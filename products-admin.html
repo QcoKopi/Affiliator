@@ -718,6 +718,12 @@
         }
 
         async function saveProduct() {
+            // PERBAIKAN: Pastikan DB siap
+            if (!DBStore.db) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                return;
+            }
+
             const id = document.getElementById('productId').value;
             const name = document.getElementById('prodName').value.trim();
             const category = document.getElementById('prodCategory').value;

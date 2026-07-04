@@ -409,6 +409,12 @@
         }
 
         async function submitLead() {
+            // PERBAIKAN: Pastikan DB siap
+            if (!DBStore.db) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                return;
+            }
+
             const refCode = document.getElementById('refCode').value;
             const productId = document.getElementById('selectedProduct').value;
             const name = document.getElementById('buyerName').value.trim();

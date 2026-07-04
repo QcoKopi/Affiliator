@@ -277,7 +277,7 @@
                         <label class="form-label">Password</label>
                         <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="login()">
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnLogin" onclick="login()">
                         <i class="fas fa-sign-in-alt"></i> Masuk
                     </button>
                     <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
@@ -309,7 +309,7 @@
                         <label class="form-label">Bank & Rekening <span class="required">*</span></label>
                         <input type="text" class="form-input" id="regBank" placeholder="BCA 1234567890 a.n Nama">
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="register()">
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnRegister" onclick="register()">
                         <i class="fas fa-user-plus"></i> Daftar
                     </button>
                     <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
@@ -428,13 +428,26 @@
         // ==================== INDEXEDDB STORAGE ====================
         const DBStore = {
             db: null,
+            ready: false,
+            initPromise: null,
 
             init: function() {
-                return new Promise((resolve, reject) => {
+                // Kalau sudah ada promise yang berjalan, return itu saja
+                if (this.initPromise) return this.initPromise;
+
+                this.initPromise = new Promise((resolve, reject) => {
+                    // Cek apakah browser support IndexedDB
+                    if (!window.indexedDB) {
+                        showToast('Browser tidak mendukung penyimpanan lokal. Gunakan Chrome/Firefox/Safari terbaru.', 'error');
+                        reject('IndexedDB not supported');
+                        return;
+                    }
+
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
 
                     request.onerror = () => {
                         DEBUG.log('IndexedDB error:', request.error);
+                        this.ready = false;
                         reject(request.error);
                     };
 
@@ -445,6 +458,7 @@
 
                     request.onsuccess = () => {
                         this.db = request.result;
+                        this.ready = true;
                         this.db.onversionchange = () => {
                             this.db.close();
                             location.reload();
@@ -481,6 +495,18 @@
                         }
                     };
                 });
+
+                return this.initPromise;
+            },
+
+            // Tunggu DB siap sebelum operasi
+            waitForReady: async function() {
+                if (this.ready && this.db) return;
+                if (this.initPromise) {
+                    await this.initPromise;
+                    return;
+                }
+                throw new Error('IndexedDB belum diinisialisasi');
             },
 
             getAll: function(storeName) {
@@ -816,6 +842,22 @@
             if (page === 'admin') loadAdminPanel();
         }
 
+        // ==================== UI HELPERS ====================
+        function setAuthButtonsEnabled(enabled) {
+            const btnRegister = document.getElementById('btnRegister');
+            const btnLogin = document.getElementById('btnLogin');
+            if (btnRegister) {
+                btnRegister.disabled = !enabled;
+                btnRegister.style.opacity = enabled ? '1' : '0.6';
+                btnRegister.style.cursor = enabled ? 'pointer' : 'not-allowed';
+            }
+            if (btnLogin) {
+                btnLogin.disabled = !enabled;
+                btnLogin.style.opacity = enabled ? '1' : '0.6';
+                btnLogin.style.cursor = enabled ? 'pointer' : 'not-allowed';
+            }
+        }
+
         // ==================== AUTH ====================
         function showAuthModal(mode) {
             document.getElementById('authModal').classList.add('active');
@@ -839,6 +881,15 @@
         }
 
         async function register() {
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
+                return;
+            }
+
             const data = {
                 name: document.getElementById('regName').value.trim(),
                 email: document.getElementById('regEmail').value.trim().toLowerCase(),
@@ -882,6 +933,15 @@
         }
 
         async function login() {
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
+                return;
+            }
+
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
 
@@ -1032,6 +1092,15 @@
         });
 
         async function saveLeadUpdate() {
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
+                return;
+            }
+
             const leadId = document.getElementById('updateLeadSelect').value;
             const newStatus = document.getElementById('updateLeadStatus').value;
             const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
@@ -1188,13 +1257,20 @@
         document.addEventListener('DOMContentLoaded', async function() {
             DEBUG.log('=== APP STARTING ===');
 
+            // PERBAIKAN: Disable tombol auth sampai DB siap
+            setAuthButtonsEnabled(false);
+
             // Step 1: Initialize IndexedDB
             try {
                 await DBStore.init();
                 DEBUG.log('IndexedDB initialized');
+                // PERBAIKAN: Enable tombol setelah DB siap
+                setAuthButtonsEnabled(true);
             } catch(e) {
                 DEBUG.log('IndexedDB failed, using memory only');
                 showToast('Mode offline - data tidak akan persist', 'warning');
+                // PERBAIKAN: Tetap enable tombol walau offline, tapi pakai memory only
+                setAuthButtonsEnabled(true);
             }
 
             // Step 2: Load all data from IndexedDB
