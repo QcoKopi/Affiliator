@@ -265,36 +265,49 @@
             }
         }
 
-        // ==================== INDEXEDDB ====================
+        // ==================== STORAGE ENGINE (IndexedDB > localStorage > Memory) ====================
         const DBStore = {
-            db: null,
+            db: null, ready: false, mode: 'unknown',
+            memory: { users: [], leads: [], commissions: [], products: [], orders: [] },
+            initPromise: null,
 
             init: function() {
+                if (this.initPromise) return this.initPromise;
+                this.initPromise = this._tryInit();
+                return this.initPromise;
+            },
+
+            _tryInit: async function() {
+                try {
+                    await this._initIndexedDB(3000);
+                    this.mode = 'indexeddb'; this.ready = true;
+                    console.log('Storage: IndexedDB'); return;
+                } catch(e) { console.log('IndexedDB gagal:', e.message || e); }
+
+                try {
+                    this._testLocalStorage();
+                    this.mode = 'localstorage'; this.ready = true;
+                    console.log('Storage: localStorage'); return;
+                } catch(e) { console.log('localStorage gagal:', e.message || e); }
+
+                this.mode = 'memory'; this.ready = true;
+                console.log('Storage: in-memory only');
+            },
+
+            _initIndexedDB: function(timeoutMs) {
                 return new Promise((resolve, reject) => {
+                    if (!window.indexedDB) { reject('not supported'); return; }
+                    const timer = setTimeout(() => reject('timeout'), timeoutMs);
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
-
-                    request.onerror = (e) => {
-                        console.error('IndexedDB error:', e.target.error);
-                        reject(e.target.error);
-                    };
-
-                    request.onblocked = (e) => {
-                        console.warn('IndexedDB blocked');
-                        alert('Database sedang digunakan di tab lain. Tutup tab lain dan refresh.');
-                    };
-
-                    request.onsuccess = (e) => {
-                        this.db = e.target.result;
-                        this.db.onversionchange = () => {
-                            this.db.close();
-                            location.reload();
-                        };
-                        console.log('IndexedDB opened, stores:', Array.from(this.db.objectStoreNames));
+                    request.onerror = () => { clearTimeout(timer); reject(request.error); };
+                    request.onblocked = () => { clearTimeout(timer); reject('blocked'); };
+                    request.onsuccess = () => {
+                        clearTimeout(timer);
+                        this.db = request.result;
+                        this.db.onversionchange = () => { this.db.close(); location.reload(); };
                         resolve(this.db);
                     };
-
                     request.onupgradeneeded = (event) => {
-                        console.log('Upgrading database from', event.oldVersion, 'to', event.newVersion);
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
@@ -306,25 +319,51 @@
                 });
             },
 
+            _testLocalStorage: function() {
+                const k = '_aff_test_'; localStorage.setItem(k, '1');
+                if (localStorage.getItem(k) !== '1') throw new Error('fail');
+                localStorage.removeItem(k);
+            },
+
+            _lsKey: function(s) { return 'aff_' + s; },
+            _lsGet: function(s) { try { const r = localStorage.getItem(this._lsKey(s)); return r ? JSON.parse(r) : []; } catch(e) { return []; } },
+            _lsSet: function(s, d) { try { localStorage.setItem(this._lsKey(s), JSON.stringify(d)); } catch(e) {} },
+
             getAll: function(storeName) {
                 return new Promise((resolve) => {
-                    if (!this.db) { resolve([]); return; }
-                    const tx = this.db.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result || []);
-                    request.onerror = () => resolve([]);
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readonly');
+                        const store = tx.objectStore(storeName);
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => resolve([]);
+                    } else if (this.mode === 'localstorage') {
+                        resolve(this._lsGet(storeName));
+                    } else {
+                        resolve(this.memory[storeName] || []);
+                    }
                 });
             },
 
             put: function(storeName, data) {
                 return new Promise((resolve, reject) => {
-                    if (!this.db) { reject('DB not initialized'); return; }
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    const request = store.put(data);
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.put(data);
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => reject(req.error);
+                    } else if (this.mode === 'localstorage') {
+                        const items = this._lsGet(storeName);
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        this._lsSet(storeName, items); resolve();
+                    } else {
+                        const items = this.memory[storeName] || [];
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        resolve();
+                    }
                 });
             }
         };
