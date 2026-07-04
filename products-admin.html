@@ -108,6 +108,7 @@
         }
         .hidden { display: none !important; }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
@@ -626,7 +627,7 @@
             document.getElementById('productModal').classList.add('active');
         }
 
-        async async function saveProduct() {
+        async function saveProduct() {
             const id = document.getElementById('productId').value;
             const name = document.getElementById('prodName').value.trim();
             const category = document.getElementById('prodCategory').value;
