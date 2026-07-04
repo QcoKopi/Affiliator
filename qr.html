@@ -167,10 +167,41 @@
         const CONFIG = {
             BASE_URL: 'https://kopinusantara.id',
             DB_NAME: 'KopiAffiliateDB',
-            DB_VERSION: 1
+            DB_VERSION: 1,
+            // PERBAIKAN: Tambahkan GAS URL
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec'
         };
 
-        // ==================== INDEXEDDB (SAMA DENGAN index.html & admin.html) ====================
+        // ==================== GAS INTEGRATION (PERBAIKAN BARU) ====================
+        async function fetchFromGAS(action) {
+            try {
+                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch(err) {
+                console.error('GAS fetch error:', err.message);
+                return { success: false, error: err.message };
+            }
+        }
+
+        async function syncUsersFromGAS() {
+            const result = await fetchFromGAS('getUsers');
+            if (result.success && Array.isArray(result.data)) {
+                let added = 0;
+                for (const user of result.data) {
+                    if (!user || !user.id) continue;
+                    // Simpan ke IndexedDB
+                    await DBStore.put('users', user);
+                    added++;
+                }
+                console.log('Users synced from GAS:', added, 'users');
+                return true;
+            }
+            return false;
+        }
+
+        // ==================== INDEXEDDB ====================
         const DBStore = {
             db: null,
 
@@ -209,6 +240,18 @@
                     request.onsuccess = () => resolve(request.result || []);
                     request.onerror = () => resolve([]);
                 });
+            },
+
+            // PERBAIKAN: Tambahkan put method
+            put: function(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    if (!this.db) { reject('DB not initialized'); return; }
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const request = store.put(data);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
             }
         };
 
@@ -224,8 +267,18 @@
             }
 
             // Cek di IndexedDB
-            const users = await DBStore.getAll('users');
-            const affiliator = users.find(u => u.referralCode === code);
+            let users = await DBStore.getAll('users');
+            let affiliator = users.find(u => u.referralCode === code);
+
+            // PERBAIKAN: Kalau tidak ketemu di lokal, coba sync dari GAS dulu
+            if (!affiliator) {
+                showToast('Mencari di server...', 'info');
+                const synced = await syncUsersFromGAS();
+                if (synced) {
+                    users = await DBStore.getAll('users');
+                    affiliator = users.find(u => u.referralCode === code);
+                }
+            }
 
             if (!affiliator) {
                 document.getElementById('errorMsg').classList.add('active');
@@ -268,16 +321,41 @@
         }
 
         async function loadAffiliatorStats(aff) {
+            // PERBAIKAN: Sync leads dan commissions dari GAS dulu
+            await syncLeadsFromGAS();
+            await syncCommissionsFromGAS();
+
             const leads = await DBStore.getAll('leads');
             const commissions = await DBStore.getAll('commissions');
 
             const userLeads = leads.filter(l => l.referralCode === aff.referralCode);
             const userComm = commissions.filter(c => c.affiliatorId === aff.id);
-            const totalComm = userComm.reduce((a, c) => a + c.amount, 0);
+            const totalComm = userComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
 
             document.getElementById('affTotalLeads').textContent = userLeads.length;
             document.getElementById('affValidLeads').textContent = userLeads.filter(l => l.status === 'Valid').length;
             document.getElementById('affTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
+        }
+
+        // PERBAIKAN: Tambahkan sync leads dan commissions
+        async function syncLeadsFromGAS() {
+            const result = await fetchFromGAS('getLeads');
+            if (result.success && Array.isArray(result.data)) {
+                for (const lead of result.data) {
+                    if (!lead || !lead.id) continue;
+                    await DBStore.put('leads', lead);
+                }
+            }
+        }
+
+        async function syncCommissionsFromGAS() {
+            const result = await fetchFromGAS('getCommissions');
+            if (result.success && Array.isArray(result.data)) {
+                for (const comm of result.data) {
+                    if (!comm || !comm.id) continue;
+                    await DBStore.put('commissions', comm);
+                }
+            }
         }
 
         function copyLink() {
@@ -328,6 +406,9 @@
             try {
                 await DBStore.init();
                 console.log('IndexedDB initialized for QR Generator');
+
+                // PERBAIKAN: Sync users dari GAS saat init
+                await syncUsersFromGAS();
             } catch(e) {
                 console.log('IndexedDB error:', e);
             }
