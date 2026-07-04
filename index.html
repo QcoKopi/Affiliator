@@ -435,7 +435,18 @@
 
             init: function() {
                 if (this.initPromise) return this.initPromise;
-                this.initPromise = this._tryInit();
+                // PERBAIKAN: Paksa resolve dalam 3.5 detik - tidak peduli apa yang terjadi
+                this.initPromise = Promise.race([
+                    this._tryInit(),
+                    new Promise(resolve => setTimeout(() => {
+                        if (!this.ready) {
+                            console.log('Storage init FORCED timeout - using memory mode');
+                            this.mode = 'memory';
+                            this.ready = true;
+                        }
+                        resolve();
+                    }, 3500))
+                ]);
                 return this.initPromise;
             },
 
@@ -511,16 +522,29 @@
             },
 
             _testLocalStorage: function() {
-                const testKey = '_aff_test_';
-                localStorage.setItem(testKey, '1');
-                if (localStorage.getItem(testKey) !== '1') throw new Error('localStorage tidak berfungsi');
-                localStorage.removeItem(testKey);
+                // PERBAIKAN: Lebih robust untuk iframe context
+                // Di Google Sites iframe, localStorage bisa throw SecurityError
+                try {
+                    if (typeof window.localStorage === 'undefined') throw new Error('not available');
+                    // Coba akses - ini bisa throw DOMException: SecurityError
+                    const storage = window.localStorage;
+                    const k = '_aff_test_' + Date.now();
+                    storage.setItem(k, '1');
+                    const v = storage.getItem(k);
+                    storage.removeItem(k);
+                    if (v !== '1') throw new Error('mismatch');
+                    return true;
+                } catch(e) {
+                    console.log('localStorage blocked:', e.name || e.message || 'unknown');
+                    throw new Error('blocked');
+                }
             },
 
             waitForReady: async function() {
                 if (this.ready) return;
                 if (this.initPromise) { await this.initPromise; return; }
-                throw new Error('Storage belum diinisialisasi');
+                // PERBAIKAN: Kalau init belum pernah dipanggil, panggil sekarang
+                await this.init();
             },
 
             // KEY: prefix + storeName, misal: aff_users
@@ -1326,54 +1350,69 @@
         document.addEventListener('DOMContentLoaded', async function() {
             DEBUG.log('=== APP STARTING ===');
 
-            // PERBAIKAN: Disable tombol auth sampai DB siap
-            setAuthButtonsEnabled(false);
+            // PERBAIKAN: Selalu enable tombol - jangan depend pada storage
+            setAuthButtonsEnabled(true);
 
-            // Step 1: Initialize IndexedDB
+            // Step 1: Initialize Storage (IndexedDB > localStorage > memory)
             try {
                 await DBStore.init();
-                DEBUG.log('IndexedDB initialized');
-                // PERBAIKAN: Enable tombol setelah DB siap
-                setAuthButtonsEnabled(true);
+                DEBUG.log('Storage initialized, mode:', DBStore.mode);
             } catch(e) {
-                DEBUG.log('IndexedDB failed, using memory only');
-                showToast('Mode offline - data tidak akan persist', 'warning');
-                // PERBAIKAN: Tetap enable tombol walau offline, tapi pakai memory only
-                setAuthButtonsEnabled(true);
+                console.error('Storage init error (terjebak):', e);
+                // Force fallback ke memory
+                DBStore.mode = 'memory';
+                DBStore.ready = true;
             }
 
-            // Step 2: Load all data from IndexedDB
-            await DataSync.loadAll();
+            // Step 2: Load data - wrap semua dengan try-catch
+            try {
+                await DataSync.loadAll();
+                DEBUG.log('Data loaded:', DB.users.length, 'users,', DB.leads.length, 'leads');
+            } catch(e) {
+                console.error('DataSync.loadAll error:', e);
+                // Jangan biarkan error ini crash app
+            }
 
-            // Step 3: Load demo data if empty
-            await loadDemoData();
+            // Step 3: Load demo data
+            try {
+                await loadDemoData();
+            } catch(e) {
+                console.error('loadDemoData error:', e);
+            }
 
-            // Step 4: PERBAIKAN - Fetch data dari GAS (server)
+            // Step 4: Sync dari GAS
             try {
                 await syncAllFromGAS();
             } catch(e) {
                 DEBUG.log('GAS sync failed:', e.message);
             }
 
-            // Step 5: Restore session from cookie
-            const sessionRestored = await SessionManager.restoreSession();
-            DEBUG.log('Session restored:', sessionRestored);
-
-            // Step 6: Update UI
-            updateNavbar();
-
-            if (sessionRestored) {
-                if (DB.isAdmin) {
-                    navigateTo('admin');
-                } else if (DB.currentUser) {
-                    navigateTo('dashboard');
+            // Step 5: Restore session
+            try {
+                const sessionRestored = await SessionManager.restoreSession();
+                DEBUG.log('Session restored:', sessionRestored);
+                if (sessionRestored) {
+                    if (DB.isAdmin) navigateTo('admin');
+                    else if (DB.currentUser) navigateTo('dashboard');
                 }
+            } catch(e) {
+                console.error('Session restore error:', e);
             }
 
+            // Step 6: Update UI
+            try {
+                updateNavbar();
+            } catch(e) {
+                console.error('updateNavbar error:', e);
+            }
+
+            // PERBAIKAN: Force enable tombol setelah semua init selesai
+            setAuthButtonsEnabled(true);
+
             DEBUG.log('=== APP READY ===');
+            DEBUG.log('Storage mode:', DBStore.mode);
             DEBUG.log('Users:', DB.users.length);
             DEBUG.log('Leads:', DB.leads.length);
-            DEBUG.log('Current user:', DB.currentUser ? DB.currentUser.email : 'none');
         });
 
         // Close modal on overlay click
