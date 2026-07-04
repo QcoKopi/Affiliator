@@ -783,10 +783,9 @@
         }
 
         async function saveProduct() {
-            // PERBAIKAN: Pastikan DB siap
-            if (!DBStore.db) {
-                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
-                return;
+            // PERBAIKAN: Pastikan storage init selesai
+            if (!DBStore.ready && DBStore.initPromise) {
+                try { await DBStore.initPromise; } catch(e) {}
             }
 
             const id = document.getElementById('productId').value;
@@ -912,8 +911,20 @@
         });
 
         document.addEventListener('DOMContentLoaded', async function() {
+            // PERBAIKAN: Init storage tanpa blocking (sama seperti landing.html)
+            DBStore.init().catch(() => {
+                DBStore.mode = 'memory';
+                DBStore.ready = true;
+            });
+
+            // Tunggu storage siap (dengan timeout)
+            let attempts = 0;
+            while (!DBStore.ready && attempts < 10) {
+                await new Promise(r => setTimeout(r, 200));
+                attempts++;
+            }
+
             try {
-                await DBStore.init();
                 await loadDemoProducts();
                 checkAdminSession();
                 if (SessionManager.loadSession()) {

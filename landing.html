@@ -371,15 +371,36 @@
         // ==================== LOAD PRODUCTS ====================
         async function loadProducts() {
             const container = document.getElementById('productsContainer');
-            const products = await DBStore.getAll('products');
-            const activeProducts = products.filter(p => p.status === 'Active');
+
+            // PERBAIKAN: Selalu fetch dari GAS dulu (supaya terlihat di semua device)
+            let allProducts = [];
+            try {
+                const result = await fetchFromGAS('getProducts');
+                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                    allProducts = result.data;
+                    // Simpan ke storage lokal untuk offline
+                    for (const p of result.data) {
+                        if (p && p.id) await DBStore.put('products', p);
+                    }
+                    console.log('Products loaded from GAS:', allProducts.length);
+                }
+            } catch(e) {
+                console.log('GAS fetch failed, using local:', e.message);
+            }
+
+            // Fallback ke storage lokal kalau GAS kosong/gagal
+            if (allProducts.length === 0) {
+                allProducts = await DBStore.getAll('products');
+            }
+
+            const activeProducts = allProducts.filter(p => p.status === 'Active' || !p.status);
 
             if (activeProducts.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-box-open"></i>
                         <h3>Belum Ada Produk</h3>
-                        <p>Produk akan segera ditambahkan. Silakan cek kembali nanti.</p>
+                        <p>Admin belum menambahkan produk. Silakan cek kembali nanti.</p>
                     </div>
                 `;
                 return;
@@ -479,10 +500,9 @@
             const btn = document.querySelector('button[onclick="submitLead()"]');
             const originalBtnText = btn.innerHTML;
 
-            // PERBAIKAN 1: Cek storage ready (bukan DB.db)
-            if (!DBStore.ready) {
-                showToast('Sistem belum siap. Tunggu sebentar dan coba lagi.', 'error');
-                return;
+            // PERBAIKAN 1: Pastikan storage init selesai (tunggu kalau perlu)
+            if (!DBStore.ready && DBStore.initPromise) {
+                try { await DBStore.initPromise; } catch(e) {}
             }
 
             // PERBAIKAN 2: Ambil nilai form
@@ -609,19 +629,33 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
+            // PERBAIKAN: Init storage tanpa blocking
+            DBStore.init().catch(() => {
+                DBStore.mode = 'memory';
+                DBStore.ready = true;
+            });
+
+            // Load products langsung (akan fetch dari GAS)
             try {
-                await DBStore.init();
                 await loadProducts();
-                await loadAffiliatorInfo();
             } catch(e) {
-                console.error('Init error:', e);
+                console.error('Load products error:', e);
                 document.getElementById('productsContainer').innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Gagal Memuat Produk</h3>
-                        <p>Silakan refresh halaman atau coba lagi nanti.</p>
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <h3>Memuat Produk...</h3>
+                        <p>Silakan tunggu sebentar.</p>
                     </div>
                 `;
+                // Retry setelah 2 detik
+                setTimeout(loadProducts, 2000);
+            }
+
+            // Load affiliator info
+            try {
+                await loadAffiliatorInfo();
+            } catch(e) {
+                console.error('Load affiliator error:', e);
             }
         });
     </script>
