@@ -1163,7 +1163,7 @@
         // ==================== AFFILIATOR DASHBOARD ====================
         function loadDashboard() {
             if (!DB.currentUser) return;
-            const refLink = `https://kopinusantara.id/?ref=${DB.currentUser.referralCode}`;
+            const refLink = `https://qcokopi.github.io/Affiliator/landing.html?ref=${DB.currentUser.referralCode}`;
             document.getElementById('referralLinkInput').value = refLink;
 
             const userLeads = DB.leads.filter(l => l.referralCode === DB.currentUser.referralCode);
