@@ -340,6 +340,27 @@
     </div>
 
     <script>
+        // ==================== ACCESS CONTROL ====================
+        // PERBAIKAN: Cek admin session sebelum load apapun
+        (function checkAccess() {
+            try {
+                const match = document.cookie.match(/aff_admin_session=([^;]+)/);
+                if (!match) {
+                    // Belum login sebagai admin → redirect ke halaman affiliator
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const session = JSON.parse(decodeURIComponent(match[1]));
+                if (!session || !session.isAdmin) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                // Admin OK → lanjut
+            } catch(e) {
+                window.location.href = 'index.html';
+            }
+        })();
+
         // ==================== CONFIG ====================
         const CONFIG = {
             GAS_URL: 'https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec',

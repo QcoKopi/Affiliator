@@ -667,6 +667,30 @@
             isAdmin: false
         };
 
+        // ==================== SHARED ADMIN SESSION (cross-page) ====================
+        const AdminSession = {
+            save: function() {
+                try {
+                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
+                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
+                } catch(e) {}
+            },
+            load: function() {
+                try {
+                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
+                    if (match) return JSON.parse(decodeURIComponent(match[1]));
+                } catch(e) {}
+                return null;
+            },
+            clear: function() {
+                document.cookie = 'aff_admin_session=; path=/; max-age=0';
+            },
+            isActive: function() {
+                const s = this.load();
+                return !!(s && s.isAdmin);
+            }
+        };
+
         // ==================== SESSION MANAGEMENT ====================
         const SessionManager = {
             saveSession: function() {
@@ -1069,6 +1093,7 @@
             DB.currentUser = null;
             DB.isAdmin = false;
             SessionManager.clearSession();
+            AdminSession.clear(); // PERBAIKAN: Clear shared admin session juga
             updateNavbar();
             navigateTo('home');
             showToast('Berhasil keluar', 'success');
@@ -1079,6 +1104,8 @@
             if (input === CONFIG.ADMIN_PASSWORD) {
                 DB.isAdmin = true;
                 SessionManager.saveSession();
+                // PERBAIKAN: Simpan shared admin session untuk akses halaman admin lain
+                AdminSession.save();
                 closeModal('adminLoginModal');
                 showToast('Selamat datang, Admin!', 'success');
                 navigateTo('admin');
@@ -1094,6 +1121,8 @@
                 nav.innerHTML = `
                     <a class="nav-link" data-page="home">Beranda</a>
                     <a class="nav-link active" data-page="admin">Admin Panel <span class="admin-badge">ADMIN</span></a>
+                    <a href="affiliator-admin.html" class="btn btn-outline btn-sm" style="font-size:0.8rem;"><i class="fas fa-user-shield"></i> Aff.Admin</a>
+                    <a href="products-admin.html" class="btn btn-outline btn-sm" style="font-size:0.8rem;"><i class="fas fa-box"></i> Products</a>
                     <button class="btn btn-outline btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
                 `;
             } else if (DB.currentUser) {
@@ -1350,6 +1379,12 @@
         document.addEventListener('DOMContentLoaded', async function() {
             DEBUG.log('=== APP STARTING ===');
 
+            // PERBAIKAN: Cek admin session dulu - kalau admin sudah login di halaman lain
+            if (AdminSession.isActive()) {
+                DEBUG.log('Admin session detected from another page');
+                DB.isAdmin = true;
+            }
+
             // PERBAIKAN: Selalu enable tombol - jangan depend pada storage
             setAuthButtonsEnabled(true);
 
@@ -1394,6 +1429,11 @@
                 if (sessionRestored) {
                     if (DB.isAdmin) navigateTo('admin');
                     else if (DB.currentUser) navigateTo('dashboard');
+                }
+                // PERBAIKAN: Kalau ada admin session dari halaman lain, langsung ke admin
+                else if (AdminSession.isActive()) {
+                    DB.isAdmin = true;
+                    navigateTo('admin');
                 }
             } catch(e) {
                 console.error('Session restore error:', e);
