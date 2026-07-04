@@ -19,7 +19,6 @@
         .form-input, .form-select { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 0.9rem; }
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th { background: var(--bg); padding: 0.6rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border); }
@@ -65,42 +64,52 @@
                 </div>
             </div>
 
-            <!-- ADD FORM -->
+            <!-- FORM: Method GET langsung ke GAS -->
             <div class="card">
                 <h3 style="margin-bottom:0.75rem;"><i class="fas fa-plus"></i> Tambah Produk</h3>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Nama *</label>
-                        <input type="text" class="form-input" id="fName" placeholder="Arabika Gayo">
+                <form id="productForm" method="GET" action="https://script.google.com/macros/s/AKfycbwUlbpq99F9x0piNjFU0IGM5b-W9DVs2nUsnvfor183gj2vSj3cbulkM8qkUd5MO40/exec" target="_blank" onsubmit="return handleSubmit();">
+                    <input type="hidden" name="action" value="saveProduct">
+                    <input type="hidden" name="id" id="formId">
+                    <input type="hidden" name="status" value="Active">
+                    <input type="hidden" name="createdAt" id="formCreatedAt">
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nama *</label>
+                            <input type="text" name="name" class="form-input" id="fName" placeholder="Arabika Gayo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kategori</label>
+                            <select name="category" class="form-select" id="fCat">
+                                <option>Arabika</option><option>Robusta</option><option>House Blend</option><option>Single Origin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Harga (Rp) *</label>
+                            <input type="number" name="price" class="form-input" id="fPrice" placeholder="125000" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Harga Coret (Rp)</label>
+                            <input type="number" name="originalPrice" class="form-input" id="fOrig" placeholder="150000">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Kategori</label>
-                        <select class="form-select" id="fCat">
-                            <option>Arabika</option><option>Robusta</option><option>House Blend</option><option>Single Origin</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Harga (Rp) *</label>
-                        <input type="number" class="form-input" id="fPrice" placeholder="125000">
+                        <label class="form-label">URL Gambar</label>
+                        <input type="text" name="imageUrl" class="form-input" id="fImg" placeholder="https://...">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Harga Coret (Rp)</label>
-                        <input type="number" class="form-input" id="fOrig" placeholder="150000">
+                        <label class="form-label">Deskripsi</label>
+                        <input type="text" name="description" class="form-input" id="fDesc" placeholder="Deskripsi...">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">URL Gambar</label>
-                    <input type="text" class="form-input" id="fImg" placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Deskripsi</label>
-                    <input type="text" class="form-input" id="fDesc" placeholder="Deskripsi...">
-                </div>
-                <button class="btn btn-primary" id="btnSave" onclick="save()">
-                    <i class="fas fa-save"></i> Simpan ke Google Sheets
-                </button>
+                    <button type="submit" class="btn btn-primary" id="btnSave">
+                        <i class="fas fa-save"></i> Simpan ke Google Sheets
+                    </button>
+                </form>
+                <p style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem;">
+                    <i class="fas fa-info-circle"></i> Akan membuka tab baru dengan response JSON. Tutup tab tersebut dan klik Refresh.
+                </p>
                 <div class="log" id="log"></div>
             </div>
 
@@ -131,9 +140,7 @@
 
         function log(msg) {
             console.log(msg);
-            const el = document.getElementById('log');
-            el.innerHTML += '<div>' + new Date().toLocaleTimeString() + ' ' + msg + '</div>';
-            el.scrollTop = el.scrollHeight;
+            document.getElementById('log').innerHTML += '<div>' + new Date().toLocaleTimeString() + ' ' + msg + '</div>';
         }
 
         function toast(msg, ok) {
@@ -159,17 +166,29 @@
             location.reload();
         }
 
-        // Check session
-        try {
-            if (document.cookie.includes('pa=1')) {
-                document.getElementById('loginCard').style.display = 'none';
-                document.getElementById('main').style.display = 'block';
-            }
-        } catch(e) {}
+        try { if (document.cookie.includes('pa=1')) { document.getElementById('loginCard').style.display = 'none'; document.getElementById('main').style.display = 'block'; } } catch(e) {}
 
-        // LOAD — via GET
+        // Isi hidden fields sebelum submit
+        function handleSubmit() {
+            document.getElementById('formId').value = 'prod_' + Date.now();
+            document.getElementById('formCreatedAt').value = new Date().toISOString();
+            log('Submitting form via GET...');
+            // Clear form setelah submit
+            setTimeout(() => {
+                document.getElementById('fName').value = '';
+                document.getElementById('fPrice').value = '';
+                document.getElementById('fOrig').value = '';
+                document.getElementById('fImg').value = '';
+                document.getElementById('fDesc').value = '';
+                toast('Data dikirim! Tutup tab JSON dan klik Refresh.', true);
+                setTimeout(load, 2000);
+            }, 500);
+            return true; // Allow form to submit
+        }
+
+        // LOAD
         async function load() {
-            log('Loading products...');
+            log('Loading...');
             try {
                 const r = await fetch(GAS + '?action=getProducts');
                 const j = await r.json();
@@ -183,89 +202,7 @@
                 const o = await fetch(GAS + '?action=getOrders');
                 const oj = await o.json();
                 if (oj.data) document.getElementById('statOrd').textContent = oj.data.length;
-            } catch(e) {
-                log('ERROR: ' + e.message);
-                toast('Gagal load: ' + e.message, false);
-            }
-        }
-
-        // SAVE — via iframe form (sama persis dengan index.html yang berhasil)
-        async function save() {
-            const btn = document.getElementById('btnSave');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-            const name = document.getElementById('fName').value.trim();
-            const price = document.getElementById('fPrice').value;
-
-            if (!name || !price) {
-                toast('Nama dan harga wajib diisi', false);
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
-                return;
-            }
-
-            const fields = {
-                action: 'saveProduct',
-                id: 'prod_' + Date.now(),
-                name: name,
-                category: document.getElementById('fCat').value,
-                price: price,
-                originalPrice: document.getElementById('fOrig').value || '',
-                imageUrl: document.getElementById('fImg').value.trim(),
-                description: document.getElementById('fDesc').value.trim(),
-                status: 'Active',
-                createdAt: new Date().toISOString()
-            };
-
-            log('Saving: ' + name + ', Rp ' + price);
-
-            // PAKAI IFRAME FORM — sama persis dengan cara user berhasil di index.html
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = GAS;
-            form.target = 'gasFrame';
-            form.style.display = 'none';
-
-            for (let key in fields) {
-                const input = document.createElement('input');
-                input.name = key;
-                input.value = fields[key];
-                form.appendChild(input);
-            }
-
-            const iframe = document.getElementById('gasFrame');
-            let done = false;
-
-            iframe.onload = function() {
-                if (done) return;
-                done = true;
-                log('Iframe loaded - success!');
-                toast('Produk tersimpan di Google Sheets!', true);
-                document.getElementById('fName').value = '';
-                document.getElementById('fPrice').value = '';
-                document.getElementById('fOrig').value = '';
-                document.getElementById('fImg').value = '';
-                document.getElementById('fDesc').value = '';
-                setTimeout(load, 1500);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
-            };
-
-            // Safety: cleanup after 5 seconds
-            setTimeout(() => {
-                if (!done) {
-                    done = true;
-                    log('Timeout - check Google Sheets manually');
-                    toast('Request sent - cek Google Sheets', true);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
-                }
-                try { document.body.removeChild(form); } catch(e) {}
-            }, 5000);
-
-            document.body.appendChild(form);
-            form.submit();
-            log('Form submitted via iframe');
+            } catch(e) { log('ERROR: ' + e.message); }
         }
     </script>
 </body>
