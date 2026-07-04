@@ -491,9 +491,36 @@
             }
         };
 
-        // ==================== GAS INTEGRATION (PERBAIKAN BARU) ====================
-        function syncToGAS(action, data) {
+        // ==================== GAS INTEGRATION (ROBUST) ====================
+        // PERBAIKAN: Gunakan fetch POST langsung ke GAS (lebih reliable dari form iframe)
+        async function syncToGAS(action, data) {
+            // Build URL-encoded body
+            const params = new URLSearchParams();
+            params.append('action', action);
+            for (let key in data) {
+                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
+            }
+
             try {
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    body: params
+                    // Note: no-cors mode hides the response but request still goes through
+                });
+                console.log('GAS sync OK:', action);
+                showToast('Data tersimpan di server', 'success');
+                return true;
+            } catch(err) {
+                console.error('GAS fetch failed, trying iframe fallback:', err.message);
+                // Fallback: gunakan form + iframe
+                return syncToGASIframe(action, data);
+            }
+        }
+
+        // PERBAIKAN: Form iframe sebagai fallback (pertahankan form sampai iframe load)
+        function syncToGASIframe(action, data) {
+            return new Promise((resolve) => {
+                const iframe = document.getElementById('gasFrame');
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = CONFIG.GAS_URL;
@@ -512,13 +539,21 @@
                     form.appendChild(field);
                 }
 
+                // PERBAIKAN: Bersihkan form SETELAH iframe onload (tidak segera)
+                const cleanup = () => {
+                    try { document.body.removeChild(form); } catch(e) {}
+                    iframe.onload = null;
+                    resolve(true);
+                };
+
+                iframe.onload = cleanup;
+                // Safety timeout: bersihkan setelah 5 detik walau iframe belum load
+                setTimeout(cleanup, 5000);
+
                 document.body.appendChild(form);
                 form.submit();
-                document.body.removeChild(form);
-                console.log('Synced to GAS:', action);
-            } catch(err) {
-                console.error('GAS sync error:', err.message);
-            }
+                console.log('GAS iframe sync:', action);
+            });
         }
 
         async function fetchFromGAS(action) {
@@ -671,7 +706,7 @@
             for (const p of demoProducts) {
                 await DBStore.put('products', p);
                 // PERBAIKAN: Sync demo products ke GAS juga
-                syncToGAS('saveProduct', p);
+                await syncToGAS('saveProduct', p);
             }
             console.log('Demo products loaded');
         }
@@ -817,8 +852,8 @@
             // Simpan ke IndexedDB
             await DBStore.put('products', product);
 
-            // PERBAIKAN: Sync ke GAS
-            syncToGAS('saveProduct', product);
+            // PERBAIKAN: Sync ke GAS (tunggu selesai)
+            await syncToGAS('saveProduct', product);
 
             closeModal('productModal');
             showToast(id ? 'Produk diupdate!' : 'Produk ditambahkan!', 'success');
@@ -832,8 +867,8 @@
             p.status = isActive ? 'Active' : 'Inactive';
             await DBStore.put('products', p);
 
-            // PERBAIKAN: Sync ke GAS
-            syncToGAS('saveProduct', p);
+            // PERBAIKAN: Sync ke GAS (tunggu selesai)
+            await syncToGAS('saveProduct', p);
 
             showToast('Status produk diupdate', 'success');
             loadProducts();

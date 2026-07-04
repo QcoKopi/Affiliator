@@ -828,33 +828,29 @@
             }
         };
 
-        // ==================== GAS INTEGRATION (PUSH) ====================
-        function syncToGAS(action, data) {
+        // ==================== GAS INTEGRATION (ROBUST) ====================
+        async function syncToGAS(action, data) {
+            const params = new URLSearchParams();
+            params.append('action', action);
+            for (let key in data) {
+                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
+            }
             try {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = CONFIG.GAS_URL;
-                form.target = 'gasFrame';
-                form.style.display = 'none';
-
-                const actionField = document.createElement('input');
-                actionField.name = 'action';
-                actionField.value = action;
-                form.appendChild(actionField);
-
-                for (let key in data) {
-                    const field = document.createElement('input');
-                    field.name = key;
-                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
-                    form.appendChild(field);
-                }
-
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                DEBUG.log('Sync to GAS:', action);
+                await fetch(CONFIG.GAS_URL, { method: 'POST', body: params });
+                DEBUG.log('GAS sync OK:', action);
+                return true;
             } catch(err) {
-                DEBUG.log('GAS sync error:', err.message);
+                DEBUG.log('GAS fetch failed:', err.message);
+                // Fallback iframe
+                const iframe = document.getElementById('gasFrame');
+                const form = document.createElement('form');
+                form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
+                const af = document.createElement('input'); af.name = 'action'; af.value = action; form.appendChild(af);
+                for (let key in data) { const f = document.createElement('input'); f.name = key; f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''); form.appendChild(f); }
+                const cleanup = () => { try { document.body.removeChild(form); } catch(e) {} iframe.onload = null; };
+                iframe.onload = cleanup; setTimeout(cleanup, 5000);
+                document.body.appendChild(form); form.submit();
+                return true;
             }
         }
 
@@ -1044,7 +1040,7 @@
             DataSync.saveToCookieFallback();
 
             // PERBAIKAN: Sync ke GAS
-            syncToGAS('register', newUser);
+            await syncToGAS('register', newUser);
 
             showToast('Pendaftaran berhasil! Silakan masuk.', 'success');
             switchAuthMode('login');
@@ -1260,7 +1256,7 @@
                         paid: false
                     };
                     await DataSync.saveCommission(commission);
-                    syncToGAS('addCommission', commission);
+                    await syncToGAS('addCommission', commission);
                 }
                 if (newStatus === 'Converted' && oldStatus !== 'Converted' && transValue > 0) {
                     const commission = {
@@ -1273,14 +1269,14 @@
                         paid: false
                     };
                     await DataSync.saveCommission(commission);
-                    syncToGAS('addCommission', commission);
+                    await syncToGAS('addCommission', commission);
                 }
             }
 
             DataSync.saveToCookieFallback();
 
             // PERBAIKAN: Sync ke GAS
-            syncToGAS('updateLead', { leadId: leadId, status: newStatus, transactionValue: transValue });
+            await syncToGAS('updateLead', { leadId: leadId, status: newStatus, transactionValue: transValue });
 
             closeModal('updateLeadModal');
             showToast('Lead updated!', 'success');
