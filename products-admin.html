@@ -181,8 +181,8 @@
                     </div>
                 </div>
 
-                <!-- DEBUG PANEL (Ctrl+Shift+D) -->
-                <div class="debug-panel" id="debugPanel" style="display:none;"></div>
+                <!-- DEBUG PANEL (selalu terlihat untuk troubleshooting) -->
+                <div class="debug-panel" id="debugPanel"></div>
             </div>
 
             <!-- PRODUCTS -->
@@ -531,9 +531,10 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // Debug toggle (Ctrl+Shift+D)
+        // Debug toggle (Cmd+Shift+A di Mac, Ctrl+Shift+A di Win/Linux)
         document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='D') {
+            if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.key==='A') {
+                e.preventDefault();
                 const el = document.getElementById('debugPanel');
                 el.style.display = el.style.display==='none'?'block':'none';
             }
