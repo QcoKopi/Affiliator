@@ -127,6 +127,12 @@
                 <i class="fas fa-unlock"></i> Masuk
             </button>
             <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button class="btn btn-outline" style="width: 100%; font-size: 0.8rem;" onclick="clearDatabase()">
+                    <i class="fas fa-trash"></i> Clear Database (if error)
+                </button>
+                <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.5rem;">Klik ini kalau ada error database</p>
+            </div>
         </div>
     </div>
 
@@ -420,6 +426,19 @@
         };
 
         // ==================== AUTH ====================
+        function clearDatabase() {
+            if (confirm('Yakin ingin menghapus database? Semua data lokal akan hilang.')) {
+                const req = indexedDB.deleteDatabase('KopiAffiliateDB');
+                req.onsuccess = function() {
+                    alert('Database dihapus. Halaman akan refresh.');
+                    location.reload();
+                };
+                req.onerror = function() {
+                    alert('Gagal menghapus database.');
+                };
+            }
+        }
+
         function adminLogin() {
             const input = document.getElementById('adminPassword').value;
             if (input === CONFIG.ADMIN_PASSWORD) {
