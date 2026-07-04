@@ -98,6 +98,10 @@
         .admin-badge { background: var(--danger); color: white; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; }
         .debug-panel { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
         .debug-panel.show { display: block; }
+        .sync-status { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-light); margin-left: 0.5rem; }
+        .sync-status.syncing { color: var(--info); }
+        .sync-status.synced { color: var(--success); }
+        .sync-status.error { color: var(--danger); }
         @media (max-width: 768px) {
             .navbar { padding: 1rem; }
             .form-row { grid-template-columns: 1fr; }
@@ -228,7 +232,11 @@
                 <div class="card">
                     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <h3>Manage Leads</h3>
-                        <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Lead</button>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Sinkronasi...</span>
+                            <button class="btn btn-primary btn-sm" onclick="manualSync()"><i class="fas fa-sync-alt"></i> Sync</button>
+                            <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Lead</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table class="data-table">
@@ -372,13 +380,14 @@
     <script>
         // ==================== CONFIG ====================
         const CONFIG = {
+            // PERBAIKAN: GAS URL yang benar sesuai dari user
             GAS_URL: 'https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec',
             COMMISSION_PER_LEAD: 10000,
             COMMISSION_PERCENTAGE: 5,
             MIN_PAYOUT: 100000,
             ADMIN_PASSWORD: 'admin123',
             DB_NAME: 'KopiAffiliateDB',
-            DB_VERSION: 1,
+            DB_VERSION: 2,
             STORE_USERS: 'users',
             STORE_LEADS: 'leads',
             STORE_COMMISSIONS: 'commissions',
@@ -428,8 +437,17 @@
                         reject(request.error);
                     };
 
+                    request.onblocked = () => {
+                        DEBUG.log('IndexedDB blocked - another tab is open');
+                        showToast('Database sedang digunakan di tab lain. Tutup tab lain dan refresh.', 'warning');
+                    };
+
                     request.onsuccess = () => {
                         this.db = request.result;
+                        this.db.onversionchange = () => {
+                            this.db.close();
+                            location.reload();
+                        };
                         DEBUG.log('IndexedDB opened successfully');
                         resolve(this.db);
                     };
@@ -452,11 +470,18 @@
                             db.createObjectStore(CONFIG.STORE_SESSION, { keyPath: 'key' });
                             DEBUG.log('Created session store');
                         }
+                        if (!db.objectStoreNames.contains('products')) {
+                            db.createObjectStore('products', { keyPath: 'id' });
+                            DEBUG.log('Created products store');
+                        }
+                        if (!db.objectStoreNames.contains('orders')) {
+                            db.createObjectStore('orders', { keyPath: 'id' });
+                            DEBUG.log('Created orders store');
+                        }
                     };
                 });
             },
 
-            // Generic CRUD operations
             getAll: function(storeName) {
                 return new Promise((resolve, reject) => {
                     if (!this.db) { resolve([]); return; }
@@ -524,7 +549,6 @@
 
         // ==================== SESSION MANAGEMENT ====================
         const SessionManager = {
-            // Save session to cookie (small, just user ID and admin flag)
             saveSession: function() {
                 const sessionData = {
                     userId: DB.currentUser ? DB.currentUser.id : null,
@@ -536,7 +560,6 @@
                 DEBUG.log('Session saved to cookie', sessionData);
             },
 
-            // Load session from cookie
             loadSession: function() {
                 try {
                     const match = document.cookie.match(/aff_session=([^;]+)/);
@@ -551,13 +574,11 @@
                 return null;
             },
 
-            // Clear session
             clearSession: function() {
                 document.cookie = 'aff_session=; path=/; max-age=0';
                 DEBUG.log('Session cleared');
             },
 
-            // Restore session from IndexedDB
             restoreSession: async function() {
                 const sessionCookie = this.loadSession();
                 if (!sessionCookie) {
@@ -589,7 +610,6 @@
 
         // ==================== DATA SYNC ====================
         const DataSync = {
-            // Load all data from IndexedDB to memory
             loadAll: async function() {
                 try {
                     DB.users = await DBStore.getAll(CONFIG.STORE_USERS);
@@ -602,22 +622,18 @@
                     });
                 } catch(e) {
                     DEBUG.log('Error loading from IndexedDB:', e.message);
-                    // Fallback: try cookie
                     this.loadFromCookieFallback();
                 }
             },
 
-            // Save user to IndexedDB
             saveUser: async function(user) {
                 await DBStore.put(CONFIG.STORE_USERS, user);
-                // Update in-memory cache
                 const idx = DB.users.findIndex(u => u.id === user.id);
                 if (idx >= 0) DB.users[idx] = user;
                 else DB.users.push(user);
                 DEBUG.log('User saved', user.email);
             },
 
-            // Save lead to IndexedDB
             saveLead: async function(lead) {
                 await DBStore.put(CONFIG.STORE_LEADS, lead);
                 const idx = DB.leads.findIndex(l => l.id === lead.id);
@@ -626,7 +642,6 @@
                 DEBUG.log('Lead saved', lead.name);
             },
 
-            // Save commission to IndexedDB
             saveCommission: async function(commission) {
                 await DBStore.put(CONFIG.STORE_COMMISSIONS, commission);
                 const idx = DB.commissions.findIndex(c => c.id === commission.id);
@@ -635,7 +650,6 @@
                 DEBUG.log('Commission saved', commission.amount);
             },
 
-            // COOKIE FALLBACK (for emergency)
             loadFromCookieFallback: function() {
                 try {
                     const saved = document.cookie.match(/affiliate_db=([^;]+)/);
@@ -659,7 +673,6 @@
                         commissions: DB.commissions
                     };
                     const json = encodeURIComponent(JSON.stringify(data));
-                    // Only save if under 4KB
                     if (json.length < 3500) {
                         document.cookie = 'affiliate_db=' + json + '; path=/; max-age=31536000; SameSite=Lax';
                         DEBUG.log('Data saved to cookie fallback');
@@ -670,30 +683,119 @@
             }
         };
 
-        // ==================== GAS INTEGRATION ====================
+        // ==================== GAS INTEGRATION (PUSH) ====================
         function syncToGAS(action, data) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = CONFIG.GAS_URL;
-            form.target = 'gasFrame';
-            form.style.display = 'none';
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = CONFIG.GAS_URL;
+                form.target = 'gasFrame';
+                form.style.display = 'none';
 
-            const actionField = document.createElement('input');
-            actionField.name = 'action';
-            actionField.value = action;
-            form.appendChild(actionField);
+                const actionField = document.createElement('input');
+                actionField.name = 'action';
+                actionField.value = action;
+                form.appendChild(actionField);
 
-            for (let key in data) {
-                const field = document.createElement('input');
-                field.name = key;
-                field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key];
-                form.appendChild(field);
+                for (let key in data) {
+                    const field = document.createElement('input');
+                    field.name = key;
+                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
+                    form.appendChild(field);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+                DEBUG.log('Sync to GAS:', action);
+            } catch(err) {
+                DEBUG.log('GAS sync error:', err.message);
+            }
+        }
+
+        // ==================== GAS INTEGRATION (FETCH) - PERBAIKAN BARU ====================
+        async function fetchFromGAS(action) {
+            try {
+                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    // mode: 'no-cors' would hide the response, so we try with cors first
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const result = await response.json();
+                DEBUG.log('GAS fetch [' + action + ']:', result.success ? 'OK' : 'FAIL');
+                return result;
+            } catch(err) {
+                DEBUG.log('GAS fetch error [' + action + ']:', err.message);
+                return { success: false, error: err.message };
+            }
+        }
+
+        async function syncAllFromGAS() {
+            updateSyncStatus('syncing', 'Sinkronasi...');
+            DEBUG.log('=== SYNCING FROM GAS ===');
+
+            const actions = ['getUsers', 'getLeads', 'getCommissions'];
+            const stores = [CONFIG.STORE_USERS, CONFIG.STORE_LEADS, CONFIG.STORE_COMMISSIONS];
+            const arrays = ['users', 'leads', 'commissions'];
+
+            let hasError = false;
+
+            for (let i = 0; i < actions.length; i++) {
+                const result = await fetchFromGAS(actions[i]);
+                if (result.success && Array.isArray(result.data)) {
+                    // Merge data: add new items, skip existing
+                    for (const item of result.data) {
+                        if (!item || !item.id) continue;
+                        const existing = DB[arrays[i]].find(x => x.id === item.id);
+                        if (!existing) {
+                            DB[arrays[i]].push(item);
+                            await DBStore.put(stores[i], item);
+                            DEBUG.log('Added from GAS:', item.id);
+                        }
+                    }
+                    DEBUG.log(actions[i] + ': fetched ' + result.data.length + ' items');
+                } else {
+                    hasError = true;
+                    DEBUG.log(actions[i] + ': failed', result.error);
+                }
             }
 
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-            DEBUG.log('Sync to GAS:', action);
+            if (hasError) {
+                updateSyncStatus('error', 'GAS error - menggunakan data lokal');
+            } else {
+                updateSyncStatus('synced', 'Tersinkronasi');
+            }
+
+            DEBUG.log('=== SYNC COMPLETE ===');
+        }
+
+        function updateSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            el.className = 'sync-status ' + status;
+            const icons = {
+                syncing: '<i class="fas fa-spinner fa-spin"></i>',
+                synced: '<i class="fas fa-check-circle"></i>',
+                error: '<i class="fas fa-exclamation-circle"></i>'
+            };
+            el.innerHTML = (icons[status] || '') + ' ' + text;
+        }
+
+        async function manualSync() {
+            showToast('Menyinkronkan data dari server...', 'info');
+            await syncAllFromGAS();
+
+            // Reload current view
+            if (DB.isAdmin) loadAdminPanel();
+            else if (DB.currentUser) {
+                loadDashboard();
+                loadAffiliatorLeads();
+            }
+
+            showToast('Sinkronasi selesai!', 'success');
         }
 
         // ==================== NAVIGATION ====================
@@ -754,7 +856,6 @@
                 return;
             }
 
-            // Check if email exists in IndexedDB
             const existingUsers = await DBStore.getAll(CONFIG.STORE_USERS);
             if (existingUsers.find(u => u.email === data.email)) {
                 showToast('Email sudah terdaftar', 'error');
@@ -772,6 +873,7 @@
             SessionManager.saveSession();
             DataSync.saveToCookieFallback();
 
+            // PERBAIKAN: Sync ke GAS
             syncToGAS('register', newUser);
 
             showToast('Pendaftaran berhasil! Silakan masuk.', 'success');
@@ -789,7 +891,6 @@
 
             DEBUG.log('Login attempt:', email);
 
-            // Search in IndexedDB
             const allUsers = await DBStore.getAll(CONFIG.STORE_USERS);
             const user = allUsers.find(u => u.email === email && u.password === password);
 
@@ -857,7 +958,6 @@
                 `;
             }
 
-            // Re-attach event listeners
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', function() {
                     const page = this.dataset.page;
@@ -906,13 +1006,11 @@
             const totalComm = DB.commissions.reduce((a, c) => a + c.amount, 0);
             document.getElementById('adminTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-            // Render leads
             document.getElementById('adminLeadsBody').innerHTML = DB.leads.map(lead => {
                 const aff = DB.users.find(u => u.referralCode === lead.referralCode);
                 return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${aff ? aff.name : lead.referralCode}</td><td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td><td>${lead.transactionValue ? 'Rp ' + formatNumber(lead.transactionValue) : '-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${lead.id}')"><i class="fas fa-edit"></i></button></td></tr>`;
             }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada leads</td></tr>';
 
-            // Render affiliators
             document.getElementById('adminAffBody').innerHTML = DB.users.map(aff => {
                 const affLeads = DB.leads.filter(l => l.referralCode === aff.referralCode);
                 const affComm = DB.commissions.filter(c => c.affiliatorId === aff.id);
@@ -946,7 +1044,6 @@
 
             await DataSync.saveLead(lead);
 
-            // Create commissions
             const aff = DB.users.find(u => u.referralCode === lead.referralCode);
             if (aff) {
                 if (newStatus === 'Valid' && oldStatus !== 'Valid') {
@@ -960,6 +1057,7 @@
                         paid: false
                     };
                     await DataSync.saveCommission(commission);
+                    syncToGAS('addCommission', commission);
                 }
                 if (newStatus === 'Converted' && oldStatus !== 'Converted' && transValue > 0) {
                     const commission = {
@@ -972,11 +1070,13 @@
                         paid: false
                     };
                     await DataSync.saveCommission(commission);
+                    syncToGAS('addCommission', commission);
                 }
             }
 
             DataSync.saveToCookieFallback();
 
+            // PERBAIKAN: Sync ke GAS
             syncToGAS('updateLead', { leadId: leadId, status: newStatus, transactionValue: transValue });
 
             closeModal('updateLeadModal');
@@ -1102,11 +1202,18 @@
             // Step 3: Load demo data if empty
             await loadDemoData();
 
-            // Step 4: Restore session from cookie
+            // Step 4: PERBAIKAN - Fetch data dari GAS (server)
+            try {
+                await syncAllFromGAS();
+            } catch(e) {
+                DEBUG.log('GAS sync failed:', e.message);
+            }
+
+            // Step 5: Restore session from cookie
             const sessionRestored = await SessionManager.restoreSession();
             DEBUG.log('Session restored:', sessionRestored);
 
-            // Step 5: Update UI
+            // Step 6: Update UI
             updateNavbar();
 
             if (sessionRestored) {

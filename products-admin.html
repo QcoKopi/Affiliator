@@ -99,6 +99,10 @@
         .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
         .empty-state { text-align: center; padding: 3rem; color: var(--text-light); }
         .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+        .sync-status { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--text-light); }
+        .sync-status.syncing { color: var(--info); }
+        .sync-status.synced { color: var(--success); }
+        .sync-status.error { color: var(--danger); }
         @media (max-width: 768px) {
             .sidebar { width: 100%; transform: translateX(-100%); transition: transform 0.3s; }
             .sidebar.open { transform: translateX(0); }
@@ -108,10 +112,12 @@
         }
         .hidden { display: none !important; }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
+    <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
 
     <!-- ADMIN LOGIN OVERLAY -->
     <div id="loginOverlay" style="position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
@@ -146,7 +152,7 @@
             <li><a onclick="showPage('products')" data-page="products"><i class="fas fa-box"></i> Products</a></li>
             <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
             <li><a onclick="showPage('preview')" data-page="preview"><i class="fas fa-eye"></i> Preview Landing</a></li>
-            <li><a href="admin.html"><i class="fas fa-shield-alt"></i> Affiliate Admin</a></li>
+            <li><a href="index.html"><i class="fas fa-shield-alt"></i> Affiliate Admin</a></li>
             <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
         </ul>
     </aside>
@@ -155,8 +161,9 @@
         <div class="header">
             <h1 id="pageTitle">Dashboard</h1>
             <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <span style="color: var(--text-light); font-size: 0.9rem;"><i class="fas fa-user-shield"></i> Admin</span>
+                <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Sinkronasi...</span>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-primary btn-sm" onclick="manualSync()"><i class="fas fa-cloud-download-alt"></i> Sync dari Server</button>
             </div>
         </div>
 
@@ -318,47 +325,41 @@
         const CONFIG = {
             ADMIN_PASSWORD: 'admin123',
             DB_NAME: 'KopiAffiliateDB',
-            DB_VERSION: 1
+            DB_VERSION: 1,
+            // PERBAIKAN: Tambahkan GAS URL
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec'
         };
 
-        // ==================== INDEXEDDB (SAMA) ====================
+        // ==================== INDEXEDDB ====================
         const DBStore = {
             db: null,
 
             init: function() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
-                    request.onerror = () => reject(request.error);
-                    request.onsuccess = () => { 
-                        this.db = request.result;
-                        // Check if all required stores exist
-                        const requiredStores = ['users', 'leads', 'commissions', 'products', 'orders', 'session'];
-                        const missingStores = requiredStores.filter(s => !this.db.objectStoreNames.contains(s));
-                        if (missingStores.length > 0) {
-                            console.log('Missing stores:', missingStores, '- Recreating database...');
-                            this.db.close();
-                            // Force upgrade by deleting and reopening
-                            const deleteReq = indexedDB.deleteDatabase(CONFIG.DB_NAME);
-                            deleteReq.onsuccess = () => {
-                                const newReq = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
-                                newReq.onerror = () => reject(newReq.error);
-                                newReq.onsuccess = () => { this.db = newReq.result; resolve(this.db); };
-                                newReq.onupgradeneeded = (event) => {
-                                    const db = event.target.result;
-                                    if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
-                                    if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
-                                    if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
-                                    if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
-                                    if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id' });
-                                    if (!db.objectStoreNames.contains('session')) db.createObjectStore('session', { keyPath: 'key' });
-                                };
-                            };
-                            deleteReq.onerror = () => reject(deleteReq.error);
-                        } else {
-                            resolve(this.db);
-                        }
+
+                    request.onerror = (e) => {
+                        console.error('IndexedDB error:', e.target.error);
+                        reject(e.target.error);
                     };
+
+                    request.onblocked = (e) => {
+                        console.warn('IndexedDB blocked');
+                        alert('Database sedang digunakan di tab lain. Tutup tab lain dan refresh.');
+                    };
+
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        this.db.onversionchange = () => {
+                            this.db.close();
+                            location.reload();
+                        };
+                        console.log('IndexedDB opened, stores:', Array.from(this.db.objectStoreNames));
+                        resolve(this.db);
+                    };
+
                     request.onupgradeneeded = (event) => {
+                        console.log('Upgrading database from', event.oldVersion, 'to', event.newVersion);
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
@@ -425,6 +426,107 @@
             }
         };
 
+        // ==================== GAS INTEGRATION (PERBAIKAN BARU) ====================
+        function syncToGAS(action, data) {
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = CONFIG.GAS_URL;
+                form.target = 'gasFrame';
+                form.style.display = 'none';
+
+                const actionField = document.createElement('input');
+                actionField.name = 'action';
+                actionField.value = action;
+                form.appendChild(actionField);
+
+                for (let key in data) {
+                    const field = document.createElement('input');
+                    field.name = key;
+                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
+                    form.appendChild(field);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+                console.log('Synced to GAS:', action);
+            } catch(err) {
+                console.error('GAS sync error:', err.message);
+            }
+        }
+
+        async function fetchFromGAS(action) {
+            try {
+                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch(err) {
+                console.error('GAS fetch error:', err.message);
+                return { success: false, error: err.message };
+            }
+        }
+
+        async function syncProductsFromGAS() {
+            updateSyncStatus('syncing', 'Sinkronasi...');
+            const result = await fetchFromGAS('getProducts');
+            if (result.success && Array.isArray(result.data)) {
+                let added = 0;
+                for (const item of result.data) {
+                    if (!item || !item.id) continue;
+                    const existing = Data.products.find(p => p.id === item.id);
+                    if (!existing) {
+                        Data.products.push(item);
+                        await DBStore.put('products', item);
+                        added++;
+                    }
+                }
+                updateSyncStatus('synced', 'Tersinkronasi (' + Data.products.length + ' produk)');
+                console.log('Products synced from GAS, added:', added);
+            } else {
+                updateSyncStatus('error', 'GAS error');
+            }
+        }
+
+        async function syncOrdersFromGAS() {
+            const result = await fetchFromGAS('getOrders');
+            if (result.success && Array.isArray(result.data)) {
+                let added = 0;
+                for (const item of result.data) {
+                    if (!item || !item.id) continue;
+                    const existing = Data.orders.find(o => o.id === item.id);
+                    if (!existing) {
+                        Data.orders.push(item);
+                        await DBStore.put('orders', item);
+                        added++;
+                    }
+                }
+                console.log('Orders synced from GAS, added:', added);
+            }
+        }
+
+        function updateSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            el.className = 'sync-status ' + status;
+            const icons = {
+                syncing: '<i class="fas fa-spinner fa-spin"></i>',
+                synced: '<i class="fas fa-check-circle"></i>',
+                error: '<i class="fas fa-exclamation-circle"></i>'
+            };
+            el.innerHTML = (icons[status] || '') + ' ' + text;
+        }
+
+        async function manualSync() {
+            showToast('Menyinkronkan data dari server...', 'info');
+            await syncProductsFromGAS();
+            await syncOrdersFromGAS();
+            loadDashboard();
+            loadProducts();
+            showToast('Sinkronasi selesai!', 'success');
+        }
+
         // ==================== AUTH ====================
         function clearDatabase() {
             if (confirm('Yakin ingin menghapus database? Semua data lokal akan hilang.')) {
@@ -468,7 +570,6 @@
             location.reload();
         }
 
-
         // ==================== DEMO PRODUCTS ====================
         async function loadDemoProducts() {
             const existing = await DBStore.getAll('products');
@@ -476,68 +577,39 @@
 
             const demoProducts = [
                 {
-                    id: 'prod_1',
-                    name: 'Arabika Gayo Premium',
-                    category: 'Arabika',
-                    price: 125000,
-                    originalPrice: 150000,
+                    id: 'prod_1', name: 'Arabika Gayo Premium', category: 'Arabika', price: 125000, originalPrice: 150000,
                     imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop',
-                    description: 'Single origin dari Aceh. Notes: floral, citrus, chocolate.',
-                    status: 'Active',
-                    createdAt: '2026-01-01T00:00:00.000Z'
+                    description: 'Single origin dari Aceh. Notes: floral, citrus, chocolate.', status: 'Active', createdAt: '2026-01-01T00:00:00.000Z'
                 },
                 {
-                    id: 'prod_2',
-                    name: 'Robusta Temanggung',
-                    category: 'Robusta',
-                    price: 85000,
-                    originalPrice: 100000,
+                    id: 'prod_2', name: 'Robusta Temanggung', category: 'Robusta', price: 85000, originalPrice: 100000,
                     imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop',
-                    description: 'Full body, earthy, low acidity. Cocok untuk espresso.',
-                    status: 'Active',
-                    createdAt: '2026-01-02T00:00:00.000Z'
+                    description: 'Full body, earthy, low acidity. Cocok untuk espresso.', status: 'Active', createdAt: '2026-01-02T00:00:00.000Z'
                 },
                 {
-                    id: 'prod_3',
-                    name: 'House Blend Special',
-                    category: 'House Blend',
-                    price: 95000,
-                    originalPrice: 110000,
+                    id: 'prod_3', name: 'House Blend Special', category: 'House Blend', price: 95000, originalPrice: 110000,
                     imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop',
-                    description: 'Campuran Arabika & Robusta. Balance & smooth.',
-                    status: 'Active',
-                    createdAt: '2026-01-03T00:00:00.000Z'
+                    description: 'Campuran Arabika & Robusta. Balance & smooth.', status: 'Active', createdAt: '2026-01-03T00:00:00.000Z'
                 },
                 {
-                    id: 'prod_4',
-                    name: 'Kopi Luwak Premium',
-                    category: 'Single Origin',
-                    price: 450000,
-                    originalPrice: 500000,
+                    id: 'prod_4', name: 'Kopi Luwak Premium', category: 'Single Origin', price: 450000, originalPrice: 500000,
                     imageUrl: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop',
-                    description: 'Kopi paling eksklusif. Smooth, no bitterness.',
-                    status: 'Active',
-                    createdAt: '2026-01-04T00:00:00.000Z'
+                    description: 'Kopi paling eksklusif. Smooth, no bitterness.', status: 'Active', createdAt: '2026-01-04T00:00:00.000Z'
                 },
                 {
-                    id: 'prod_5',
-                    name: 'Toraja Sapan',
-                    category: 'Single Origin',
-                    price: 135000,
-                    originalPrice: 160000,
+                    id: 'prod_5', name: 'Toraja Sapan', category: 'Single Origin', price: 135000, originalPrice: 160000,
                     imageUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710c93?w=400&h=300&fit=crop',
-                    description: 'Dari Sulawesi. Notes: spicy, woody, dark chocolate.',
-                    status: 'Active',
-                    createdAt: '2026-01-05T00:00:00.000Z'
+                    description: 'Dari Sulawesi. Notes: spicy, woody, dark chocolate.', status: 'Active', createdAt: '2026-01-05T00:00:00.000Z'
                 }
             ];
 
             for (const p of demoProducts) {
                 await DBStore.put('products', p);
+                // PERBAIKAN: Sync demo products ke GAS juga
+                syncToGAS('saveProduct', p);
             }
             console.log('Demo products loaded');
         }
-
 
         // ==================== NAVIGATION ====================
         function showPage(page) {
@@ -546,7 +618,7 @@
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
             event.target.classList.add('active');
 
-            document.getElementById('pageTitle').textContent = 
+            document.getElementById('pageTitle').textContent =
                 page === 'dashboard' ? 'Dashboard' :
                 page === 'products' ? 'Manage Products' :
                 page === 'orders' ? 'Orders' : 'Preview Landing Page';
@@ -566,7 +638,6 @@
             document.getElementById('dashActiveProducts').textContent = active.length;
             document.getElementById('dashTotalOrders').textContent = Data.orders.length;
 
-            // Recent orders
             const recent = Data.orders.slice(-5).reverse();
             document.getElementById('recentOrdersBody').innerHTML = recent.map(o => `
                 <tr>
@@ -673,7 +744,11 @@
                 createdAt: id ? (Data.products.find(p => p.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
             };
 
+            // Simpan ke IndexedDB
             await DBStore.put('products', product);
+
+            // PERBAIKAN: Sync ke GAS
+            syncToGAS('saveProduct', product);
 
             closeModal('productModal');
             showToast(id ? 'Produk diupdate!' : 'Produk ditambahkan!', 'success');
@@ -686,6 +761,10 @@
             if (!p) return;
             p.status = isActive ? 'Active' : 'Inactive';
             await DBStore.put('products', p);
+
+            // PERBAIKAN: Sync ke GAS
+            syncToGAS('saveProduct', p);
+
             showToast('Status produk diupdate', 'success');
             loadProducts();
             loadDashboard();
@@ -694,6 +773,10 @@
         async function deleteProduct(productId) {
             if (!confirm('Yakin ingin menghapus produk ini?')) return;
             await DBStore.delete('products', productId);
+
+            // PERBAIKAN: Tidak ada delete action di GAS, tapi kita bisa set status ke 'Deleted'
+            // Atau biarkan saja, data tetap ada di GAS sebagai backup
+
             showToast('Produk dihapus', 'success');
             loadProducts();
             loadDashboard();
@@ -764,6 +847,9 @@
                 checkAdminSession();
                 if (SessionManager.loadSession()) {
                     loadDashboard();
+                    // PERBAIKAN: Sync dari GAS saat init
+                    await syncProductsFromGAS();
+                    await syncOrdersFromGAS();
                 }
             } catch(e) {
                 console.error('Init error:', e);

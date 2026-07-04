@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Affiliate System</title>
+    <title>Kopi Nusantara - Premium Coffee</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,7 +12,7 @@
             --primary-light: #8D6E63;
             --primary-dark: #3E2723;
             --accent: #A1887F;
-            --bg: #F5F3F0;
+            --bg: #FAFAF8;
             --card-bg: #FFFFFF;
             --text: #2C2C2C;
             --text-light: #6B6B6B;
@@ -20,7 +20,6 @@
             --success: #4CAF50;
             --warning: #FF9800;
             --danger: #E53935;
-            --info: #2196F3;
             --shadow: 0 4px 20px rgba(93,64,55,0.08);
             --shadow-lg: 0 10px 40px rgba(93,64,55,0.12);
             --radius: 12px;
@@ -28,514 +27,245 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .sidebar { width: 260px; background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.5rem; overflow-y: auto; z-index: 1000; }
-        .sidebar-brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-menu { list-style: none; }
-        .sidebar-menu li { margin-bottom: 0.5rem; }
-        .sidebar-menu a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: all 0.3s; cursor: pointer; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { color: white; background: rgba(255,255,255,0.1); }
-        .sidebar-menu i { width: 20px; text-align: center; }
-        .main { margin-left: 260px; min-height: 100vh; }
-        .header { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .header h1 { font-size: 1.25rem; color: var(--primary-dark); }
-        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
-        .content { padding: 2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .stat-icon.blue { background: #E3F2FD; color: var(--info); }
-        .stat-icon.green { background: #E8F5E9; color: var(--success); }
-        .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
-        .stat-icon.red { background: #FFEBEE; color: var(--danger); }
-        .stat-icon.purple { background: #F3E5F5; color: #9C27B0; }
-        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
-        .stat-label { font-size: 0.85rem; color: var(--text-light); }
-        .stat-change { font-size: 0.8rem; margin-top: 0.5rem; }
-        .stat-change.positive { color: var(--success); }
-        .stat-change.negative { color: var(--danger); }
-        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
-        .card-body { padding: 1.5rem; }
-        .table-container { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .data-table th { background: var(--bg); padding: 0.875rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        .data-table td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .data-table tr:hover { background: var(--bg); }
-        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-        .badge-pending { background: #FFF3E0; color: var(--warning); }
-        .badge-valid { background: #E8F5E9; color: var(--success); }
-        .badge-converted { background: #E3F2FD; color: var(--info); }
-        .badge-rejected { background: #FFEBEE; color: var(--danger); }
-        .badge-paid { background: #E8F5E9; color: var(--success); }
-        .badge-unpaid { background: #FFF3E0; color: var(--warning); }
-        .btn { padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+        .navbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; }
+        .navbar-brand i { color: var(--primary-light); }
+        .hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 6rem 2rem 4rem; text-align: center; margin-top: 60px; }
+        .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 1.5rem; }
+        .ref-banner { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: var(--radius); padding: 1rem 1.5rem; display: inline-flex; align-items: center; gap: 1rem; margin-top: 1rem; }
+        .ref-banner i { font-size: 1.5rem; }
+        .ref-banner-text { text-align: left; }
+        .ref-banner-text small { opacity: 0.8; font-size: 0.8rem; }
+        .ref-banner-text strong { font-size: 1rem; }
+        .section { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-dark); text-align: center; }
+        .section-subtitle { color: var(--text-light); margin-bottom: 2rem; text-align: center; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .product-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.3s, box-shadow 0.3s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+        .product-img { height: 200px; background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; overflow: hidden; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .product-body { padding: 1.5rem; }
+        .product-name { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 0.5rem; }
+        .product-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; }
+        .product-price { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .product-price small { font-size: 0.8rem; color: var(--text-light); text-decoration: line-through; margin-left: 0.5rem; }
+        .product-btn { width: 100%; margin-top: 1rem; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-weight: 500; cursor: pointer; transition: all 0.3s; }
+        .product-btn:hover { background: var(--primary-dark); }
+        .form-section { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border); max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .form-label .required { color: var(--danger); }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; transition: all 0.3s; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary-light); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: #388E3C; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #C62828; }
-        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.4rem; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.6rem 0.875rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; transition: all 0.3s; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary-light); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 1rem; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { color: var(--primary-dark); font-size: 1.1rem; }
-        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; }
-        .modal-body { padding: 1.5rem; }
-        .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
-        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
-        .tab { padding: 0.75rem 1.25rem; border: none; background: none; font-family: inherit; font-weight: 500; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .btn-block { width: 100%; justify-content: center; }
+        .toast-container { position: fixed; top: 90px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; min-width: 300px; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
-        .toast.warning { border-left-color: var(--warning); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .filter-bar .form-select { width: auto; min-width: 150px; }
-        .search-box { position: relative; flex: 1; min-width: 250px; }
-        .search-box i { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-        .search-box input { padding-left: 2.5rem; }
+        .success-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 1rem; }
+        .success-modal-overlay.active { display: flex; }
+        .success-modal { background: var(--card-bg); border-radius: var(--radius); max-width: 450px; width: 100%; padding: 2.5rem; text-align: center; box-shadow: var(--shadow-lg); }
+        .success-modal i { font-size: 4rem; color: var(--success); margin-bottom: 1rem; }
+        .success-modal h2 { color: var(--primary-dark); margin-bottom: 0.5rem; }
+        .success-modal p { color: var(--text-light); margin-bottom: 1.5rem; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .feature { text-align: center; padding: 1.5rem; }
+        .feature-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem; color: var(--primary); }
+        .feature h4 { margin-bottom: 0.5rem; color: var(--primary-dark); }
+        .feature p { font-size: 0.9rem; color: var(--text-light); }
+        .footer { background: var(--primary-dark); color: white; padding: 2rem; text-align: center; margin-top: 3rem; }
+        .footer p { opacity: 0.8; font-size: 0.9rem; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-light); }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+        .loading { text-align: center; padding: 3rem; color: var(--text-light); }
+        .loading i { font-size: 2rem; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
-            .sidebar { width: 100%; transform: translateX(-100%); transition: transform 0.3s; }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; }
+            .hero h1 { font-size: 1.8rem; }
             .form-row { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .products-grid { grid-template-columns: 1fr; }
         }
-        .hidden { display: none !important; }
-        .detail-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { color: var(--text-light); font-size: 0.9rem; }
-        .detail-value { font-weight: 500; font-size: 0.9rem; }
-        .commission-preview { background: #E8F5E9; border-radius: var(--radius-sm); padding: 1rem; margin-top: 1rem; }
-        .commission-preview h4 { color: var(--success); font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .debug-panel { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
-        .debug-panel.show { display: block; }
     </style>
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <div class="debug-panel" id="debugPanel"></div>
 
-    <div id="loginOverlay" style="position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
-        <div style="background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); text-align: center;">
-            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i></div>
-            <h2 style="color: var(--primary-dark); margin-bottom: 0.5rem;">Admin Panel</h2>
-            <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 1.5rem;">Kopi Nusantara Affiliate System</p>
-            <div class="form-group" style="text-align: left;">
-                <label class="form-label">Password Admin</label>
-                <input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align: center; font-size: 1rem;">
+    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
+    <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-coffee"></i>
+            <span>Kopi Nusantara</span>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1><i class="fas fa-mug-hot"></i> Kopi Nusantara Premium</h1>
+        <p>Kopi pilihan dari petani terbaik Indonesia. Langsung dari kebun ke cangkir Anda.</p>
+        <div class="ref-banner" id="refBanner">
+            <i class="fas fa-user-friends"></i>
+            <div class="ref-banner-text">
+                <small>Rekomendasi dari</small><br>
+                <strong id="refAffiliatorName">Affiliator</strong>
             </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="adminLogin()">
-                <i class="fas fa-unlock"></i> Masuk
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Produk Kami</h2>
+        <p class="section-subtitle">Pilih kopi favorit Anda</p>
+        <div id="productsContainer">
+            <div class="loading" id="loadingProducts">
+                <i class="fas fa-spinner"></i>
+                <p>Memuat produk...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="background: var(--card-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+        <h2 class="section-title">Kenapa Memilih Kami?</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+                <h4>100% Natural</h4>
+                <p>Tanpa bahan tambahan, langsung dari petani</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon"><i class="fas fa-truck"></i></div>
+                <h4>Pengiriman Cepat</h4>
+                <p>1-3 hari ke seluruh Indonesia</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon"><i class="fas fa-award"></i></div>
+                <h4>Kualitas Terjamin</h4>
+                <p>Grade A, roasted fresh setiap hari</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon"><i class="fas fa-headset"></i></div>
+                <h4>Support 24/7</h4>
+                <p>Tim siap membantu kapan saja</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="formSection">
+        <h2 class="section-title">Formulir Pemesanan</h2>
+        <p class="section-subtitle">Isi data Anda untuk pemesanan</p>
+
+        <div class="form-section">
+            <input type="hidden" id="refCode">
+            <input type="hidden" id="selectedProduct">
+            <input type="hidden" id="selectedPrice">
+
+            <div class="form-group" id="productDisplay" style="display: none;">
+                <label class="form-label">Produk Dipilih</label>
+                <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                    <span id="productDisplayName" style="font-weight: 600;">-</span>
+                    <span id="productDisplayPrice" style="color: var(--primary); font-weight: 700;">-</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerName" placeholder="Nama Anda">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="buyerEmail" placeholder="email@anda.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">No. WhatsApp <span class="required">*</span></label>
+                    <input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kota <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerCity" placeholder="Jakarta">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Alamat Lengkap</label>
+                <textarea class="form-textarea" id="buyerAddress" placeholder="Alamat pengiriman lengkap..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Catatan</label>
+                <textarea class="form-textarea" id="buyerNotes" placeholder="Catatan tambahan (opsional)..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="submitLead()">
+                <i class="fas fa-paper-plane"></i> Kirim Pesanan
             </button>
-            <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
+            <p style="text-align: center; font-size: 0.8rem; color: var(--text-light); margin-top: 1rem;">
+                <i class="fas fa-lock"></i> Data Anda aman & terenkripsi
+            </p>
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <i class="fas fa-shield-alt"></i>
-            <span>Admin Panel</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
-            <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-user-plus"></i> Leads</a></li>
-            <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Commissions</a></li>
-            <li><a onclick="showPage('payouts')" data-page="payouts"><i class="fas fa-wallet"></i> Payouts</a></li>
-            <li><a onclick="showPage('settings')" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
-            <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
-        </ul>
-    </aside>
-
-    <div class="main">
-        <div class="header">
-            <h1 id="pageTitle">Dashboard</h1>
-            <div class="header-actions">
-                <span style="color: var(--text-light); font-size: 0.9rem;"><i class="fas fa-user-shield"></i> Admin</span>
-                <button class="btn btn-outline btn-sm" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
-        </div>
-
-        <div class="content">
-            <div id="page-dashboard" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-header"><div class="stat-icon blue"><i class="fas fa-users"></i></div></div>
-                        <div class="stat-value" id="dashTotalAffiliators">0</div>
-                        <div class="stat-label">Total Affiliators</div>
-                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> <span id="dashNewAffiliators">0</span> baru bulan ini</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header"><div class="stat-icon green"><i class="fas fa-user-check"></i></div></div>
-                        <div class="stat-value" id="dashTotalLeads">0</div>
-                        <div class="stat-label">Total Leads</div>
-                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> <span id="dashValidLeads">0</span> valid</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header"><div class="stat-icon orange"><i class="fas fa-shopping-bag"></i></div></div>
-                        <div class="stat-value" id="dashTotalTransactions">0</div>
-                        <div class="stat-label">Transaksi</div>
-                        <div class="stat-change positive">Rp <span id="dashTransactionValue">0</span></div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header"><div class="stat-icon purple"><i class="fas fa-money-bill-wave"></i></div></div>
-                        <div class="stat-value" id="dashTotalCommissions">0</div>
-                        <div class="stat-label">Total Komisi</div>
-                        <div class="stat-change positive">Rp <span id="dashCommissionValue">0</span></div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-header"><div class="stat-icon red"><i class="fas fa-wallet"></i></div></div>
-                        <div class="stat-value" id="dashPendingPayouts">0</div>
-                        <div class="stat-label">Payout Pending</div>
-                        <div class="stat-change negative">Rp <span id="dashPayoutAmount">0</span></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-clock"></i> Aktivitas Terbaru</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table" id="recentActivityTable">
-                                <thead><tr><th>Waktu</th><th>Aktivitas</th><th>Affiliator</th><th>Detail</th></tr></thead>
-                                <tbody id="recentActivityBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-affiliators" class="page">
-                <div class="filter-bar">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="form-input" id="affSearch" placeholder="Cari nama, email, atau referral code..." onkeyup="filterAffiliators()">
-                    </div>
-                    <select class="form-select" id="affStatusFilter" onchange="filterAffiliators()">
-                        <option value="all">Semua Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="Suspended">Suspended</option>
-                    </select>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div>
-                        <span class="badge badge-valid" id="affCountBadge">0 Affiliators</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table" id="affiliatorsTable">
-                                <thead>
-                                    <tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Leads</th><th>Komisi</th><th>Status</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody id="affiliatorsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-leads" class="page">
-                <div class="filter-bar">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="form-input" id="leadSearch" placeholder="Cari nama lead atau kontak..." onkeyup="filterLeads()">
-                    </div>
-                    <select class="form-select" id="leadStatusFilter" onchange="filterLeads()">
-                        <option value="all">Semua Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Valid">Valid</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                    <select class="form-select" id="leadAffFilter" onchange="filterLeads()"><option value="all">Semua Affiliator</option></select>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-user-plus"></i> Manage Leads</div>
-                        <button class="btn btn-primary btn-sm" onclick="openAddLeadModal()"><i class="fas fa-plus"></i> Tambah Lead</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table" id="leadsTable">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Komisi</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody id="leadsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-commissions" class="page">
-                <div class="filter-bar">
-                    <select class="form-select" id="commTypeFilter" onchange="filterCommissions()">
-                        <option value="all">Semua Tipe</option>
-                        <option value="Lead">Lead</option>
-                        <option value="Transaksi">Transaksi</option>
-                    </select>
-                    <select class="form-select" id="commStatusFilter" onchange="filterCommissions()">
-                        <option value="all">Semua Status</option>
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Paid">Paid</option>
-                    </select>
-                </div>
-                <div class="card">
-                    <div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Riwayat Komisi</div></div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table" id="commissionsTable">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody id="commissionsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-payouts" class="page">
-                <div class="tabs">
-                    <button class="tab active" onclick="switchPayoutTab('pending', this)">Pending</button>
-                    <button class="tab" onclick="switchPayoutTab('history', this)">History</button>
-                </div>
-                <div id="payout-pending" class="page active">
-                    <div class="card">
-                        <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Payout Request Pending</div></div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table class="data-table" id="pendingPayoutsTable">
-                                    <thead><tr><th>Tanggal Request</th><th>Affiliator</th><th>Bank</th><th>Jumlah</th><th>Aksi</th></tr></thead>
-                                    <tbody id="pendingPayoutsBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="payout-history" class="page">
-                    <div class="card">
-                        <div class="card-header"><div class="card-title"><i class="fas fa-check-circle"></i> Riwayat Payout</div></div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table class="data-table" id="historyPayoutsTable">
-                                    <thead><tr><th>Tanggal Proses</th><th>Affiliator</th><th>Jumlah</th><th>Status</th></tr></thead>
-                                    <tbody id="historyPayoutsBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-settings" class="page">
-                <div class="card">
-                    <div class="card-header"><div class="card-title"><i class="fas fa-cog"></i> Konfigurasi Komisi</div></div>
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Komisi per Lead Valid (Rp)</label>
-                                <input type="number" class="form-input" id="settingLeadComm" value="10000">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Persentase Komisi Transaksi (%)</label>
-                                <input type="number" class="form-input" id="settingTransComm" value="5" min="0" max="100">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Minimal Payout (Rp)</label>
-                                <input type="number" class="form-input" id="settingMinPayout" value="100000">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Mata Uang</label>
-                                <select class="form-select" id="settingCurrency"><option value="IDR" selected>IDR (Rupiah)</option><option value="USD">USD (Dollar)</option></select>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 1rem;"><i class="fas fa-save"></i> Simpan Perubahan</button>
-                    </div>
-                </div>
-                <div class="card" style="margin-top: 1.5rem;">
-                    <div class="card-header"><div class="card-title"><i class="fas fa-bell"></i> Notifikasi</div></div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label class="form-label">Webhook URL (WhatsApp/Email)</label>
-                            <input type="text" class="form-input" id="settingWebhook" placeholder="https://hooks.zapier.com/... atau https://api.whatsapp.com/...">
-                            <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.25rem;">URL untuk kirim notifikasi saat ada lead baru</p>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Email Admin</label>
-                            <input type="email" class="form-input" id="settingAdminEmail" placeholder="admin@kopinusantara.id">
-                        </div>
-                        <button class="btn btn-primary" onclick="saveNotificationSettings()" style="margin-top: 0.5rem;"><i class="fas fa-save"></i> Simpan Notifikasi</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="footer">
+        <p><i class="fas fa-coffee"></i> Kopi Nusantara &copy; 2026. Kopi terbaik dari petani terbaik.</p>
     </div>
 
-    <div class="modal-overlay" id="updateLeadModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Update Status Lead</h3>
-                <button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="updateLeadId">
-                <div class="detail-row"><span class="detail-label">Nama Lead</span><span class="detail-value" id="updateLeadName">-</span></div>
-                <div class="detail-row"><span class="detail-label">Kontak</span><span class="detail-value" id="updateLeadContact">-</span></div>
-                <div class="detail-row"><span class="detail-label">Affiliator</span><span class="detail-value" id="updateLeadAffiliator">-</span></div>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="updateLeadStatus">
-                        <option value="Pending">Pending</option>
-                        <option value="Valid">Valid</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                <div class="form-group" id="transactionValueGroup" style="display: none;">
-                    <label class="form-label">Nilai Transaksi (Rp)</label>
-                    <input type="number" class="form-input" id="updateTransactionValue" placeholder="0">
-                </div>
-                <div class="commission-preview" id="commissionPreview" style="display: none;">
-                    <h4><i class="fas fa-calculator"></i> Komisi yang Akan Diberikan</h4>
-                    <div class="detail-row"><span class="detail-label">Komisi Lead Valid</span><span class="detail-value" id="previewLeadComm">Rp 0</span></div>
-                    <div class="detail-row"><span class="detail-label">Komisi Transaksi (5%)</span><span class="detail-value" id="previewTransComm">Rp 0</span></div>
-                    <div class="detail-row" style="border-top: 2px solid var(--success); margin-top: 0.5rem; padding-top: 0.5rem;">
-                        <span class="detail-label" style="font-weight: 600;">Total Komisi</span>
-                        <span class="detail-value" style="font-weight: 700; color: var(--success);" id="previewTotalComm">Rp 0</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="addLeadModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-plus"></i> Tambah Lead Manual</h3>
-                <button class="modal-close" onclick="closeModal('addLeadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Affiliator</label>
-                    <select class="form-select" id="addLeadAffiliator"></select>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Nama Lead</label>
-                        <input type="text" class="form-input" id="addLeadName" placeholder="Nama lengkap">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kontak</label>
-                        <input type="text" class="form-input" id="addLeadContact" placeholder="Email atau WhatsApp">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Source</label>
-                    <input type="text" class="form-input" id="addLeadSource" placeholder="Instagram, WhatsApp, dll">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catatan</label>
-                    <textarea class="form-input" id="addLeadNotes" rows="3" placeholder="Catatan tambahan..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('addLeadModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveNewLead()"><i class="fas fa-plus"></i> Tambah</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="approvePayoutModal">
-        <div class="modal" style="max-width: 450px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-check-circle"></i> Approve Payout</h3>
-                <button class="modal-close" onclick="closeModal('approvePayoutModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="approvePayoutId">
-                <div class="detail-row"><span class="detail-label">Affiliator</span><span class="detail-value" id="approvePayoutAffiliator">-</span></div>
-                <div class="detail-row"><span class="detail-label">Bank</span><span class="detail-value" id="approvePayoutBank">-</span></div>
-                <div class="detail-row"><span class="detail-label">Jumlah</span><span class="detail-value" id="approvePayoutAmount" style="font-weight: 700; color: var(--success);">-</span></div>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label">Catatan (opsional)</label>
-                    <textarea class="form-input" id="approvePayoutNotes" rows="2" placeholder="Catatan untuk affiliator..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('approvePayoutModal')">Batal</button>
-                <button class="btn btn-success" onclick="confirmApprovePayout()"><i class="fas fa-check"></i> Approve & Transfer</button>
-            </div>
+    <div class="success-modal-overlay" id="successModal">
+        <div class="success-modal">
+            <i class="fas fa-check-circle"></i>
+            <h2>Pesanan Terkirim!</h2>
+            <p>Terima kasih telah memesan. Tim kami akan menghubungi Anda via WhatsApp dalam 1x24 jam.</p>
+            <button class="btn btn-primary" onclick="closeSuccessModal()">
+                <i class="fas fa-home"></i> Kembali ke Beranda
+            </button>
         </div>
     </div>
 
     <script>
         // ==================== CONFIG ====================
         const CONFIG = {
+            // PERBAIKAN: Tambahkan GAS URL
             GAS_URL: 'https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec',
-            COMMISSION_PER_LEAD: 10000,
-            COMMISSION_PERCENTAGE: 5,
-            MIN_PAYOUT: 100000,
-            ADMIN_PASSWORD: 'admin123',
             DB_NAME: 'KopiAffiliateDB',
             DB_VERSION: 1
         };
 
-        // ==================== DEBUG LOGGER ====================
-        const DEBUG = {
-            enabled: false,
-            log: function(msg, data) {
-                const panel = document.getElementById('debugPanel');
-                if (!this.enabled) return;
-                const time = new Date().toLocaleTimeString();
-                const line = document.createElement('div');
-                line.textContent = `[${time}] ${msg}`;
-                panel.appendChild(line);
-                if (data) {
-                    const detail = document.createElement('div');
-                    detail.style.color = '#aaa';
-                    detail.style.paddingLeft = '20px';
-                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 200);
-                    panel.appendChild(detail);
+        // ==================== GAS INTEGRATION (PERBAIKAN BARU) ====================
+        function syncToGAS(action, data) {
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = CONFIG.GAS_URL;
+                form.target = 'gasFrame';
+                form.style.display = 'none';
+
+                const actionField = document.createElement('input');
+                actionField.name = 'action';
+                actionField.value = action;
+                form.appendChild(actionField);
+
+                for (let key in data) {
+                    const field = document.createElement('input');
+                    field.name = key;
+                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
+                    form.appendChild(field);
                 }
-                panel.scrollTop = panel.scrollHeight;
-            }
-        };
 
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                DEBUG.enabled = !DEBUG.enabled;
-                document.getElementById('debugPanel').classList.toggle('show');
-                DEBUG.log('Debug mode ' + (DEBUG.enabled ? 'ON' : 'OFF'));
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+                console.log('Synced to GAS:', action);
+            } catch(err) {
+                console.error('GAS sync error:', err.message);
             }
-        });
+        }
 
-        // ==================== INDEXEDDB STORAGE (SAMA DENGAN index.html) ====================
+        // ==================== INDEXEDDB ====================
         const DBStore = {
             db: null,
 
@@ -543,35 +273,35 @@
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
 
-                    request.onerror = () => {
-                        DEBUG.log('IndexedDB error:', request.error);
-                        reject(request.error);
+                    request.onerror = (e) => {
+                        console.error('IndexedDB error:', e.target.error);
+                        reject(e.target.error);
                     };
 
-                    request.onsuccess = () => {
-                        this.db = request.result;
-                        DEBUG.log('IndexedDB opened successfully');
+                    request.onblocked = (e) => {
+                        console.warn('IndexedDB blocked');
+                        alert('Database sedang digunakan di tab lain. Tutup tab lain dan refresh.');
+                    };
+
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        this.db.onversionchange = () => {
+                            this.db.close();
+                            location.reload();
+                        };
+                        console.log('IndexedDB opened, stores:', Array.from(this.db.objectStoreNames));
                         resolve(this.db);
                     };
 
                     request.onupgradeneeded = (event) => {
+                        console.log('Upgrading database from', event.oldVersion, 'to', event.newVersion);
                         const db = event.target.result;
-                        if (!db.objectStoreNames.contains('users')) {
-                            db.createObjectStore('users', { keyPath: 'id' });
-                            DEBUG.log('Created users store');
-                        }
-                        if (!db.objectStoreNames.contains('leads')) {
-                            db.createObjectStore('leads', { keyPath: 'id' });
-                            DEBUG.log('Created leads store');
-                        }
-                        if (!db.objectStoreNames.contains('commissions')) {
-                            db.createObjectStore('commissions', { keyPath: 'id' });
-                            DEBUG.log('Created commissions store');
-                        }
-                        if (!db.objectStoreNames.contains('session')) {
-                            db.createObjectStore('session', { keyPath: 'key' });
-                            DEBUG.log('Created session store');
-                        }
+                        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('session')) db.createObjectStore('session', { keyPath: 'key' });
                     };
                 });
             },
@@ -587,17 +317,6 @@
                 });
             },
 
-            getById: function(storeName, id) {
-                return new Promise((resolve) => {
-                    if (!this.db) { resolve(null); return; }
-                    const tx = this.db.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const request = store.get(id);
-                    request.onsuccess = () => resolve(request.result || null);
-                    request.onerror = () => resolve(null);
-                });
-            },
-
             put: function(storeName, data) {
                 return new Promise((resolve, reject) => {
                     if (!this.db) { reject('DB not initialized'); return; }
@@ -607,604 +326,164 @@
                     request.onsuccess = () => resolve();
                     request.onerror = () => reject(request.error);
                 });
-            },
-
-            delete: function(storeName, id) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) { reject('DB not initialized'); return; }
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    const store = tx.objectStore(storeName);
-                    const request = store.delete(id);
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
-                });
             }
         };
 
-        // ==================== IN-MEMORY CACHE ====================
-        let Data = {
-            affiliators: [],
-            leads: [],
-            commissions: [],
-            payouts: []
-        };
+        // ==================== LOAD PRODUCTS ====================
+        async function loadProducts() {
+            const container = document.getElementById('productsContainer');
+            const products = await DBStore.getAll('products');
+            const activeProducts = products.filter(p => p.status === 'Active');
 
-        // ==================== SESSION MANAGEMENT ====================
-        const SessionManager = {
-            saveSession: function() {
-                const sessionData = { isAdmin: true, timestamp: Date.now() };
-                const json = encodeURIComponent(JSON.stringify(sessionData));
-                document.cookie = 'admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                DEBUG.log('Admin session saved');
-            },
-
-            loadSession: function() {
-                try {
-                    const match = document.cookie.match(/admin_session=([^;]+)/);
-                    if (match) {
-                        const session = JSON.parse(decodeURIComponent(match[1]));
-                        DEBUG.log('Admin session loaded');
-                        return session;
-                    }
-                } catch(e) {
-                    DEBUG.log('Session cookie error:', e.message);
-                }
-                return null;
-            },
-
-            clearSession: function() {
-                document.cookie = 'admin_session=; path=/; max-age=0';
-                DEBUG.log('Admin session cleared');
-            }
-        };
-
-        // ==================== DATA MANAGER ====================
-        const DataManager = {
-            async loadAll() {
-                Data.affiliators = await DBStore.getAll('users');
-                Data.leads = await DBStore.getAll('leads');
-                Data.commissions = await DBStore.getAll('commissions');
-                try {
-                    const saved = localStorage.getItem('aff_payouts');
-                    Data.payouts = saved ? JSON.parse(saved) : [];
-                } catch(e) { Data.payouts = []; }
-                DEBUG.log('Data loaded', {
-                    users: Data.affiliators.length,
-                    leads: Data.leads.length,
-                    commissions: Data.commissions.length,
-                    payouts: Data.payouts.length
-                });
-            },
-
-            async saveUser(user) {
-                await DBStore.put('users', user);
-                const idx = Data.affiliators.findIndex(u => u.id === user.id);
-                if (idx >= 0) Data.affiliators[idx] = user;
-                else Data.affiliators.push(user);
-            },
-
-            async saveLead(lead) {
-                await DBStore.put('leads', lead);
-                const idx = Data.leads.findIndex(l => l.id === lead.id);
-                if (idx >= 0) Data.leads[idx] = lead;
-                else Data.leads.push(lead);
-            },
-
-            async saveCommission(commission) {
-                await DBStore.put('commissions', commission);
-                const idx = Data.commissions.findIndex(c => c.id === commission.id);
-                if (idx >= 0) Data.commissions[idx] = commission;
-                else Data.commissions.push(commission);
-            },
-
-            async deleteCommission(commId) {
-                await DBStore.delete('commissions', commId);
-                Data.commissions = Data.commissions.filter(c => c.id !== commId);
-            },
-
-            savePayouts() {
-                try { localStorage.setItem('aff_payouts', JSON.stringify(Data.payouts)); } catch(e) {}
-            }
-        };
-
-        // ==================== ADMIN AUTH ====================
-        function adminLogin() {
-            const input = document.getElementById('adminPassword').value;
-            if (input === CONFIG.ADMIN_PASSWORD) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                SessionManager.saveSession();
-                showToast('Selamat datang, Admin!', 'success');
-                loadDashboard();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('adminPassword').focus();
-            }
-        }
-
-        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') adminLogin();
-        });
-
-        function checkAdminSession() {
-            const session = SessionManager.loadSession();
-            if (session && session.isAdmin) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                DEBUG.log('Admin auto-login via session');
-            }
-        }
-
-        function adminLogout() {
-            SessionManager.clearSession();
-            location.reload();
-        }
-
-        // ==================== NAVIGATION ====================
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-            event.target.classList.add('active');
-
-            document.getElementById('pageTitle').textContent = 
-                page === 'dashboard' ? 'Dashboard' :
-                page === 'affiliators' ? 'Affiliators' :
-                page === 'leads' ? 'Manage Leads' :
-                page === 'commissions' ? 'Commissions' :
-                page === 'payouts' ? 'Payouts' : 'Settings';
-
-            if (page === 'dashboard') loadDashboard();
-            if (page === 'affiliators') loadAffiliators();
-            if (page === 'leads') loadLeads();
-            if (page === 'commissions') loadCommissions();
-            if (page === 'payouts') loadPayouts();
-        }
-
-        function switchPayoutTab(tab, el) {
-            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.querySelectorAll('#page-payouts .page').forEach(p => p.classList.remove('active'));
-            document.getElementById('payout-' + tab).classList.add('active');
-        }
-
-        // ==================== DASHBOARD ====================
-        async function loadDashboard() {
-            await DataManager.loadAll();
-
-            document.getElementById('dashTotalAffiliators').textContent = Data.affiliators.length;
-            document.getElementById('dashNewAffiliators').textContent = Data.affiliators.filter(a => {
-                const d = new Date(a.joined);
-                return d.getMonth() === new Date().getMonth();
-            }).length;
-
-            document.getElementById('dashTotalLeads').textContent = Data.leads.length;
-            document.getElementById('dashValidLeads').textContent = Data.leads.filter(l => l.status === 'Valid').length;
-
-            const converted = Data.leads.filter(l => l.status === 'Converted');
-            document.getElementById('dashTotalTransactions').textContent = converted.length;
-            const totalTrans = converted.reduce((a, l) => a + (l.transactionValue || 0), 0);
-            document.getElementById('dashTransactionValue').textContent = formatNumber(totalTrans);
-
-            const totalComm = Data.commissions.reduce((a, c) => a + c.amount, 0);
-            document.getElementById('dashTotalCommissions').textContent = Data.commissions.length;
-            document.getElementById('dashCommissionValue').textContent = formatNumber(totalComm);
-
-            const pendingPayouts = Data.payouts.filter(p => p.status === 'Pending');
-            document.getElementById('dashPendingPayouts').textContent = pendingPayouts.length;
-            const payoutAmount = pendingPayouts.reduce((a, p) => a + p.amount, 0);
-            document.getElementById('dashPayoutAmount').textContent = formatNumber(payoutAmount);
-
-            loadRecentActivity();
-        }
-
-        function loadRecentActivity() {
-            const activities = [];
-            Data.leads.slice(-5).reverse().forEach(l => {
-                const aff = Data.affiliators.find(a => a.referralCode === l.referralCode);
-                activities.push({
-                    time: formatDateTime(l.date),
-                    type: 'lead',
-                    text: 'Lead baru masuk',
-                    affiliator: aff ? aff.name : l.referralCode,
-                    detail: l.name + ' (' + l.status + ')'
-                });
-            });
-            Data.commissions.slice(-5).reverse().forEach(c => {
-                const aff = Data.affiliators.find(a => a.id === c.affiliatorId);
-                activities.push({
-                    time: formatDateTime(c.date),
-                    type: 'commission',
-                    text: 'Komisi ' + c.type,
-                    affiliator: aff ? aff.name : '-',
-                    detail: 'Rp ' + formatNumber(c.amount)
-                });
-            });
-            activities.sort((a, b) => new Date(b.time) - new Date(a.time));
-
-            document.getElementById('recentActivityBody').innerHTML = activities.slice(0, 10).map(act => `
-                <tr><td>${act.time}</td><td><span class="badge badge-${act.type === 'lead' ? 'info' : 'success'}">${act.text}</span></td><td>${act.affiliator}</td><td>${act.detail}</td></tr>
-            `).join('');
-        }
-
-        // ==================== AFFILIATORS ====================
-        async function loadAffiliators() {
-            await DataManager.loadAll();
-            renderAffiliators(Data.affiliators);
-        }
-
-        function renderAffiliators(data) {
-            document.getElementById('affCountBadge').textContent = data.length + ' Affiliators';
-            document.getElementById('affiliatorsBody').innerHTML = data.map(aff => {
-                const affLeads = Data.leads.filter(l => l.referralCode === aff.referralCode);
-                const affComm = Data.commissions.filter(c => c.affiliatorId === aff.id);
-                const totalComm = affComm.reduce((a, c) => a + c.amount, 0);
-                return `
-                    <tr>
-                        <td><strong>${aff.name}</strong><br><small style="color: var(--text-light);">${aff.social || '-'}</small></td>
-                        <td>${aff.email}</td>
-                        <td>${aff.phone}</td>
-                        <td><code style="background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 4px;">${aff.referralCode}</code></td>
-                        <td>${affLeads.length}</td>
-                        <td>Rp ${formatNumber(totalComm)}</td>
-                        <td><span class="badge badge-${aff.status === 'Active' ? 'valid' : 'pending'}">${aff.status}</span></td>
-                        <td><button class="btn btn-sm btn-outline" onclick="viewAffiliator('${aff.id}')"><i class="fas fa-eye"></i></button></td>
-                    </tr>
+            if (activeProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Belum Ada Produk</h3>
+                        <p>Produk akan segera ditambahkan. Silakan cek kembali nanti.</p>
+                    </div>
                 `;
-            }).join('');
-        }
-
-        function filterAffiliators() {
-            const search = document.getElementById('affSearch').value.toLowerCase();
-            const status = document.getElementById('affStatusFilter').value;
-            renderAffiliators(Data.affiliators.filter(a => {
-                const matchSearch = a.name.toLowerCase().includes(search) || a.email.toLowerCase().includes(search) || a.referralCode.toLowerCase().includes(search);
-                const matchStatus = status === 'all' || a.status === status;
-                return matchSearch && matchStatus;
-            }));
-        }
-
-        // ==================== LEADS ====================
-        async function loadLeads() {
-            await DataManager.loadAll();
-            const affFilter = document.getElementById('leadAffFilter');
-            affFilter.innerHTML = '<option value="all">Semua Affiliator</option>';
-            Data.affiliators.forEach(aff => {
-                affFilter.innerHTML += `<option value="${aff.referralCode}">${aff.name}</option>`;
-            });
-            renderLeads(Data.leads);
-        }
-
-        function renderLeads(data) {
-            document.getElementById('leadsBody').innerHTML = data.map(lead => {
-                const aff = Data.affiliators.find(a => a.referralCode === lead.referralCode);
-                const comm = calculateLeadCommission(lead);
-                return `
-                    <tr>
-                        <td>${formatDate(lead.date)}</td>
-                        <td><strong>${lead.name}</strong></td>
-                        <td>${lead.contact}</td>
-                        <td>${aff ? aff.name : lead.referralCode}</td>
-                        <td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td>
-                        <td>${lead.transactionValue ? 'Rp ' + formatNumber(lead.transactionValue) : '-'}</td>
-                        <td>${comm > 0 ? 'Rp ' + formatNumber(comm) : '-'}</td>
-                        <td><button class="btn btn-sm btn-primary" onclick="openUpdateLead('${lead.id}')"><i class="fas fa-edit"></i></button></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function calculateLeadCommission(lead) {
-            let comm = 0;
-            if (lead.status === 'Valid') comm += CONFIG.COMMISSION_PER_LEAD;
-            if (lead.status === 'Converted' && lead.transactionValue) {
-                comm += lead.transactionValue * CONFIG.COMMISSION_PERCENTAGE / 100;
-            }
-            return comm;
-        }
-
-        function filterLeads() {
-            const search = document.getElementById('leadSearch').value.toLowerCase();
-            const status = document.getElementById('leadStatusFilter').value;
-            const aff = document.getElementById('leadAffFilter').value;
-            renderLeads(Data.leads.filter(l => {
-                const matchSearch = l.name.toLowerCase().includes(search) || l.contact.toLowerCase().includes(search);
-                const matchStatus = status === 'all' || l.status === status;
-                const matchAff = aff === 'all' || l.referralCode === aff;
-                return matchSearch && matchStatus && matchAff;
-            }));
-        }
-
-        function openUpdateLead(leadId) {
-            const lead = Data.leads.find(l => l.id === leadId);
-            if (!lead) return;
-            const aff = Data.affiliators.find(a => a.referralCode === lead.referralCode);
-            document.getElementById('updateLeadId').value = leadId;
-            document.getElementById('updateLeadName').textContent = lead.name;
-            document.getElementById('updateLeadContact').textContent = lead.contact;
-            document.getElementById('updateLeadAffiliator').textContent = aff ? aff.name : lead.referralCode;
-            document.getElementById('updateLeadStatus').value = lead.status;
-            document.getElementById('updateTransactionValue').value = lead.transactionValue || '';
-            toggleTransactionField();
-            document.getElementById('updateLeadModal').classList.add('active');
-        }
-
-        document.getElementById('updateLeadStatus').addEventListener('change', toggleTransactionField);
-
-        function toggleTransactionField() {
-            const status = document.getElementById('updateLeadStatus').value;
-            const transGroup = document.getElementById('transactionValueGroup');
-            const preview = document.getElementById('commissionPreview');
-            if (status === 'Converted') {
-                transGroup.style.display = 'block';
-                preview.style.display = 'block';
-                updateCommissionPreview();
-            } else if (status === 'Valid') {
-                transGroup.style.display = 'none';
-                preview.style.display = 'block';
-                document.getElementById('previewLeadComm').textContent = 'Rp ' + formatNumber(CONFIG.COMMISSION_PER_LEAD);
-                document.getElementById('previewTransComm').textContent = 'Rp 0';
-                document.getElementById('previewTotalComm').textContent = 'Rp ' + formatNumber(CONFIG.COMMISSION_PER_LEAD);
-            } else {
-                transGroup.style.display = 'none';
-                preview.style.display = 'none';
-            }
-        }
-
-        document.getElementById('updateTransactionValue').addEventListener('input', updateCommissionPreview);
-
-        function updateCommissionPreview() {
-            const transValue = parseFloat(document.getElementById('updateTransactionValue').value) || 0;
-            const leadComm = CONFIG.COMMISSION_PER_LEAD;
-            const transComm = transValue * CONFIG.COMMISSION_PERCENTAGE / 100;
-            document.getElementById('previewLeadComm').textContent = 'Rp ' + formatNumber(leadComm);
-            document.getElementById('previewTransComm').textContent = 'Rp ' + formatNumber(transComm);
-            document.getElementById('previewTotalComm').textContent = 'Rp ' + formatNumber(leadComm + transComm);
-        }
-
-        async function saveLeadUpdate() {
-            const leadId = document.getElementById('updateLeadId').value;
-            const newStatus = document.getElementById('updateLeadStatus').value;
-            const transValue = parseFloat(document.getElementById('updateTransactionValue').value) || 0;
-            const leadIndex = Data.leads.findIndex(l => l.id === leadId);
-            if (leadIndex === -1) return;
-
-            const oldStatus = Data.leads[leadIndex].status;
-            Data.leads[leadIndex].status = newStatus;
-            if (newStatus === 'Converted') Data.leads[leadIndex].transactionValue = transValue;
-            await DataManager.saveLead(Data.leads[leadIndex]);
-
-            const lead = Data.leads[leadIndex];
-            const aff = Data.affiliators.find(a => a.referralCode === lead.referralCode);
-            if (aff) {
-                if (newStatus === 'Valid' && oldStatus !== 'Valid') {
-                    await DataManager.saveCommission({
-                        id: 'comm_' + Date.now().toString(),
-                        affiliatorId: aff.id,
-                        type: 'Lead',
-                        description: 'Lead: ' + lead.name,
-                        amount: CONFIG.COMMISSION_PER_LEAD,
-                        date: new Date().toISOString(),
-                        paid: false
-                    });
-                }
-                if (newStatus === 'Converted' && oldStatus !== 'Converted' && transValue > 0) {
-                    await DataManager.saveCommission({
-                        id: 'comm_' + (Date.now() + 1).toString(),
-                        affiliatorId: aff.id,
-                        type: 'Transaksi',
-                        description: 'Transaksi ' + lead.name + ' (Rp ' + formatNumber(transValue) + ')',
-                        amount: transValue * CONFIG.COMMISSION_PERCENTAGE / 100,
-                        date: new Date().toISOString(),
-                        paid: false
-                    });
-                }
-            }
-
-            closeModal('updateLeadModal');
-            showToast('Lead berhasil diupdate!', 'success');
-            loadLeads();
-            loadDashboard();
-        }
-
-        function openAddLeadModal() {
-            const select = document.getElementById('addLeadAffiliator');
-            select.innerHTML = Data.affiliators.map(a => `<option value="${a.referralCode}">${a.name} (${a.referralCode})</option>`).join('');
-            document.getElementById('addLeadModal').classList.add('active');
-        }
-
-        async function saveNewLead() {
-            const refCode = document.getElementById('addLeadAffiliator').value;
-            const name = document.getElementById('addLeadName').value.trim();
-            const contact = document.getElementById('addLeadContact').value.trim();
-            const source = document.getElementById('addLeadSource').value.trim();
-            const notes = document.getElementById('addLeadNotes').value.trim();
-            if (!name || !contact) {
-                showToast('Nama dan kontak wajib diisi', 'error');
                 return;
             }
-            await DataManager.saveLead({
+
+            container.innerHTML = '<div class="products-grid" id="productsGrid"></div>';
+            const grid = document.getElementById('productsGrid');
+
+            grid.innerHTML = activeProducts.map(product => {
+                const hasImage = product.imageUrl && product.imageUrl.trim() !== '';
+                const imgHtml = hasImage
+                    ? `<img src="${product.imageUrl}" alt="${product.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-coffee\'></i>';">`
+                    : '<i class="fas fa-coffee"></i>';
+
+                const hasOriginalPrice = product.originalPrice && product.originalPrice > product.price;
+                const originalPriceHtml = hasOriginalPrice
+                    ? `<small>Rp ${formatNumber(product.originalPrice)}</small>`
+                    : '';
+
+                return `
+                    <div class="product-card">
+                        <div class="product-img">${imgHtml}</div>
+                        <div class="product-body">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-desc">${product.description || ''}</div>
+                            <div class="product-price">Rp ${formatNumber(product.price)} ${originalPriceHtml}</div>
+                            <button class="product-btn" onclick="selectProduct('${product.id}', '${product.name}', ${product.price})">
+                                <i class="fas fa-shopping-cart"></i> Pilih Produk
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== REFERRAL & LEAD ====================
+        function getRefCode() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('ref') || '';
+        }
+
+        async function loadAffiliatorInfo() {
+            const refCode = getRefCode();
+            if (!refCode) {
+                document.getElementById('refBanner').style.display = 'none';
+                return;
+            }
+            document.getElementById('refCode').value = refCode;
+            const users = await DBStore.getAll('users');
+            const aff = users.find(u => u.referralCode === refCode);
+            if (aff) {
+                document.getElementById('refAffiliatorName').textContent = aff.name;
+            } else {
+                document.getElementById('refAffiliatorName').textContent = refCode;
+            }
+        }
+
+        function selectProduct(productId, name, price) {
+            document.getElementById('selectedProduct').value = productId;
+            document.getElementById('selectedPrice').value = price;
+            document.getElementById('productDisplayName').textContent = name;
+            document.getElementById('productDisplayPrice').textContent = 'Rp ' + formatNumber(price);
+            document.getElementById('productDisplay').style.display = 'block';
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+            showToast('Produk dipilih: ' + name, 'success');
+        }
+
+        async function submitLead() {
+            const refCode = document.getElementById('refCode').value;
+            const productId = document.getElementById('selectedProduct').value;
+            const name = document.getElementById('buyerName').value.trim();
+            const email = document.getElementById('buyerEmail').value.trim();
+            const phone = document.getElementById('buyerPhone').value.trim();
+            const city = document.getElementById('buyerCity').value.trim();
+            const address = document.getElementById('buyerAddress').value.trim();
+            const notes = document.getElementById('buyerNotes').value.trim();
+
+            if (!name || !email || !phone || !city) {
+                showToast('Harap isi semua field wajib', 'error');
+                return;
+            }
+
+            // Get product info
+            const products = await DBStore.getAll('products');
+            const product = products.find(p => p.id === productId);
+            const productName = product ? product.name : 'Tidak dipilih';
+
+            const leadData = {
                 id: 'lead_' + Date.now().toString(),
-                referralCode: refCode,
+                referralCode: refCode || 'DIRECT',
                 name: name,
-                contact: contact,
+                contact: email + ' / ' + phone,
                 status: 'Pending',
                 date: new Date().toISOString(),
                 transactionValue: 0,
-                source: source || 'Manual',
-                notes: notes
-            });
-            closeModal('addLeadModal');
-            showToast('Lead berhasil ditambahkan!', 'success');
-            loadLeads();
-            document.getElementById('addLeadName').value = '';
-            document.getElementById('addLeadContact').value = '';
-            document.getElementById('addLeadSource').value = '';
-            document.getElementById('addLeadNotes').value = '';
+                source: 'Landing Page - ' + productName,
+                notes: 'Kota: ' + city + '\nAlamat: ' + address + '\nCatatan: ' + notes
+            };
+
+            // Save as lead locally
+            await DBStore.put('leads', leadData);
+
+            // Also save as order locally
+            const orderData = {
+                id: 'order_' + Date.now().toString(),
+                leadId: leadData.id,
+                productId: productId,
+                productName: productName,
+                price: parseInt(document.getElementById('selectedPrice').value) || 0,
+                buyerName: name,
+                buyerEmail: email,
+                buyerPhone: phone,
+                buyerCity: city,
+                buyerAddress: address,
+                notes: notes,
+                referralCode: refCode || 'DIRECT',
+                status: 'Pending',
+                date: new Date().toISOString()
+            };
+            await DBStore.put('orders', orderData);
+
+            // PERBAIKAN: Sync ke GAS
+            syncToGAS('addLead', leadData);
+            syncToGAS('addOrder', orderData);
+
+            document.getElementById('successModal').classList.add('active');
+
+            // Clear form
+            document.getElementById('buyerName').value = '';
+            document.getElementById('buyerEmail').value = '';
+            document.getElementById('buyerPhone').value = '';
+            document.getElementById('buyerCity').value = '';
+            document.getElementById('buyerAddress').value = '';
+            document.getElementById('buyerNotes').value = '';
+            document.getElementById('productDisplay').style.display = 'none';
         }
 
-        // ==================== COMMISSIONS ====================
-        async function loadCommissions() {
-            await DataManager.loadAll();
-            renderCommissions(Data.commissions);
-        }
-
-        function renderCommissions(data) {
-            document.getElementById('commissionsBody').innerHTML = data.map(comm => {
-                const aff = Data.affiliators.find(a => a.id === comm.affiliatorId);
-                return `
-                    <tr>
-                        <td>${formatDate(comm.date)}</td>
-                        <td>${aff ? aff.name : '-'}</td>
-                        <td><span class="badge badge-${comm.type === 'Lead' ? 'valid' : 'converted'}">${comm.type}</span></td>
-                        <td>${comm.description}</td>
-                        <td style="font-weight: 600; color: var(--success);">+Rp ${formatNumber(comm.amount)}</td>
-                        <td><span class="badge badge-${comm.paid ? 'paid' : 'unpaid'}">${comm.paid ? 'Paid' : 'Unpaid'}</span></td>
-                        <td>${!comm.paid ? `<button class="btn btn-sm btn-success" onclick="markCommissionPaid('${comm.id}')"><i class="fas fa-check"></i></button>` : '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function filterCommissions() {
-            const type = document.getElementById('commTypeFilter').value;
-            const status = document.getElementById('commStatusFilter').value;
-            renderCommissions(Data.commissions.filter(c => {
-                const matchType = type === 'all' || c.type === type;
-                const matchStatus = status === 'all' || (status === 'Paid' && c.paid) || (status === 'Unpaid' && !c.paid);
-                return matchType && matchStatus;
-            }));
-        }
-
-        async function markCommissionPaid(commId) {
-            const idx = Data.commissions.findIndex(c => c.id === commId);
-            if (idx !== -1) {
-                Data.commissions[idx].paid = true;
-                Data.commissions[idx].payoutDate = new Date().toISOString();
-                await DataManager.saveCommission(Data.commissions[idx]);
-                showToast('Komisi ditandai sebagai paid', 'success');
-                loadCommissions();
-            }
-        }
-
-        // ==================== PAYOUTS ====================
-        async function loadPayouts() {
-            await DataManager.loadAll();
-            renderPayouts();
-        }
-
-        function renderPayouts() {
-            const pending = Data.payouts.filter(p => p.status === 'Pending');
-            const history = Data.payouts.filter(p => p.status === 'Paid');
-
-            document.getElementById('pendingPayoutsBody').innerHTML = pending.map(p => {
-                const aff = Data.affiliators.find(a => a.id === p.affiliatorId);
-                return `
-                    <tr>
-                        <td>${formatDate(p.requestDate)}</td>
-                        <td><strong>${aff ? aff.name : '-'}</strong></td>
-                        <td>${aff ? aff.bank : '-'}</td>
-                        <td style="font-weight: 600;">Rp ${formatNumber(p.amount)}</td>
-                        <td>
-                            <button class="btn btn-sm btn-success" onclick="openApprovePayout('${p.id}')"><i class="fas fa-check"></i> Approve</button>
-                            <button class="btn btn-sm btn-danger" onclick="rejectPayout('${p.id}')"><i class="fas fa-times"></i></button>
-                        </td>
-                    </tr>
-                `;
-            }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-light);">Tidak ada payout pending</td></tr>';
-
-            document.getElementById('historyPayoutsBody').innerHTML = history.map(p => {
-                const aff = Data.affiliators.find(a => a.id === p.affiliatorId);
-                return `
-                    <tr>
-                        <td>${formatDate(p.processDate)}</td>
-                        <td>${aff ? aff.name : '-'}</td>
-                        <td>Rp ${formatNumber(p.amount)}</td>
-                        <td><span class="badge badge-paid">Paid</span></td>
-                    </tr>
-                `;
-            }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-light);">Belum ada riwayat payout</td></tr>';
-        }
-
-        function openApprovePayout(payoutId) {
-            const p = Data.payouts.find(pay => pay.id === payoutId);
-            if (!p) return;
-            const aff = Data.affiliators.find(a => a.id === p.affiliatorId);
-            document.getElementById('approvePayoutId').value = payoutId;
-            document.getElementById('approvePayoutAffiliator').textContent = aff ? aff.name : '-';
-            document.getElementById('approvePayoutBank').textContent = aff ? aff.bank : '-';
-            document.getElementById('approvePayoutAmount').textContent = 'Rp ' + formatNumber(p.amount);
-            document.getElementById('approvePayoutModal').classList.add('active');
-        }
-
-        function confirmApprovePayout() {
-            const payoutId = document.getElementById('approvePayoutId').value;
-            const idx = Data.payouts.findIndex(p => p.id === payoutId);
-            if (idx === -1) return;
-            Data.payouts[idx].status = 'Paid';
-            Data.payouts[idx].processDate = new Date().toISOString();
-            Data.payouts[idx].notes = document.getElementById('approvePayoutNotes').value;
-            DataManager.savePayouts();
-            closeModal('approvePayoutModal');
-            showToast('Payout berhasil diapprove!', 'success');
-            loadPayouts();
-            loadDashboard();
-        }
-
-        function rejectPayout(payoutId) {
-            if (!confirm('Yakin ingin menolak payout ini?')) return;
-            const idx = Data.payouts.findIndex(p => p.id === payoutId);
-            if (idx !== -1) {
-                Data.payouts[idx].status = 'Rejected';
-                DataManager.savePayouts();
-                showToast('Payout ditolak', 'warning');
-                loadPayouts();
-            }
-        }
-
-        // ==================== SETTINGS ====================
-        function saveSettings() {
-            const leadComm = parseInt(document.getElementById('settingLeadComm').value) || 10000;
-            const transComm = parseInt(document.getElementById('settingTransComm').value) || 5;
-            const minPayout = parseInt(document.getElementById('settingMinPayout').value) || 100000;
-            CONFIG.COMMISSION_PER_LEAD = leadComm;
-            CONFIG.COMMISSION_PERCENTAGE = transComm;
-            CONFIG.MIN_PAYOUT = minPayout;
-            try {
-                localStorage.setItem('aff_config', JSON.stringify({
-                    COMMISSION_PER_LEAD: leadComm,
-                    COMMISSION_PERCENTAGE: transComm,
-                    MIN_PAYOUT: minPayout
-                }));
-            } catch(e) {}
-            showToast('Settings berhasil disimpan!', 'success');
-        }
-
-        function saveNotificationSettings() {
-            const webhook = document.getElementById('settingWebhook').value;
-            const email = document.getElementById('settingAdminEmail').value;
-            try {
-                localStorage.setItem('aff_notifications', JSON.stringify({ webhook: webhook, adminEmail: email }));
-            } catch(e) {}
-            showToast('Notifikasi settings disimpan!', 'success');
-        }
-
-        // ==================== UTILITIES ====================
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('active');
         }
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        function formatDate(dateStr) {
-            const d = new Date(dateStr);
-            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
-
-        function formatDateTime(dateStr) {
-            const d = new Date(dateStr);
-            return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
         }
 
         function showToast(message, type) {
@@ -1217,57 +496,21 @@
             setTimeout(() => toast.remove(), 4000);
         }
 
-        function refreshData() {
-            loadDashboard();
-            showToast('Data refreshed!', 'success');
-        }
-
-        function viewAffiliator(id) {
-            showToast('Detail affiliator: ' + id, 'info');
-        }
-
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
-            });
-        });
-
-        function loadConfig() {
-            try {
-                const saved = localStorage.getItem('aff_config');
-                if (saved) {
-                    const config = JSON.parse(saved);
-                    document.getElementById('settingLeadComm').value = config.COMMISSION_PER_LEAD || 10000;
-                    document.getElementById('settingTransComm').value = config.COMMISSION_PERCENTAGE || 5;
-                    document.getElementById('settingMinPayout').value = config.MIN_PAYOUT || 100000;
-                    CONFIG.COMMISSION_PER_LEAD = config.COMMISSION_PER_LEAD || 10000;
-                    CONFIG.COMMISSION_PERCENTAGE = config.COMMISSION_PERCENTAGE || 5;
-                    CONFIG.MIN_PAYOUT = config.MIN_PAYOUT || 100000;
-                }
-                const notif = localStorage.getItem('aff_notifications');
-                if (notif) {
-                    const n = JSON.parse(notif);
-                    document.getElementById('settingWebhook').value = n.webhook || '';
-                    document.getElementById('settingAdminEmail').value = n.adminEmail || '';
-                }
-            } catch(e) {}
-        }
-
         document.addEventListener('DOMContentLoaded', async function() {
-            DEBUG.log('=== ADMIN APP STARTING ===');
             try {
                 await DBStore.init();
-                DEBUG.log('IndexedDB initialized');
+                await loadProducts();
+                await loadAffiliatorInfo();
             } catch(e) {
-                DEBUG.log('IndexedDB failed:', e.message);
-                showToast('Mode offline - data tidak akan persist', 'warning');
+                console.error('Init error:', e);
+                document.getElementById('productsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Gagal Memuat Produk</h3>
+                        <p>Silakan refresh halaman atau coba lagi nanti.</p>
+                    </div>
+                `;
             }
-            checkAdminSession();
-            loadConfig();
-            if (SessionManager.loadSession()) {
-                loadDashboard();
-            }
-            DEBUG.log('=== ADMIN APP READY ===');
         });
     </script>
 </body>
