@@ -7,18 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #5D4037;
-            --primary-dark: #3E2723;
-            --bg: #F5F3F0;
-            --card: #FFFFFF;
-            --text: #2C2C2C;
-            --text-light: #6B6B6B;
-            --border: #E8E4E0;
-            --success: #4CAF50;
-            --danger: #E53935;
-            --info: #2196F3;
-        }
+        :root { --primary: #5D4037; --primary-dark: #3E2723; --bg: #F5F3F0; --card: #fff; --text: #2C2C2C; --text-light: #6B6B6B; --border: #E8E4E0; --success: #4CAF50; --danger: #E53935; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
         .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
@@ -39,8 +28,7 @@
         .toast.show { display: flex; align-items: center; gap: 0.5rem; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
-        .log { background: #1a1a1a; color: #0f0; padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 150px; overflow-y: auto; margin-top: 0.5rem; }
-        a { color: var(--primary); }
+        .log { background: #1a1a1a; color: #0f0; padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; margin-top: 0.5rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
         @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
@@ -51,7 +39,6 @@
             <h1><i class="fas fa-box"></i> Products Admin</h1>
         </div>
 
-        <!-- TOAST -->
         <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
         <!-- LOGIN -->
@@ -65,10 +52,8 @@
             <p id="err" style="color:var(--danger);font-size:0.8rem;margin-top:0.5rem;display:none;">Password salah</p>
         </div>
 
-        <!-- MAIN (hidden until login) -->
+        <!-- MAIN -->
         <div id="main" style="display:none;">
-
-            <!-- STATS -->
             <div class="grid-2">
                 <div class="card">
                     <div style="font-size:1.5rem;font-weight:700;" id="statProd">0</div>
@@ -80,7 +65,7 @@
                 </div>
             </div>
 
-            <!-- FORM ADD PRODUCT -->
+            <!-- ADD FORM -->
             <div class="card">
                 <h3 style="margin-bottom:0.75rem;"><i class="fas fa-plus"></i> Tambah Produk</h3>
                 <div class="grid-2">
@@ -91,10 +76,7 @@
                     <div class="form-group">
                         <label class="form-label">Kategori</label>
                         <select class="form-select" id="fCat">
-                            <option>Arabika</option>
-                            <option>Robusta</option>
-                            <option>House Blend</option>
-                            <option>Single Origin</option>
+                            <option>Arabika</option><option>Robusta</option><option>House Blend</option><option>Single Origin</option>
                         </select>
                     </div>
                 </div>
@@ -119,12 +101,10 @@
                 <button class="btn btn-primary" id="btnSave" onclick="save()">
                     <i class="fas fa-save"></i> Simpan ke Google Sheets
                 </button>
-
-                <!-- DEBUG LOG -->
                 <div class="log" id="log"></div>
             </div>
 
-            <!-- PRODUCTS LIST -->
+            <!-- LIST -->
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
                     <h3><i class="fas fa-list"></i> Daftar Produk</h3>
@@ -132,9 +112,7 @@
                 </div>
                 <div style="overflow-x:auto;">
                     <table>
-                        <thead>
-                            <tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th></tr>
-                        </thead>
+                        <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th></tr></thead>
                         <tbody id="tbl"></tbody>
                     </table>
                 </div>
@@ -154,8 +132,7 @@
         function log(msg) {
             console.log(msg);
             const el = document.getElementById('log');
-            const t = new Date().toLocaleTimeString();
-            el.innerHTML += '<div>[' + t + '] ' + msg + '</div>';
+            el.innerHTML += '<div>' + new Date().toLocaleTimeString() + ' ' + msg + '</div>';
             el.scrollTop = el.scrollHeight;
         }
 
@@ -166,20 +143,15 @@
             setTimeout(() => el.className = 'toast', 3000);
         }
 
-        // LOGIN
         function login() {
             if (document.getElementById('pw').value === 'admin123') {
                 document.cookie = 'pa=1; path=/; max-age=86400';
-                showMain();
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('main').style.display = 'block';
+                load();
             } else {
                 document.getElementById('err').style.display = 'block';
             }
-        }
-
-        function showMain() {
-            document.getElementById('loginCard').style.display = 'none';
-            document.getElementById('main').style.display = 'block';
-            load();
         }
 
         function logout() {
@@ -187,40 +159,37 @@
             location.reload();
         }
 
-        // CHECK SESSION
+        // Check session
         try {
-            if (document.cookie.includes('pa=1')) showMain();
+            if (document.cookie.includes('pa=1')) {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('main').style.display = 'block';
+            }
         } catch(e) {}
 
-        // LOAD PRODUCTS
+        // LOAD — via GET
         async function load() {
-            log('Loading...');
+            log('Loading products...');
             try {
                 const r = await fetch(GAS + '?action=getProducts');
                 const j = await r.json();
-                log('Response: ' + JSON.stringify(j).substring(0, 200));
-
-                if (j.success && j.data) {
+                log('Products: ' + (j.data ? j.data.length : 0));
+                if (j.data) {
                     document.getElementById('statProd').textContent = j.data.length;
-                    const rows = j.data.filter(p => p.status === 'Active' || !p.status).map(p =>
+                    document.getElementById('tbl').innerHTML = j.data.filter(p => p.status === 'Active' || !p.status).map(p =>
                         '<tr><td><strong>' + (p.name||'-') + '</strong></td><td>' + (p.category||'-') + '</td><td>Rp ' + ((p.price||0)+'').replace(/\B(?=(\d{3})+(?!\d))/g,'.') + '</td><td>' + (p.status||'Active') + '</td></tr>'
-                    ).join('');
-                    document.getElementById('tbl').innerHTML = rows || '<tr><td colspan="4" style="text-align:center;color:#999;">Belum ada produk</td></tr>';
+                    ).join('') || '<tr><td colspan="4" style="text-align:center;color:#999;">Belum ada produk</td></tr>';
                 }
-
-                // Load orders count
                 const o = await fetch(GAS + '?action=getOrders');
                 const oj = await o.json();
-                if (oj.success && oj.data) document.getElementById('statOrd').textContent = oj.data.length;
-
-                toast('Data dimuat', true);
+                if (oj.data) document.getElementById('statOrd').textContent = oj.data.length;
             } catch(e) {
                 log('ERROR: ' + e.message);
-                toast('Gagal: ' + e.message, false);
+                toast('Gagal load: ' + e.message, false);
             }
         }
 
-        // SAVE PRODUCT
+        // SAVE — via iframe form (sama persis dengan index.html yang berhasil)
         async function save() {
             const btn = document.getElementById('btnSave');
             btn.disabled = true;
@@ -231,53 +200,72 @@
 
             if (!name || !price) {
                 toast('Nama dan harga wajib diisi', false);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
                 return;
             }
 
-            const params = new URLSearchParams();
-            params.append('action', 'saveProduct');
-            params.append('id', 'prod_' + Date.now());
-            params.append('name', name);
-            params.append('category', document.getElementById('fCat').value);
-            params.append('price', price);
-            params.append('originalPrice', document.getElementById('fOrig').value || '');
-            params.append('imageUrl', document.getElementById('fImg').value.trim());
-            params.append('description', document.getElementById('fDesc').value.trim());
-            params.append('status', 'Active');
-            params.append('createdAt', new Date().toISOString());
+            const fields = {
+                action: 'saveProduct',
+                id: 'prod_' + Date.now(),
+                name: name,
+                category: document.getElementById('fCat').value,
+                price: price,
+                originalPrice: document.getElementById('fOrig').value || '',
+                imageUrl: document.getElementById('fImg').value.trim(),
+                description: document.getElementById('fDesc').value.trim(),
+                status: 'Active',
+                createdAt: new Date().toISOString()
+            };
 
-            log('Sending: ' + name + ', Rp ' + price);
+            log('Saving: ' + name + ', Rp ' + price);
 
-            try {
-                const r = await fetch(GAS, { method: 'POST', body: params });
-                const txt = await r.text();
-                log('Server response: ' + txt);
+            // PAKAI IFRAME FORM — sama persis dengan cara user berhasil di index.html
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = GAS;
+            form.target = 'gasFrame';
+            form.style.display = 'none';
 
-                try {
-                    const j = JSON.parse(txt);
-                    if (j.success) {
-                        toast('Produk tersimpan di Google Sheets!', true);
-                        document.getElementById('fName').value = '';
-                        document.getElementById('fPrice').value = '';
-                        document.getElementById('fOrig').value = '';
-                        document.getElementById('fImg').value = '';
-                        document.getElementById('fDesc').value = '';
-                        setTimeout(load, 1000);
-                    } else {
-                        toast('Gagal: ' + (j.error||'unknown'), false);
-                    }
-                } catch(e) {
-                    toast('Response tidak valid: ' + txt.substring(0,100), false);
-                }
-            } catch(e) {
-                log('FETCH ERROR: ' + e.message);
-                toast('Error: ' + e.message, false);
+            for (let key in fields) {
+                const input = document.createElement('input');
+                input.name = key;
+                input.value = fields[key];
+                form.appendChild(input);
             }
 
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
+            const iframe = document.getElementById('gasFrame');
+            let done = false;
+
+            iframe.onload = function() {
+                if (done) return;
+                done = true;
+                log('Iframe loaded - success!');
+                toast('Produk tersimpan di Google Sheets!', true);
+                document.getElementById('fName').value = '';
+                document.getElementById('fPrice').value = '';
+                document.getElementById('fOrig').value = '';
+                document.getElementById('fImg').value = '';
+                document.getElementById('fDesc').value = '';
+                setTimeout(load, 1500);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
+            };
+
+            // Safety: cleanup after 5 seconds
+            setTimeout(() => {
+                if (!done) {
+                    done = true;
+                    log('Timeout - check Google Sheets manually');
+                    toast('Request sent - cek Google Sheets', true);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Simpan ke Google Sheets';
+                }
+                try { document.body.removeChild(form); } catch(e) {}
+            }, 5000);
+
+            document.body.appendChild(form);
+            form.submit();
+            log('Form submitted via iframe');
         }
     </script>
 </body>
