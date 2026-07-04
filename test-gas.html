@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Test GAS</title>
+    <style>
+        body { font-family: Arial; padding: 2rem; max-width: 600px; margin: 0 auto; }
+        .log { background: #1a1a1a; color: #0f0; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; margin-top: 1rem; }
+        .log .error { color: #f44; }
+        .log .success { color: #4f4; }
+        .log .info { color: #88f; }
+        button { padding: 0.75rem 1.5rem; margin: 0.5rem 0.5rem 0.5rem 0; cursor: pointer; font-size: 1rem; }
+        input { padding: 0.5rem; width: 100%; margin-bottom: 0.5rem; font-size: 1rem; }
+        label { font-weight: bold; display: block; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h2>Test GAS - Simpan Produk</h2>
+    <label>GAS URL:</label>
+    <input type="text" id="gasUrl" value="https://script.google.com/macros/s/AKfycbzhK1izEA3a3LbRF0NFQkQxmNmnY4A8it50tOXh4EDOV6JoDKHazUUnswGj8UROV-o/exec" style="width:100%;">
+
+    <label>Nama Produk:</label>
+    <input type="text" id="pName" value="Test Kopi">
+    <label>Harga:</label>
+    <input type="number" id="pPrice" value="100000">
+    <label>Kategori:</label>
+    <input type="text" id="pCat" value="Arabika">
+
+    <div>
+        <button onclick="testFetch()">Test 1: Fetch POST</button>
+        <button onclick="testIframe()">Test 2: Iframe Form</button>
+        <button onclick="testImage()">Test 3: Image Tag</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
+
+    <script>
+        const GAS_URL = document.getElementById('gasUrl').value;
+
+        function log(msg, type) {
+            const el = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = type || '';
+            const time = new Date().toLocaleTimeString();
+            line.textContent = `[${time}] ${msg}`;
+            el.appendChild(line);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        // TEST 1: Fetch POST (CORS?)
+        async function testFetch() {
+            log('=== TEST 1: Fetch POST ===', 'info');
+            const params = new URLSearchParams();
+            params.append('action', 'saveProduct');
+            params.append('id', 'test_' + Date.now());
+            params.append('name', document.getElementById('pName').value);
+            params.append('price', document.getElementById('pPrice').value);
+            params.append('category', document.getElementById('pCat').value);
+            params.append('originalPrice', '');
+            params.append('imageUrl', '');
+            params.append('description', 'Test dari debug page');
+            params.append('status', 'Active');
+            params.append('createdAt', new Date().toISOString());
+
+            log('URL: ' + GAS_URL);
+            log('Body: ' + params.toString().substring(0, 200));
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: params
+                });
+                log('Response status: ' + response.status, 'success');
+                const text = await response.text();
+                log('Response body: ' + text.substring(0, 300), 'success');
+            } catch(err) {
+                log('Fetch ERROR: ' + err.message, 'error');
+                log('This is likely a CORS error - try Test 2 or 3', 'error');
+            }
+        }
+
+        // TEST 2: Form + Iframe (bypass CORS)
+        function testIframe() {
+            log('=== TEST 2: Iframe Form ===', 'info');
+            const id = 'test_' + Date.now();
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = GAS_URL;
+            form.target = 'gasFrame';
+            form.style.display = 'none';
+
+            const fields = {
+                action: 'saveProduct',
+                id: id,
+                name: document.getElementById('pName').value,
+                price: document.getElementById('pPrice').value,
+                category: document.getElementById('pCat').value,
+                originalPrice: '',
+                imageUrl: '',
+                description: 'Test iframe form',
+                status: 'Active',
+                createdAt: new Date().toISOString()
+            };
+
+            for (let key in fields) {
+                const input = document.createElement('input');
+                input.name = key;
+                input.value = fields[key];
+                form.appendChild(input);
+            }
+
+            const iframe = document.getElementById('gasFrame');
+
+            // PERBAIKAN: Tunggu iframe onload sebelum hapus form
+            let loaded = false;
+            iframe.onload = function() {
+                if (loaded) return;
+                loaded = true;
+                log('Iframe loaded - form submitted!', 'success');
+                try { document.body.removeChild(form); } catch(e) {}
+                // Cek isi iframe
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    log('Iframe content: ' + doc.body.innerText.substring(0, 200), 'success');
+                } catch(e) {
+                    log('Cannot read iframe (cross-origin) - but request should have gone through', 'info');
+                }
+            };
+
+            // Safety cleanup after 5 seconds
+            setTimeout(() => {
+                if (!loaded) {
+                    loaded = true;
+                    log('Timeout - cleaning up form', 'info');
+                    try { document.body.removeChild(form); } catch(e) {}
+                }
+            }, 5000);
+
+            document.body.appendChild(form);
+            form.submit();
+            log('Form submitted to iframe. ID: ' + id, 'info');
+            log('Check Google Sheets tab "Products" in 5 seconds', 'info');
+        }
+
+        // TEST 3: Image Tag (GET request - no CORS)
+        function testImage() {
+            log('=== TEST 3: Image GET ===', 'info');
+            const img = new Image();
+            const params = new URLSearchParams();
+            params.append('action', 'saveProduct');
+            params.append('id', 'img_' + Date.now());
+            params.append('name', document.getElementById('pName').value);
+            params.append('price', document.getElementById('pPrice').value);
+            params.append('category', document.getElementById('pCat').value);
+            params.append('originalPrice', '');
+            params.append('imageUrl', '');
+            params.append('description', 'Test image GET');
+            params.append('status', 'Active');
+            params.append('createdAt', new Date().toISOString());
+
+            const url = GAS_URL + '?' + params.toString();
+            log('GET URL: ' + url.substring(0, 200));
+
+            img.onload = function() {
+                log('Image loaded (GET request sent!)', 'success');
+            };
+            img.onerror = function() {
+                log('Image error (GET request may still have been sent)', 'info');
+            };
+            img.src = url;
+            log('Image request sent. Check Google Sheets in 5 seconds.', 'info');
+        }
+
+        log('Ready. Click a test button.', 'info');
+    </script>
+</body>
+</html>
