@@ -238,7 +238,35 @@
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
                     request.onerror = () => reject(request.error);
-                    request.onsuccess = () => { this.db = request.result; resolve(this.db); };
+                    request.onsuccess = () => { 
+                        this.db = request.result;
+                        // Check if all required stores exist
+                        const requiredStores = ['users', 'leads', 'commissions', 'products', 'orders', 'session'];
+                        const missingStores = requiredStores.filter(s => !this.db.objectStoreNames.contains(s));
+                        if (missingStores.length > 0) {
+                            console.log('Missing stores:', missingStores, '- Recreating database...');
+                            this.db.close();
+                            // Force upgrade by deleting and reopening
+                            const deleteReq = indexedDB.deleteDatabase(CONFIG.DB_NAME);
+                            deleteReq.onsuccess = () => {
+                                const newReq = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+                                newReq.onerror = () => reject(newReq.error);
+                                newReq.onsuccess = () => { this.db = newReq.result; resolve(this.db); };
+                                newReq.onupgradeneeded = (event) => {
+                                    const db = event.target.result;
+                                    if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                                    if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
+                                    if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
+                                    if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
+                                    if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id' });
+                                    if (!db.objectStoreNames.contains('session')) db.createObjectStore('session', { keyPath: 'key' });
+                                };
+                            };
+                            deleteReq.onerror = () => reject(deleteReq.error);
+                        } else {
+                            resolve(this.db);
+                        }
+                    };
                     request.onupgradeneeded = (event) => {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
