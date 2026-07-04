@@ -415,9 +415,10 @@
             }
         };
 
-        // Toggle debug with Ctrl+Shift+D
+        // Toggle debug: Ctrl+Shift+D (Win/Linux) or Cmd+Shift+D (Mac)
         document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
                 DEBUG.enabled = !DEBUG.enabled;
                 document.getElementById('debugPanel').classList.toggle('show');
                 DEBUG.log('Debug mode ' + (DEBUG.enabled ? 'ON' : 'OFF'));
