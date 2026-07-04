@@ -428,12 +428,40 @@
                 return;
             }
             document.getElementById('refCode').value = refCode;
-            const users = await DBStore.getAll('users');
-            const aff = users.find(u => u.referralCode === refCode);
+
+            // PERBAIKAN: Coba cari affiliator dari lokal dulu, kalau tidak ketemu sync dari GAS
+            let users = await DBStore.getAll('users');
+            let aff = users.find(u => u.referralCode === refCode);
+
+            if (!aff) {
+                // Coba sync dari GAS
+                const result = await fetchFromGAS('getUsers');
+                if (result.success && result.data) {
+                    for (const user of result.data) {
+                        if (user && user.id) await DBStore.put('users', user);
+                    }
+                    users = await DBStore.getAll('users');
+                    aff = users.find(u => u.referralCode === refCode);
+                }
+            }
+
             if (aff) {
                 document.getElementById('refAffiliatorName').textContent = aff.name;
             } else {
                 document.getElementById('refAffiliatorName').textContent = refCode;
+            }
+        }
+
+        // PERBAIKAN: Tambahkan fetchFromGAS yang belum ada di landing.html
+        async function fetchFromGAS(action) {
+            try {
+                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch(err) {
+                console.error('GAS fetch error:', err.message);
+                return { success: false, error: err.message };
             }
         }
 
@@ -448,14 +476,20 @@
         }
 
         async function submitLead() {
-            // PERBAIKAN: Pastikan DB siap
-            if (!DBStore.db) {
-                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+            const btn = document.querySelector('button[onclick="submitLead()"]');
+            const originalBtnText = btn.innerHTML;
+
+            // PERBAIKAN 1: Cek storage ready (bukan DB.db)
+            if (!DBStore.ready) {
+                showToast('Sistem belum siap. Tunggu sebentar dan coba lagi.', 'error');
                 return;
             }
 
+            // PERBAIKAN 2: Ambil nilai form
             const refCode = document.getElementById('refCode').value;
             const productId = document.getElementById('selectedProduct').value;
+            const productName = document.getElementById('productDisplayName').textContent || 'Tidak dipilih';
+            const price = parseInt(document.getElementById('selectedPrice').value) || 0;
             const name = document.getElementById('buyerName').value.trim();
             const email = document.getElementById('buyerEmail').value.trim();
             const phone = document.getElementById('buyerPhone').value.trim();
@@ -463,64 +497,97 @@
             const address = document.getElementById('buyerAddress').value.trim();
             const notes = document.getElementById('buyerNotes').value.trim();
 
+            // PERBAIKAN 3: Validasi lengkap
+            if (!productId) {
+                showToast('Silakan pilih produk terlebih dahulu', 'error');
+                document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
             if (!name || !email || !phone || !city) {
-                showToast('Harap isi semua field wajib', 'error');
+                showToast('Harap isi semua field wajib (Nama, Email, WhatsApp, Kota)', 'error');
+                return;
+            }
+            // Validasi email sederhana
+            if (!email.includes('@') || !email.includes('.')) {
+                showToast('Format email tidak valid', 'error');
+                return;
+            }
+            // Validasi phone (minimal 10 digit angka)
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length < 10) {
+                showToast('Nomor WhatsApp minimal 10 digit', 'error');
                 return;
             }
 
-            // Get product info
-            const products = await DBStore.getAll('products');
-            const product = products.find(p => p.id === productId);
-            const productName = product ? product.name : 'Tidak dipilih';
+            // PERBAIKAN 4: Loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
-            const leadData = {
-                id: 'lead_' + Date.now().toString(),
-                referralCode: refCode || 'DIRECT',
-                name: name,
-                contact: email + ' / ' + phone,
-                status: 'Pending',
-                date: new Date().toISOString(),
-                transactionValue: 0,
-                source: 'Landing Page - ' + productName,
-                notes: 'Kota: ' + city + '\nAlamat: ' + address + '\nCatatan: ' + notes
-            };
+            try {
+                const now = new Date().toISOString();
+                const leadId = 'lead_' + Date.now();
+                const orderId = 'order_' + Date.now();
 
-            // Save as lead locally
-            await DBStore.put('leads', leadData);
+                const leadData = {
+                    id: leadId,
+                    referralCode: refCode || 'DIRECT',
+                    name: name,
+                    contact: email + ' / ' + phone,
+                    status: 'Pending',
+                    date: now,
+                    transactionValue: 0,
+                    source: 'Landing Page - ' + productName,
+                    notes: 'Kota: ' + city + ' | Alamat: ' + address + ' | Catatan: ' + notes
+                };
 
-            // Also save as order locally
-            const orderData = {
-                id: 'order_' + Date.now().toString(),
-                leadId: leadData.id,
-                productId: productId,
-                productName: productName,
-                price: parseInt(document.getElementById('selectedPrice').value) || 0,
-                buyerName: name,
-                buyerEmail: email,
-                buyerPhone: phone,
-                buyerCity: city,
-                buyerAddress: address,
-                notes: notes,
-                referralCode: refCode || 'DIRECT',
-                status: 'Pending',
-                date: new Date().toISOString()
-            };
-            await DBStore.put('orders', orderData);
+                const orderData = {
+                    id: orderId,
+                    leadId: leadId,
+                    productId: productId,
+                    productName: productName,
+                    price: price,
+                    buyerName: name,
+                    buyerEmail: email,
+                    buyerPhone: phone,
+                    buyerCity: city,
+                    buyerAddress: address,
+                    notes: notes,
+                    referralCode: refCode || 'DIRECT',
+                    status: 'Pending',
+                    date: now
+                };
 
-            // PERBAIKAN: Sync ke GAS
-            syncToGAS('addLead', leadData);
-            syncToGAS('addOrder', orderData);
+                // Simpan ke storage lokal
+                await DBStore.put('leads', leadData);
+                await DBStore.put('orders', orderData);
 
-            document.getElementById('successModal').classList.add('active');
+                // Sync ke GAS
+                syncToGAS('addLead', leadData);
+                syncToGAS('addOrder', orderData);
 
-            // Clear form
-            document.getElementById('buyerName').value = '';
-            document.getElementById('buyerEmail').value = '';
-            document.getElementById('buyerPhone').value = '';
-            document.getElementById('buyerCity').value = '';
-            document.getElementById('buyerAddress').value = '';
-            document.getElementById('buyerNotes').value = '';
-            document.getElementById('productDisplay').style.display = 'none';
+                // Tampilkan success modal
+                document.getElementById('successModal').classList.add('active');
+
+                // Clear form
+                document.getElementById('buyerName').value = '';
+                document.getElementById('buyerEmail').value = '';
+                document.getElementById('buyerPhone').value = '';
+                document.getElementById('buyerCity').value = '';
+                document.getElementById('buyerAddress').value = '';
+                document.getElementById('buyerNotes').value = '';
+                document.getElementById('selectedProduct').value = '';
+                document.getElementById('selectedPrice').value = '';
+                document.getElementById('productDisplayName').textContent = '-';
+                document.getElementById('productDisplayPrice').textContent = '-';
+                document.getElementById('productDisplay').style.display = 'none';
+
+            } catch(err) {
+                console.error('Submit error:', err);
+                showToast('Gagal mengirim. Coba lagi.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
         }
 
         function closeSuccessModal() {
