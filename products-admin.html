@@ -103,8 +103,10 @@
         .sync-status.syncing { color: var(--info); }
         .sync-status.synced { color: var(--success); }
         .sync-status.error { color: var(--danger); }
-        .debug-log { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 500px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
+        .debug-log { position: fixed; bottom: 44px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 500px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
         .debug-log.show { display: block; }
+        .debug-toggle-btn { position: fixed; bottom: 10px; right: 10px; background: #333; color: #0f0; border: 1px solid #0f0; border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 10px; cursor: pointer; z-index: 10000; opacity: 0.6; transition: opacity 0.3s; }
+        .debug-toggle-btn:hover { opacity: 1; }
         @media (max-width: 768px) {
             .sidebar { width: 100%; transform: translateX(-100%); transition: transform 0.3s; }
             .sidebar.open { transform: translateX(0); }
@@ -123,6 +125,7 @@
 
     <!-- DEBUG LOG PANEL -->
     <div class="debug-log" id="debugLog"></div>
+    <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
     <!-- ADMIN LOGIN OVERLAY -->
     <div id="loginOverlay" style="position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
@@ -365,9 +368,11 @@
                 panel.scrollTop = panel.scrollHeight;
             }
         };
-        // Toggle debug panel: tekan Ctrl+Shift+D
+        // Toggle debug panel: tombol pojok kanan bawah, atau shortcut Ctrl+Alt+D / Cmd+Option+D
         document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+            if (ctrlKey && e.altKey && e.key === 'd') {
                 e.preventDefault();
                 document.getElementById('debugLog').classList.toggle('show');
             }
