@@ -346,7 +346,7 @@
             // SAMA dengan index.html agar IndexedDB kompatibel
             DB_VERSION: 2,
             // GAS DEPLOYMENT URL
-            GAS_URL: 'https://script.google.com/macros/s/AKfycbwUlbpq99F9x0piNjFU0IGM5b-W9DVs2nUsnvfor183gj2vSj3cbulkM8qkUd5MO40/exec'
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec'
         };
 
         // ==================== DEBUG LOGGER ====================
@@ -528,55 +528,69 @@
             }
         };
 
-        // ==================== GAS: IFRAME FORM POST (PRIMARY) ====================
-        // PALING RELIABLE untuk kirim data ke GAS - bypass CORS dan redirect issues
-        function syncToGAS(action, data) {
+        // ==================== GAS: FETCH GET (PRIMARY) ====================
+        // TERBUKTI BEKERJA - getProducts sudah OK di log
+        // GAS code user handle semua action (saveProduct, register, dll) di doGet
+        async function syncToGAS(action, data) {
+            const params = new URLSearchParams();
+            params.append('action', action);
+            for (let key in data) {
+                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
+            }
+
+            const url = CONFIG.GAS_URL + '?' + params.toString();
+            Debug.log('GAS GET URL length:', url.length);
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const result = await response.json();
+                Debug.log('GAS GET OK:', action, result.success ? 'success' : 'fail');
+                return result.success;
+            } catch(err) {
+                Debug.log('GAS GET ERROR:', action + ': ' + err.message);
+                // Fallback: iframe form
+                return syncToGASIframe(action, data);
+            }
+        }
+
+        // Fallback: iframe form (hanya kalau fetch GET gagal)
+        function syncToGASIframe(action, data) {
             return new Promise((resolve) => {
                 const iframe = document.getElementById('gasFrame');
-                if (!iframe) {
-                    Debug.log('ERROR: gasFrame iframe tidak ditemukan!');
-                    resolve(false); return;
-                }
+                if (!iframe) { resolve(false); return; }
 
-                // Build form
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = CONFIG.GAS_URL;
                 form.target = 'gasFrame';
                 form.style.display = 'none';
 
-                // Action field
                 const actionField = document.createElement('input');
                 actionField.name = 'action';
                 actionField.value = action;
                 form.appendChild(actionField);
-                Debug.log('GAS action:', action);
 
-                // Data fields
-                let fieldCount = 0;
                 for (let key in data) {
                     const field = document.createElement('input');
                     field.name = key;
                     field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
                     form.appendChild(field);
-                    fieldCount++;
                 }
-                Debug.log('GAS fields:', fieldCount);
 
-                // Cleanup after iframe loads (indicates GAS processed request)
                 const cleanup = () => {
                     try { document.body.removeChild(form); } catch(e) {}
                     iframe.onload = null;
-                    Debug.log('GAS iframe selesai:', action);
+                    Debug.log('GAS iframe fallback selesai');
                     resolve(true);
                 };
 
                 iframe.onload = cleanup;
-                setTimeout(cleanup, 5000); // Safety: max 5 detik
+                setTimeout(cleanup, 5000);
 
                 document.body.appendChild(form);
                 form.submit();
-                Debug.log('GAS form submitted:', action, 'id=' + (data.id || 'n/a'));
+                Debug.log('GAS iframe fallback submitted');
             });
         }
 
@@ -705,8 +719,8 @@
 
             for (const p of demoProducts) {
                 await DBStore.put('products', p);
-                syncToGAS('saveProduct', p); // Fire-and-forget ke GAS
-                Debug.log('Demo product saved:', p.name);
+                const ok = await syncToGAS('saveProduct', p);
+                Debug.log('Demo product:', p.name, ok ? 'tersimpan di GAS' : 'GAS gagal');
             }
         }
 
@@ -823,35 +837,35 @@
             await DBStore.put('products', product);
             Debug.log('IndexedDB OK');
 
-            // 2. Kirim ke GAS via iframe form (PALING RELIABLE)
+            // 2. Kirim ke GAS via fetch GET (TERBUKTI BEKERJA)
             showToast('Menyimpan ke server...', 'info');
             const gasOk = await syncToGAS('saveProduct', product);
-            Debug.log('GAS iframe:', gasOk ? 'form submitted' : 'GAGAL');
+            Debug.log('GAS save:', gasOk ? 'SUKSES' : 'GAGAL');
 
             // 3. Tutup modal dan refresh UI
             closeModal('productModal');
-            showToast(gasOk ? 'Produk disimpan! Cek Google Sheet dalam 5 detik.' : 'Produk disimpan lokal. Sync manual kalau perlu.', gasOk ? 'success' : 'warning');
+            showToast(gasOk ? 'Produk disimpan di server!' : 'Produk disimpan lokal.', gasOk ? 'success' : 'warning');
             loadProducts();
             loadDashboard();
 
-            // 4. Verifikasi: fetch dari GAS setelah 3 detik
+            // 4. Verifikasi: fetch dari GAS setelah 2 detik
             setTimeout(async () => {
                 Debug.log('Verifikasi: fetch products dari GAS...');
                 const result = await fetchFromGAS('getProducts');
                 if (result.success && Array.isArray(result.data)) {
                     const found = result.data.find(p => p.id === product.id);
                     if (found) {
-                        Debug.log('VERIFIKASI OK:', 'Produk ditemukan di GAS!');
-                        updateSyncStatus('synced', 'Tersinkronasi');
+                        Debug.log('VERIFIKASI OK: Produk ditemukan di GAS!');
+                        updateSyncStatus('synced', result.data.length + ' produk di GAS');
                     } else {
-                        Debug.log('VERIFIKASI GAGAL:', 'Produk TIDAK ditemukan di GAS');
-                        Debug.log('GAS products count:', result.data.length);
-                        updateSyncStatus('error', 'Belum masuk GAS');
+                        Debug.log('VERIFIKASI GAGAL: Produk tidak ditemukan');
+                        Debug.log('GAS total products:', result.data.length);
+                        updateSyncStatus('error', 'Belum sinkron');
                     }
                 } else {
                     Debug.log('VERIFIKASI ERROR:', result.error || 'fetch gagal');
                 }
-            }, 3000);
+            }, 2000);
         }
 
         async function toggleProductStatus(productId, isActive) {
@@ -859,16 +873,20 @@
             if (!p) return;
             p.status = isActive ? 'Active' : 'Inactive';
             await DBStore.put('products', p);
-            await syncToGAS('saveProduct', p);
-            showToast('Status diupdate', 'success');
+            const ok = await syncToGAS('saveProduct', p);
+            showToast('Status diupdate' + (ok ? '' : ' (lokal)'), ok ? 'success' : 'warning');
             loadProducts();
             loadDashboard();
         }
 
         async function deleteProduct(productId) {
             if (!confirm('Yakin ingin menghapus produk ini?')) return;
+            const p = Data.products.find(p => p.id === productId);
             await DBStore.delete('products', productId);
-            await syncToGAS('saveProduct', { ...Data.products.find(p => p.id === productId), status: 'Deleted' });
+            if (p) {
+                p.status = 'Deleted';
+                await syncToGAS('saveProduct', p);
+            }
             showToast('Produk dihapus', 'success');
             loadProducts();
             loadDashboard();

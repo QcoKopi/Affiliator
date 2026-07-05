@@ -52,7 +52,6 @@
         .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
         .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
         .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
-        .card-body { padding: 1.5rem; }
         .table-container { overflow-x: auto; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; }
@@ -106,6 +105,10 @@
         .login-box { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); text-align: center; }
         .login-box h2 { color: var(--primary-dark); margin-bottom: 0.5rem; }
         .login-box p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .debug-log { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 500px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
+        .debug-log.show { display: block; }
+        .debug-toggle-btn { position: fixed; bottom: 10px; right: 10px; background: #333; color: #0f0; border: 1px solid #0f0; border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 10px; cursor: pointer; z-index: 10000; opacity: 0.6; transition: opacity 0.3s; }
+        .debug-toggle-btn:hover { opacity: 1; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
             .sidebar.open { transform: translateX(0); width: 260px; }
@@ -119,6 +122,9 @@
     <div class="toast-container" id="toastContainer"></div>
     <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
+    <!-- DEBUG LOG -->
+    <div class="debug-log" id="debugLog"></div>
+    <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
     <!-- LOGIN OVERLAY -->
     <div class="login-overlay" id="loginOverlay">
@@ -334,55 +340,104 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
+                <button class="btn btn-primary" id="btnUpdateLead" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
             </div>
         </div>
     </div>
 
     <script>
         // ==================== ACCESS CONTROL ====================
-        // PERBAIKAN: Cek admin session sebelum load apapun
         (function checkAccess() {
             try {
                 const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) {
-                    // Belum login sebagai admin → redirect ke halaman affiliator
-                    window.location.href = 'index.html';
-                    return;
-                }
+                if (!match) { window.location.href = 'index.html'; return; }
                 const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                // Admin OK → lanjut
-            } catch(e) {
-                window.location.href = 'index.html';
-            }
+                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
+            } catch(e) { window.location.href = 'index.html'; }
         })();
 
         // ==================== CONFIG ====================
         const CONFIG = {
-            GAS_URL: 'https://script.google.com/macros/s/AKfycbwUlbpq99F9x0piNjFU0IGM5b-W9DVs2nUsnvfor183gj2vSj3cbulkM8qkUd5MO40/exec',
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
             ADMIN_PASSWORD: 'admin123'
+        };
+
+        // ==================== DEBUG LOGGER ====================
+        const Debug = {
+            enabled: true,
+            log: function(msg, data) {
+                console.log('[AffAdmin]', msg, data || '');
+                const panel = document.getElementById('debugLog');
+                const time = new Date().toLocaleTimeString();
+                const line = document.createElement('div');
+                line.textContent = `[${time}] ${msg}`;
+                panel.appendChild(line);
+                if (data) {
+                    const detail = document.createElement('div');
+                    detail.style.cssText = 'color:#aaa;padding-left:12px;margin-bottom:4px;';
+                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 300);
+                    panel.appendChild(detail);
+                }
+                panel.scrollTop = panel.scrollHeight;
+            }
         };
 
         // ==================== STATE ====================
         let DATA = { users: [], leads: [], orders: [], commissions: [] };
 
-        // ==================== GAS FETCH ====================
+        // ==================== GAS: FETCH GET (TERBUKTI BEKERJA) ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                Debug.log('GAS GET:', action);
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 const result = await response.json();
-                console.log('GAS [' + action + ']:', result.success ? 'OK' : 'FAIL');
+                Debug.log('GAS GET OK:', action + ' count=' + (result.data ? result.data.length : 0));
                 return result;
             } catch(err) {
-                console.error('GAS fetch error [' + action + ']:', err.message);
+                Debug.log('GAS GET ERROR:', action + ': ' + err.message);
                 return { success: false, error: err.message };
             }
+        }
+
+        // ==================== GAS: SYNC WRITE (fetch GET - PRIMARY) ====================
+        async function syncToGAS(action, data) {
+            const params = new URLSearchParams();
+            params.append('action', action);
+            for (let key in data) {
+                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
+            }
+            const url = CONFIG.GAS_URL + '?' + params.toString();
+            Debug.log('GAS SYNC:', action);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const result = await response.json();
+                Debug.log('GAS SYNC OK:', action + ' ' + (result.success ? 'success' : 'fail'));
+                return result.success;
+            } catch(err) {
+                Debug.log('GAS SYNC ERROR:', action + ': ' + err.message);
+                // Fallback: iframe form
+                return syncToGASIframe(action, data);
+            }
+        }
+
+        // Fallback: iframe form
+        function syncToGASIframe(action, data) {
+            return new Promise((resolve) => {
+                const iframe = document.getElementById('gasFrame');
+                if (!iframe) { resolve(false); return; }
+                const form = document.createElement('form');
+                form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
+                const af = document.createElement('input'); af.name = 'action'; af.value = action; form.appendChild(af);
+                for (let key in data) { const f = document.createElement('input'); f.name = key; f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''); form.appendChild(f); }
+                const cleanup = () => { try { document.body.removeChild(form); } catch(e) {} iframe.onload = null; };
+                iframe.onload = cleanup; setTimeout(cleanup, 5000);
+                document.body.appendChild(form); form.submit();
+                Debug.log('GAS iframe fallback:', action);
+                resolve(true);
+            });
         }
 
         // ==================== SYNC ALL ====================
@@ -401,7 +456,6 @@
                 const result = await fetchFromGAS(item.action);
                 if (result.success && Array.isArray(result.data)) {
                     DATA[item.key] = result.data;
-                    console.log('Loaded', item.key + ':', result.data.length);
                 }
             }
 
@@ -422,7 +476,6 @@
             document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
             document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-            // Recent leads
             const recent = DATA.leads.slice(-5).reverse();
             document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
                 const aff = DATA.users.find(u => u.referralCode === l.referralCode);
@@ -507,7 +560,7 @@
             }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada komisi</td></tr>';
         }
 
-        // ==================== UPDATE LEAD ====================
+        // ==================== UPDATE LEAD (FIXED) ====================
         function openUpdateLeadModal(leadId) {
             const select = document.getElementById('updateLeadSelect');
             select.innerHTML = DATA.leads.map(l => `<option value="${l.id}">${l.name} (${l.status || 'Pending'})</option>`).join('');
@@ -523,12 +576,38 @@
             const leadId = document.getElementById('updateLeadSelect').value;
             const newStatus = document.getElementById('updateLeadStatus').value;
             const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
+            const btn = document.getElementById('btnUpdateLead');
 
             const lead = DATA.leads.find(l => l.id === leadId);
             if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
 
-            // Sync ke GAS
-            syncToGAS('updateLead', { leadId, status: newStatus, transactionValue: transValue });
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            Debug.log('=== UPDATE LEAD ===');
+            Debug.log('Lead ID:', leadId);
+            Debug.log('Status:', newStatus);
+
+            // PERBAIKAN: Gunakan fetch GET (terbukti bekerja) + await
+            // PERBAIKAN: Kirim 'id' (bukan 'leadId') supaya GAS updateSheetRow bisa match
+            const ok = await syncToGAS('updateLead', {
+                id: leadId,        // ← GAS updateSheetRow cari data[i][0] == id
+                status: newStatus,
+                transactionValue: transValue
+            });
+
+            Debug.log('GAS updateLead:', ok ? 'SUKSES' : 'GAGAL');
+
+            if (!ok) {
+                showToast('Gagal update ke server. Coba lagi.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Update';
+                return;
+            }
+
+            // Update local state
+            lead.status = newStatus;
+            if (newStatus === 'Converted') lead.transactionValue = transValue;
 
             // Jika status jadi Valid, tambah komisi
             if (newStatus === 'Valid' && lead.status !== 'Valid') {
@@ -543,12 +622,13 @@
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    syncToGAS('addCommission', commission);
+                    const commOk = await syncToGAS('addCommission', commission);
+                    Debug.log('GAS addCommission:', commOk ? 'SUKSES' : 'GAGAL');
                 }
             }
 
             // Jika status jadi Converted, tambah komisi transaksi
-            if (newStatus === 'Converted' && lead.status !== 'Converted' && transValue > 0) {
+            if (newStatus === 'Converted' && transValue > 0) {
                 const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
                 if (aff) {
                     const commission = {
@@ -560,50 +640,18 @@
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    syncToGAS('addCommission', commission);
+                    const commOk = await syncToGAS('addCommission', commission);
+                    Debug.log('GAS addCommission (trx):', commOk ? 'SUKSES' : 'GAGAL');
                 }
             }
-
-            // Update local
-            lead.status = newStatus;
-            if (newStatus === 'Converted') lead.transactionValue = transValue;
 
             closeModal('updateLeadModal');
-            showToast('Lead updated!', 'success');
-            renderCurrentPage();
+            showToast('Lead updated & tersimpan di server!', 'success');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Update';
 
-            // Refresh data dari server
+            // Refresh data dari server setelah 2 detik
             setTimeout(() => syncAllData(), 2000);
-        }
-
-        // ==================== GAS PUSH ====================
-        function syncToGAS(action, data) {
-            try {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = CONFIG.GAS_URL;
-                form.target = 'gasFrame';
-                form.style.display = 'none';
-
-                const actionField = document.createElement('input');
-                actionField.name = 'action';
-                actionField.value = action;
-                form.appendChild(actionField);
-
-                for (let key in data) {
-                    const field = document.createElement('input');
-                    field.name = key;
-                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
-                    form.appendChild(field);
-                }
-
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                console.log('Synced to GAS:', action);
-            } catch(err) {
-                console.error('GAS sync error:', err.message);
-            }
         }
 
         // ==================== NAVIGATION ====================
@@ -611,16 +659,13 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-
             const clicked = document.querySelector('.sidebar-menu a[data-page="' + page + '"]');
             if (clicked) clicked.classList.add('active');
-
             document.getElementById('pageTitle').textContent =
                 page === 'dashboard' ? 'Dashboard' :
                 page === 'affiliators' ? 'Affiliators' :
                 page === 'leads' ? 'Leads' :
                 page === 'orders' ? 'Orders' : 'Komisi';
-
             renderCurrentPage();
         }
 
