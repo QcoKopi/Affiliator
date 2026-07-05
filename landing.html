@@ -277,8 +277,28 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Alamat Lengkap</label>
-                <textarea class="form-textarea" id="buyerAddress" placeholder="Alamat pengiriman lengkap..."></textarea>
+                <label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label>
+                <input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12, Apartemen Tower A">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Provinsi <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerProvince" placeholder="Jawa Barat">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kota / Kabupaten <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerCity" placeholder="Bandung">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Kecamatan <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerDistrict" placeholder="Coblong">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kode Pos <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="buyerPostal" placeholder="40132">
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Catatan</label>
@@ -660,8 +680,11 @@
             const name = document.getElementById('buyerName').value.trim();
             const email = document.getElementById('buyerEmail').value.trim();
             const phone = document.getElementById('buyerPhone').value.trim();
+            const street = document.getElementById('buyerStreet').value.trim();
+            const province = document.getElementById('buyerProvince').value.trim();
             const city = document.getElementById('buyerCity').value.trim();
-            const address = document.getElementById('buyerAddress').value.trim();
+            const district = document.getElementById('buyerDistrict').value.trim();
+            const postal = document.getElementById('buyerPostal').value.trim();
             const notes = document.getElementById('buyerNotes').value.trim();
 
             // Validasi
@@ -670,8 +693,8 @@
                 document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
-            if (!name || !email || !phone || !city) {
-                showToast('Harap isi semua field wajib (Nama, Email, WhatsApp, Kota)', 'error'); return;
+            if (!name || !email || !phone || !street || !province || !city || !district || !postal) {
+                showToast('Harap isi semua field wajib', 'error'); return;
             }
             if (!email.includes('@') || !email.includes('.')) { showToast('Format email tidak valid', 'error'); return; }
             const phoneDigits = phone.replace(/\D/g, '');
@@ -695,7 +718,7 @@
                     date: now,
                     transactionValue: total,
                     source: 'Landing Page',
-                    notes: 'Produk: ' + productNames + ' | Kota: ' + city + ' | Alamat: ' + address + ' | Catatan: ' + notes
+                    notes: 'Produk: ' + productNames + ' | Alamat: ' + street + ', ' + district + ', ' + city + ', ' + province + ' ' + postal + ' | Catatan: ' + notes
                 };
 
                 // Simpan lead
@@ -712,7 +735,8 @@
                         buyerName: name,
                         buyerEmail: email,
                         buyerPhone: phone,
-                        buyerCity: city,
+                        buyerCity: city + ', ' + province,
+                        buyerAddress: street + ', ' + district + ', ' + postal,
                         price: item.price * item.qty,
                         qty: item.qty,
                         referralCode: refCode || 'DIRECT',
@@ -731,8 +755,11 @@
                 document.getElementById('buyerName').value = '';
                 document.getElementById('buyerEmail').value = '';
                 document.getElementById('buyerPhone').value = '';
+                document.getElementById('buyerStreet').value = '';
+                document.getElementById('buyerProvince').value = '';
                 document.getElementById('buyerCity').value = '';
-                document.getElementById('buyerAddress').value = '';
+                document.getElementById('buyerDistrict').value = '';
+                document.getElementById('buyerPostal').value = '';
                 document.getElementById('buyerNotes').value = '';
 
                 // Reset product buttons
