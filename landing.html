@@ -333,7 +333,7 @@
         const CONFIG = {
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
             DB_NAME: 'KopiAffiliateDB',
-            DB_VERSION: 2
+            DB_VERSION: 4
         };
 
         // ==================== CART STATE ====================
@@ -735,11 +735,8 @@
                         buyerName: name,
                         buyerEmail: email,
                         buyerPhone: phone,
-                        namaJalanGedung: street,
-                        provinsi: province,
-                        kotaKabupaten: city,
-                        kecamatan: district,
-                        kodePos: postal,
+                        buyerCity: city + ', ' + province,
+                        buyerAddress: street + ', ' + district + ', ' + postal,
                         price: item.price * item.qty,
                         qty: item.qty,
                         referralCode: refCode || 'DIRECT',
