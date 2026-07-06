@@ -533,13 +533,14 @@
 
         function renderOrders() {
             document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
+                const alamat = [o.namaJalanGedung, o.kecamatan, o.kotaKabupaten, o.provinsi, o.kodePos].filter(Boolean).join(', ');
                 return `<tr>
                     <td>${formatDate(o.date)}</td>
-                    <td>${o.productName || '-'}</td>
+                    <td>${o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
                     <td>${o.buyerName || '-'}</td>
                     <td>${o.buyerPhone || '-'}<br><small>${o.buyerEmail || ''}</small></td>
-                    <td>${o.buyerCity || '-'}</td>
-                    <td>${o.price ? 'Rp ' + formatNumber(o.price) : '-'}</td>
+                    <td>${alamat || '-'}</td>
+                    <td>${o.price ? 'Rp ' + formatNumber(o.price) : '-'}${o.ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(o.ongkir) + '</small>' : ''}</td>
                     <td>${o.referralCode || '-'}</td>
                     <td><span class="badge badge-${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span></td>
                 </tr>`;
