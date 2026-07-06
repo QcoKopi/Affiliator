@@ -161,7 +161,7 @@
             <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
             <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
             <li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
+            <li><a href="affiliator-admin.html"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a></li>
             <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
         </ul>
     </aside>
@@ -352,7 +352,14 @@
                 const match = document.cookie.match(/aff_admin_session=([^;]+)/);
                 if (!match) { window.location.href = 'index.html'; return; }
                 const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
+                // Check cookie expired (8 hours max)
+                const now = Date.now();
+                const eightHours = 8 * 60 * 60 * 1000;
+                if (!session || !session.isAdmin || !session.ts || (now - session.ts) > eightHours) {
+                    document.cookie = 'aff_admin_session=; path=/; max-age=0';
+                    window.location.href = 'index.html';
+                    return;
+                }
             } catch(e) { window.location.href = 'index.html'; }
         })();
 
