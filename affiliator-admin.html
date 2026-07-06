@@ -613,13 +613,16 @@
                 btn.innerHTML = '<i class="fas fa-save"></i> Update';
                 return;
             }
+            // Simpan status lama SEBELUM update
+            const oldStatus = lead.status;
 
             // Update local state
-            lead.status = newStatus;
-            if (newStatus === 'Converted') lead.transactionValue = transValue;
+lead.status = newStatus;
+if (newStatus === 'Converted') lead.transactionValue = transValue;
 
-            // Jika status jadi Valid, tambah komisi
-            if (newStatus === 'Valid' && lead.status !== 'Valid') {
+// Jika status BARU jadi Valid dan sebelumnya bukan Valid
+if (newStatus === 'Valid' && oldStatus !== 'Valid') {
+    
                 const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
                 if (aff) {
                     const commission = {
