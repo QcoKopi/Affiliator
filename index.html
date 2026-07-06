@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliator Admin - Kopi Affiliate</title>
+    <title>Kopi Affiliate - Complete System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,7 +12,7 @@
             --primary-light: #8D6E63;
             --primary-dark: #3E2723;
             --accent: #A1887F;
-            --bg: #F5F3F0;
+            --bg: #FAFAF8;
             --card-bg: #FFFFFF;
             --text: #2C2C2C;
             --text-light: #6B6B6B;
@@ -28,166 +28,155 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .sidebar { width: 260px; background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.5rem; overflow-y: auto; z-index: 1000; }
-        .sidebar-brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-menu { list-style: none; }
-        .sidebar-menu li { margin-bottom: 0.5rem; }
-        .sidebar-menu a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: all 0.3s; cursor: pointer; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { color: white; background: rgba(255,255,255,0.1); }
-        .sidebar-menu i { width: 20px; text-align: center; }
-        .main { margin-left: 260px; min-height: 100vh; }
-        .header { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .header h1 { font-size: 1.25rem; color: var(--primary-dark); }
-        .content { padding: 2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.1rem; }
+        .navbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; }
+        .navbar-brand i { color: var(--primary-light); }
+        .navbar-nav { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-link { color: var(--text-light); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: color 0.3s; cursor: pointer; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .btn { padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .main-content { margin-top: 70px; min-height: calc(100vh - 70px); }
+        .hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 4rem 2rem; text-align: center; }
+        .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .section { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-dark); }
+        .section-subtitle { color: var(--text-light); margin-bottom: 2rem; }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.3rem; }
         .stat-icon.blue { background: #E3F2FD; color: var(--info); }
         .stat-icon.green { background: #E8F5E9; color: var(--success); }
         .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
         .stat-icon.purple { background: #F3E5F5; color: #9C27B0; }
-        .stat-icon.red { background: #FFEBEE; color: var(--danger); }
-        .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); }
-        .stat-label { font-size: 0.8rem; color: var(--text-light); }
-        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
+        .stat-icon.brown { background: #EFEBE9; color: var(--primary); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
+        .stat-label { font-size: 0.85rem; color: var(--text-light); }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .form-label .required { color: var(--danger); }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; transition: all 0.3s; background: var(--card-bg); }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary-light); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .table-container { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .data-table tr:hover { background: var(--bg); }
-        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; border-bottom: 2px solid var(--border); }
+        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
         .badge-pending { background: #FFF3E0; color: var(--warning); }
         .badge-valid { background: #E8F5E9; color: var(--success); }
         .badge-converted { background: #E3F2FD; color: var(--info); }
         .badge-rejected { background: #FFEBEE; color: var(--danger); }
-        .badge-active { background: #E8F5E9; color: var(--success); }
-        .btn { padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.4rem; }
-        .form-input, .form-select { width: 100%; padding: 0.6rem 0.875rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary-light); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .referral-box { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 2rem; border-radius: var(--radius); margin-bottom: 2rem; }
+        .referral-link { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .referral-link input { flex: 1; padding: 0.75rem 1rem; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; background: rgba(255,255,255,0.9); }
+        .referral-link button { padding: 0.75rem 1.5rem; background: var(--primary-dark); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; }
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 1rem; }
         .modal-overlay.active { display: flex; }
-        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { color: var(--primary-dark); font-size: 1.1rem; }
+        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; }
         .modal-body { padding: 1.5rem; }
         .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast-container { position: fixed; top: 90px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; min-width: 300px; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
-        .toast.info { border-left-color: var(--info); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-light); }
-        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
-        .sync-status { font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .sync-status.synced { color: var(--success); }
+        .hidden { display: none !important; }
+        .admin-badge { background: var(--danger); color: white; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; }
+        .debug-panel { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
+        .debug-panel.show { display: block; }
+        .sync-status { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-light); margin-left: 0.5rem; }
         .sync-status.syncing { color: var(--info); }
+        .sync-status.synced { color: var(--success); }
         .sync-status.error { color: var(--danger); }
-        .filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
-        .filter-bar input, .filter-bar select { padding: 0.5rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.85rem; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .login-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .login-box { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); text-align: center; }
-        .login-box h2 { color: var(--primary-dark); margin-bottom: 0.5rem; }
-        .login-box p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 1.5rem; }
-        .debug-log { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 500px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
-        .debug-log.show { display: block; }
-        .debug-toggle-btn { position: fixed; bottom: 10px; right: 10px; background: #333; color: #0f0; border: 1px solid #0f0; border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 10px; cursor: pointer; z-index: 10000; opacity: 0.6; transition: opacity 0.3s; }
-        .debug-toggle-btn:hover { opacity: 1; }
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
-            .sidebar.open { transform: translateX(0); width: 260px; }
-            .main { margin-left: 0; }
+            .navbar { padding: 1rem; }
             .form-row { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
+
     <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
-    <!-- DEBUG LOG -->
-    <div class="debug-log" id="debugLog"></div>
-    <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
-    <!-- LOGIN OVERLAY -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-box">
-            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i></div>
-            <h2>Affiliator Admin</h2>
-            <p>Kelola seluruh data affiliator, leads, dan komisi</p>
-            <div class="form-group" style="text-align: left;">
-                <label class="form-label">Password Admin</label>
-                <input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align: center; font-size: 1rem;" onkeypress="if(event.key==='Enter')adminLogin()">
-            </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="adminLogin()">
-                <i class="fas fa-unlock"></i> Masuk
-            </button>
-            <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                <a href="index.html" class="btn btn-outline" style="width: 100%; font-size: 0.8rem; text-decoration: none; justify-content: center;">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
-                </a>
-            </div>
+    <!-- DEBUG PANEL (tekan Ctrl+Shift+D untuk toggle) -->
+    <div class="debug-panel" id="debugPanel"></div>
+
+    <nav class="navbar" id="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-coffee"></i>
+            <span>Kopi Affiliate</span>
         </div>
-    </div>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <i class="fas fa-user-shield"></i>
-            <span>Affiliator Admin</span>
+        <div class="navbar-nav" id="navLinks">
+            <a class="nav-link active" data-page="home">Beranda</a>
+            <button class="btn btn-primary btn-sm" id="authBtn" onclick="showAuthModal()">Masuk</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('adminLoginModal').classList.add('active')"><i class="fas fa-shield-alt"></i> Admin</button>
         </div>
-        <ul class="sidebar-menu">
-            <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
-            <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
-            <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
-            <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
-            <li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
-            <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
-        </ul>
-    </aside>
+    </nav>
 
-    <!-- MAIN CONTENT -->
-    <div class="main" id="mainContent" style="display:none;">
-        <div class="header">
-            <h1 id="pageTitle">Dashboard</h1>
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Loading...</span>
-                <button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <main class="main-content">
+
+        <!-- PUBLIC: HOME -->
+        <div id="page-home" class="page-section active">
+            <div class="hero">
+                <h1><i class="fas fa-handshake"></i> Program Affiliate Kopi</h1>
+                <p>Jadikan jaringan Anda aset. Dapatkan komisi dari setiap lead dan transaksi.</p>
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;" onclick="showAuthModal('register')">
+                    <i class="fas fa-rocket"></i> Daftar Sekarang
+                </button>
+            </div>
+            <div class="section" style="text-align: center;">
+                <h2 class="section-title">Struktur Komisi</h2>
+                <div class="stats-grid" style="max-width: 800px; margin: 0 auto;">
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-value">Rp 10.000</div>
+                        <div class="stat-label">Per Lead Valid</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-percentage"></i></div>
+                        <div class="stat-value">5%</div>
+                        <div class="stat-label">Dari Transaksi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon brown"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-value">Rp 100rb</div>
+                        <div class="stat-label">Minimal Payout</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="content">
-            <!-- DASHBOARD -->
-            <div id="page-dashboard" class="page active">
+        <!-- AFFILIATOR: DASHBOARD -->
+        <div id="page-dashboard" class="page-section">
+            <div class="section">
+                <div class="referral-box">
+                    <h3><i class="fas fa-link"></i> Link Referral Anda</h3>
+                    <div class="referral-link">
+                        <input type="text" id="referralLinkInput" readonly>
+                        <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Salin</button>
+                    </div>
+                </div>
+                <h2 class="section-title">Ringkasan Performa</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" id="dashTotalAff">0</div>
-                        <div class="stat-label">Total Affiliators</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon orange"><i class="fas fa-address-book"></i></div>
                         <div class="stat-value" id="dashTotalLeads">0</div>
                         <div class="stat-label">Total Leads</div>
                     </div>
@@ -197,127 +186,165 @@
                         <div class="stat-label">Leads Valid</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div>
-                        <div class="stat-value" id="dashTotalOrders">0</div>
-                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="stat-value" id="dashTotalCommission">Rp 0</div>
+                        <div class="stat-label">Total Komisi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AFFILIATOR: LEADS -->
+        <div id="page-leads" class="page-section">
+            <div class="section">
+                <h2 class="section-title">Daftar Leads</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>Tanggal</th><th>Nama</th><th>Kontak</th><th>Status</th><th>Komisi</th></tr></thead>
+                        <tbody id="affLeadsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN: PANEL -->
+        <div id="page-admin" class="page-section">
+            <div class="section">
+                <h2 class="section-title">Admin Panel <span class="admin-badge">ADMIN</span></h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                        <div class="stat-value" id="adminTotalAff">0</div>
+                        <div class="stat-label">Affiliators</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div>
-                        <div class="stat-value" id="dashTotalComm">Rp 0</div>
+                        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-value" id="adminTotalLeads">0</div>
+                        <div class="stat-label">Total Leads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="stat-value" id="adminTotalComm">Rp 0</div>
                         <div class="stat-label">Total Komisi</div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-clock"></i> Leads Terbaru</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Aksi</th></tr></thead>
-                                <tbody id="recentLeadsBody"></tbody>
-                            </table>
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Manage Leads</h3>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Sinkronasi...</span>
+                            <button class="btn btn-primary btn-sm" onclick="manualSync()"><i class="fas fa-sync-alt"></i> Sync</button>
+                            <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Lead</button>
                         </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Affiliator</th><th>Status</th><th>Nilai</th><th>Aksi</th></tr></thead>
+                            <tbody id="adminLeadsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header"><h3>Daftar Affiliators</h3></div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>Nama</th><th>Email</th><th>Referral</th><th>Leads</th><th>Komisi</th></tr></thead>
+                            <tbody id="adminAffBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- AFFILIATORS -->
-            <div id="page-affiliators" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div>
-                        <span style="font-size: 0.85rem; color: var(--text-light);" id="affiliatorCount">0 affiliator</span>
+    </main>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 id="authModalTitle">Masuk</h3>
+                <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="loginEmail" placeholder="affiliator@email.com">
                     </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th></tr>
-                                </thead>
-                                <tbody id="affiliatorsBody"></tbody>
-                            </table>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnLogin" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i> Masuk
+                    </button>
+                    <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                        Belum punya akun? <a href="#" onclick="switchAuthMode('register')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Daftar</a>
                     </div>
                 </div>
-            </div>
-
-            <!-- LEADS -->
-            <div id="page-leads" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-address-book"></i> Semua Leads</div>
-                        <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="filter-bar">
-                            <select id="filterLeadStatus" onchange="renderLeads()">
-                                <option value="">Semua Status</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Valid">Valid</option>
-                                <option value="Converted">Converted</option>
-                                <option value="Rejected">Rejected</option>
-                            </select>
-                            <input type="text" id="filterLeadSearch" placeholder="Cari nama..." oninput="renderLeads()">
+                <div id="registerForm" class="hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nama <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="regName" placeholder="Nama Anda">
                         </div>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody id="leadsBody"></tbody>
-                            </table>
+                        <div class="form-group">
+                            <label class="form-label">Email <span class="required">*</span></label>
+                            <input type="email" class="form-input" id="regEmail" placeholder="email@anda.com">
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- ORDERS -->
-            <div id="page-orders" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-shopping-cart"></i> Semua Orders</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Produk</th><th>Buyer</th><th>Kontak</th><th>Alamat</th><th>Harga</th><th>Referral</th><th>Status</th></tr>
-                                </thead>
-                                <tbody id="ordersBody"></tbody>
-                            </table>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp <span class="required">*</span></label>
+                            <input type="tel" class="form-input" id="regPhone" placeholder="08123456789">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="regPassword" placeholder="Minimal 6 karakter">
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- COMMISSIONS -->
-            <div id="page-commissions" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div>
+                    <div class="form-group">
+                        <label class="form-label">Bank & Rekening <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="regBank" placeholder="BCA 1234567890 a.n Nama">
                     </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th></tr>
-                                </thead>
-                                <tbody id="commissionsBody"></tbody>
-                            </table>
-                        </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnRegister" onclick="register()">
+                        <i class="fas fa-user-plus"></i> Daftar
+                    </button>
+                    <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                        Sudah punya akun? <a href="#" onclick="switchAuthMode('login')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Masuk</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ADMIN LOGIN MODAL -->
+    <div class="modal-overlay" id="adminLoginModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-shield-alt"></i> Admin Login</h3>
+                <button class="modal-close" onclick="closeModal('adminLoginModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Password Admin</label>
+                    <input type="password" class="form-input" id="adminPasswordInput" placeholder="Masukkan password admin">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">
+                    <i class="fas fa-unlock"></i> Masuk Admin
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- UPDATE LEAD MODAL -->
     <div class="modal-overlay" id="updateLeadModal">
-        <div class="modal">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Update Status Lead</h3>
+                <h3><i class="fas fa-edit"></i> Update Lead</h3>
                 <button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -338,242 +365,853 @@
                     <label class="form-label">Nilai Transaksi (Rp)</label>
                     <input type="number" class="form-input" id="updateTransValue" placeholder="0">
                 </div>
+                <div style="background: #E8F5E9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                    <p style="color: var(--success); font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-calculator"></i> Komisi:</p>
+                    <p>Lead Valid: Rp 10.000</p>
+                    <p>Transaksi: 5% dari nilai transaksi</p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
-                <button class="btn btn-primary" id="btnUpdateLead" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
+                <button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== ACCESS CONTROL ====================
-        (function checkAccess() {
-            try {
-                const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) { window.location.href = 'index.html'; return; }
-                const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
-            } catch(e) { window.location.href = 'index.html'; }
-        })();
-
         // ==================== CONFIG ====================
         const CONFIG = {
+            // PERBAIKAN: GAS URL yang benar sesuai dari user
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
-            ADMIN_PASSWORD: 'admin123'
+            COMMISSION_PER_LEAD: 10000,
+            COMMISSION_PERCENTAGE: 5,
+            MIN_PAYOUT: 100000,
+            ADMIN_PASSWORD: 'admin123',
+            DB_NAME: 'KopiAffiliateDB',
+            DB_VERSION: 2,
+            STORE_USERS: 'users',
+            STORE_LEADS: 'leads',
+            STORE_COMMISSIONS: 'commissions',
+            STORE_SESSION: 'session'
         };
 
         // ==================== DEBUG LOGGER ====================
-        const Debug = {
-            enabled: true,
+        const DEBUG = {
+            enabled: false,
             log: function(msg, data) {
-                console.log('[AffAdmin]', msg, data || '');
-                const panel = document.getElementById('debugLog');
+                const panel = document.getElementById('debugPanel');
+                if (!this.enabled) return;
                 const time = new Date().toLocaleTimeString();
                 const line = document.createElement('div');
                 line.textContent = `[${time}] ${msg}`;
                 panel.appendChild(line);
                 if (data) {
                     const detail = document.createElement('div');
-                    detail.style.cssText = 'color:#aaa;padding-left:12px;margin-bottom:4px;';
-                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 300);
+                    detail.style.color = '#aaa';
+                    detail.style.paddingLeft = '20px';
+                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 200);
                     panel.appendChild(detail);
                 }
                 panel.scrollTop = panel.scrollHeight;
             }
         };
 
-        // ==================== STATE ====================
-        let DATA = { users: [], leads: [], orders: [], commissions: [] };
+        // Toggle debug: Ctrl+Shift+D (Win/Linux) or Cmd+Shift+D (Mac)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                DEBUG.enabled = !DEBUG.enabled;
+                document.getElementById('debugPanel').classList.toggle('show');
+                DEBUG.log('Debug mode ' + (DEBUG.enabled ? 'ON' : 'OFF'));
+            }
+        });
 
-        // ==================== GAS: FETCH GET (TERBUKTI BEKERJA) ====================
+        // ==================== STORAGE ENGINE (IndexedDB > localStorage > Memory) ====================
+        const DBStore = {
+            db: null,
+            ready: false,
+            mode: 'unknown', // 'indexeddb' | 'localstorage' | 'memory'
+            memory: { users: [], leads: [], commissions: [], products: [], orders: [] },
+            initPromise: null,
+
+            init: function() {
+                if (this.initPromise) return this.initPromise;
+                // PERBAIKAN: Paksa resolve dalam 3.5 detik - tidak peduli apa yang terjadi
+                this.initPromise = Promise.race([
+                    this._tryInit(),
+                    new Promise(resolve => setTimeout(() => {
+                        if (!this.ready) {
+                            console.log('Storage init FORCED timeout - using memory mode');
+                            this.mode = 'memory';
+                            this.ready = true;
+                        }
+                        resolve();
+                    }, 3500))
+                ]);
+                return this.initPromise;
+            },
+
+            _tryInit: async function() {
+                // PERBAIKAN: Coba IndexedDB dulu dengan timeout 3 detik
+                try {
+                    await this._initIndexedDB(3000);
+                    this.mode = 'indexeddb';
+                    this.ready = true;
+                    DEBUG.log('Storage: IndexedDB');
+                    return;
+                } catch(e) {
+                    DEBUG.log('IndexedDB gagal:', e.message || e);
+                }
+
+                // PERBAIKAN: Fallback ke localStorage
+                try {
+                    this._testLocalStorage();
+                    this.mode = 'localstorage';
+                    this.ready = true;
+                    DEBUG.log('Storage: localStorage');
+                    return;
+                } catch(e) {
+                    DEBUG.log('localStorage gagal:', e.message || e);
+                }
+
+                // PERBAIKAN: Terakhir, pakai memory only
+                this.mode = 'memory';
+                this.ready = true;
+                DEBUG.log('Storage: in-memory only');
+                showToast('Mode tanpa penyimpanan - data hilang saat refresh', 'warning');
+            },
+
+            _initIndexedDB: function(timeoutMs) {
+                return new Promise((resolve, reject) => {
+                    if (!window.indexedDB) {
+                        reject('IndexedDB not supported');
+                        return;
+                    }
+
+                    const timer = setTimeout(() => {
+                        reject('IndexedDB timeout - mungkin diblokir oleh iframe/browser');
+                    }, timeoutMs);
+
+                    const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+
+                    request.onerror = () => {
+                        clearTimeout(timer);
+                        reject(request.error);
+                    };
+
+                    request.onblocked = () => {
+                        clearTimeout(timer);
+                        reject('blocked');
+                    };
+
+                    request.onsuccess = () => {
+                        clearTimeout(timer);
+                        this.db = request.result;
+                        this.db.onversionchange = () => { this.db.close(); location.reload(); };
+                        resolve(this.db);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id' });
+                    };
+                });
+            },
+
+            _testLocalStorage: function() {
+                // PERBAIKAN: Lebih robust untuk iframe context
+                // Di Google Sites iframe, localStorage bisa throw SecurityError
+                try {
+                    if (typeof window.localStorage === 'undefined') throw new Error('not available');
+                    // Coba akses - ini bisa throw DOMException: SecurityError
+                    const storage = window.localStorage;
+                    const k = '_aff_test_' + Date.now();
+                    storage.setItem(k, '1');
+                    const v = storage.getItem(k);
+                    storage.removeItem(k);
+                    if (v !== '1') throw new Error('mismatch');
+                    return true;
+                } catch(e) {
+                    console.log('localStorage blocked:', e.name || e.message || 'unknown');
+                    throw new Error('blocked');
+                }
+            },
+
+            waitForReady: async function() {
+                if (this.ready) return;
+                if (this.initPromise) { await this.initPromise; return; }
+                // PERBAIKAN: Kalau init belum pernah dipanggil, panggil sekarang
+                await this.init();
+            },
+
+            // KEY: prefix + storeName, misal: aff_users
+            _lsKey: function(storeName) { return 'aff_' + storeName; },
+
+            _lsGet: function(storeName) {
+                try {
+                    const raw = localStorage.getItem(this._lsKey(storeName));
+                    return raw ? JSON.parse(raw) : [];
+                } catch(e) { return []; }
+            },
+
+            _lsSet: function(storeName, data) {
+                try {
+                    localStorage.setItem(this._lsKey(storeName), JSON.stringify(data));
+                } catch(e) {
+                    // localStorage penuh
+                }
+            },
+
+            getAll: function(storeName) {
+                return new Promise((resolve) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readonly');
+                        const store = tx.objectStore(storeName);
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => resolve([]);
+                    } else if (this.mode === 'localstorage') {
+                        resolve(this._lsGet(storeName));
+                    } else {
+                        resolve(this.memory[storeName] || []);
+                    }
+                });
+            },
+
+            getById: function(storeName, id) {
+                return new Promise((resolve) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readonly');
+                        const store = tx.objectStore(storeName);
+                        const req = store.get(id);
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => resolve(null);
+                    } else {
+                        this.getAll(storeName).then(items => {
+                            resolve(items.find(x => x.id === id) || null);
+                        });
+                    }
+                });
+            },
+
+            put: function(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.put(data);
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => reject(req.error);
+                    } else if (this.mode === 'localstorage') {
+                        const items = this._lsGet(storeName);
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        this._lsSet(storeName, items);
+                        resolve();
+                    } else {
+                        const items = this.memory[storeName] || [];
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        resolve();
+                    }
+                });
+            },
+
+            delete: function(storeName, id) {
+                return new Promise((resolve, reject) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.delete(id);
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => reject(req.error);
+                    } else if (this.mode === 'localstorage') {
+                        const items = this._lsGet(storeName).filter(x => x.id !== id);
+                        this._lsSet(storeName, items);
+                        resolve();
+                    } else {
+                        this.memory[storeName] = (this.memory[storeName] || []).filter(x => x.id !== id);
+                        resolve();
+                    }
+                });
+            },
+
+            clear: function(storeName) {
+                return new Promise((resolve) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.clear();
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => resolve();
+                    } else if (this.mode === 'localstorage') {
+                        localStorage.removeItem(this._lsKey(storeName));
+                        resolve();
+                    } else {
+                        this.memory[storeName] = [];
+                        resolve();
+                    }
+                });
+            }
+        };
+
+        // ==================== IN-MEMORY CACHE ====================
+        let DB = {
+            users: [],
+            leads: [],
+            commissions: [],
+            currentUser: null,
+            isAdmin: false
+        };
+
+        // ==================== SHARED ADMIN SESSION (cross-page) ====================
+        const AdminSession = {
+            save: function() {
+                try {
+                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
+                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
+                } catch(e) {}
+            },
+            load: function() {
+                try {
+                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
+                    if (match) return JSON.parse(decodeURIComponent(match[1]));
+                } catch(e) {}
+                return null;
+            },
+            clear: function() {
+                document.cookie = 'aff_admin_session=; path=/; max-age=0';
+            },
+            isActive: function() {
+                const s = this.load();
+                return !!(s && s.isAdmin);
+            }
+        };
+
+        // ==================== SESSION MANAGEMENT ====================
+        const SessionManager = {
+            saveSession: function() {
+                const sessionData = {
+                    userId: DB.currentUser ? DB.currentUser.id : null,
+                    isAdmin: DB.isAdmin,
+                    timestamp: Date.now()
+                };
+                const json = encodeURIComponent(JSON.stringify(sessionData));
+                document.cookie = 'aff_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
+                DEBUG.log('Session saved to cookie', sessionData);
+            },
+
+            loadSession: function() {
+                try {
+                    const match = document.cookie.match(/aff_session=([^;]+)/);
+                    if (match) {
+                        const session = JSON.parse(decodeURIComponent(match[1]));
+                        DEBUG.log('Session loaded from cookie', session);
+                        return session;
+                    }
+                } catch(e) {
+                    DEBUG.log('Session cookie error:', e.message);
+                }
+                return null;
+            },
+
+            clearSession: function() {
+                document.cookie = 'aff_session=; path=/; max-age=0';
+                DEBUG.log('Session cleared');
+            },
+
+            restoreSession: async function() {
+                const sessionCookie = this.loadSession();
+                if (!sessionCookie) {
+                    DEBUG.log('No session cookie found');
+                    return false;
+                }
+
+                if (sessionCookie.isAdmin) {
+                    DB.isAdmin = true;
+                    DEBUG.log('Admin session restored');
+                    return true;
+                }
+
+                if (sessionCookie.userId) {
+                    const user = await DBStore.getById(CONFIG.STORE_USERS, sessionCookie.userId);
+                    if (user) {
+                        DB.currentUser = user;
+                        DEBUG.log('User session restored', user.email);
+                        return true;
+                    } else {
+                        DEBUG.log('User not found in DB, clearing session');
+                        this.clearSession();
+                    }
+                }
+
+                return false;
+            }
+        };
+
+        // ==================== DATA SYNC ====================
+        const DataSync = {
+            loadAll: async function() {
+                try {
+                    DB.users = await DBStore.getAll(CONFIG.STORE_USERS);
+                    DB.leads = await DBStore.getAll(CONFIG.STORE_LEADS);
+                    DB.commissions = await DBStore.getAll(CONFIG.STORE_COMMISSIONS);
+                    DEBUG.log('Data loaded from IndexedDB', {
+                        users: DB.users.length,
+                        leads: DB.leads.length,
+                        commissions: DB.commissions.length
+                    });
+                } catch(e) {
+                    DEBUG.log('Error loading from IndexedDB:', e.message);
+                    this.loadFromCookieFallback();
+                }
+            },
+
+            saveUser: async function(user) {
+                await DBStore.put(CONFIG.STORE_USERS, user);
+                const idx = DB.users.findIndex(u => u.id === user.id);
+                if (idx >= 0) DB.users[idx] = user;
+                else DB.users.push(user);
+                DEBUG.log('User saved', user.email);
+            },
+
+            saveLead: async function(lead) {
+                await DBStore.put(CONFIG.STORE_LEADS, lead);
+                const idx = DB.leads.findIndex(l => l.id === lead.id);
+                if (idx >= 0) DB.leads[idx] = lead;
+                else DB.leads.push(lead);
+                DEBUG.log('Lead saved', lead.name);
+            },
+
+            saveCommission: async function(commission) {
+                await DBStore.put(CONFIG.STORE_COMMISSIONS, commission);
+                const idx = DB.commissions.findIndex(c => c.id === commission.id);
+                if (idx >= 0) DB.commissions[idx] = commission;
+                else DB.commissions.push(commission);
+                DEBUG.log('Commission saved', commission.amount);
+            },
+
+            loadFromCookieFallback: function() {
+                try {
+                    const saved = document.cookie.match(/affiliate_db=([^;]+)/);
+                    if (saved) {
+                        const data = JSON.parse(decodeURIComponent(saved[1]));
+                        DB.users = data.users || [];
+                        DB.leads = data.leads || [];
+                        DB.commissions = data.commissions || [];
+                        DEBUG.log('Data loaded from cookie fallback');
+                    }
+                } catch(e) {
+                    DEBUG.log('Cookie fallback failed:', e.message);
+                }
+            },
+
+            saveToCookieFallback: function() {
+                try {
+                    const data = {
+                        users: DB.users,
+                        leads: DB.leads,
+                        commissions: DB.commissions
+                    };
+                    const json = encodeURIComponent(JSON.stringify(data));
+                    if (json.length < 3500) {
+                        document.cookie = 'affiliate_db=' + json + '; path=/; max-age=31536000; SameSite=Lax';
+                        DEBUG.log('Data saved to cookie fallback');
+                    }
+                } catch(e) {
+                    DEBUG.log('Cookie fallback save failed:', e.message);
+                }
+            }
+        };
+
+        // ==================== GAS INTEGRATION (ROBUST) ====================
+        async function syncToGAS(action, data) {
+            const params = new URLSearchParams();
+            params.append('action', action);
+            for (let key in data) {
+                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
+            }
+            try {
+                await fetch(CONFIG.GAS_URL, { method: 'POST', body: params });
+                DEBUG.log('GAS sync OK:', action);
+                return true;
+            } catch(err) {
+                DEBUG.log('GAS fetch failed:', err.message);
+                // Fallback iframe
+                const iframe = document.getElementById('gasFrame');
+                const form = document.createElement('form');
+                form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
+                const af = document.createElement('input'); af.name = 'action'; af.value = action; form.appendChild(af);
+                for (let key in data) { const f = document.createElement('input'); f.name = key; f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''); form.appendChild(f); }
+                const cleanup = () => { try { document.body.removeChild(form); } catch(e) {} iframe.onload = null; };
+                iframe.onload = cleanup; setTimeout(cleanup, 5000);
+                document.body.appendChild(form); form.submit();
+                return true;
+            }
+        }
+
+        // ==================== GAS INTEGRATION (FETCH) - PERBAIKAN BARU ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-                Debug.log('GAS GET:', action);
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    // mode: 'no-cors' would hide the response, so we try with cors first
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
                 const result = await response.json();
-                Debug.log('GAS GET OK:', action + ' count=' + (result.data ? result.data.length : 0));
+                DEBUG.log('GAS fetch [' + action + ']:', result.success ? 'OK' : 'FAIL');
                 return result;
             } catch(err) {
-                Debug.log('GAS GET ERROR:', action + ': ' + err.message);
+                DEBUG.log('GAS fetch error [' + action + ']:', err.message);
                 return { success: false, error: err.message };
             }
         }
 
-        // ==================== GAS: SYNC WRITE (iframe form POST - PRIMARY) ====================
-        // Iframe form POST = paling reliable untuk kirim data ke GAS
-        // Tidak ada batasan URL length (masalah utama fetch GET untuk addCommission)
-        async function syncToGAS(action, data) {
-            Debug.log('GAS SYNC:', action);
-            const iframe = document.getElementById('gasFrame');
-            if (!iframe) {
-                Debug.log('ERROR: gasFrame tidak ditemukan');
-                return false;
-            }
-            return new Promise((resolve) => {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = CONFIG.GAS_URL;
-                form.target = 'gasFrame';
-                form.style.display = 'none';
+        async function syncAllFromGAS() {
+            updateSyncStatus('syncing', 'Sinkronasi...');
+            DEBUG.log('=== SYNCING FROM GAS ===');
 
-                const af = document.createElement('input');
-                af.name = 'action';
-                af.value = action;
-                form.appendChild(af);
+            const actions = ['getUsers', 'getLeads', 'getCommissions'];
+            const stores = [CONFIG.STORE_USERS, CONFIG.STORE_LEADS, CONFIG.STORE_COMMISSIONS];
+            const arrays = ['users', 'leads', 'commissions'];
 
-                for (let key in data) {
-                    const f = document.createElement('input');
-                    f.name = key;
-                    f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
-                    form.appendChild(f);
+            let hasError = false;
+
+            for (let i = 0; i < actions.length; i++) {
+                const result = await fetchFromGAS(actions[i]);
+                if (result.success && Array.isArray(result.data)) {
+                    // Merge data: add new items, skip existing
+                    for (const item of result.data) {
+                        if (!item || !item.id) continue;
+                        const existing = DB[arrays[i]].find(x => x.id === item.id);
+                        if (!existing) {
+                            DB[arrays[i]].push(item);
+                            await DBStore.put(stores[i], item);
+                            DEBUG.log('Added from GAS:', item.id);
+                        }
+                    }
+                    DEBUG.log(actions[i] + ': fetched ' + result.data.length + ' items');
+                } else {
+                    hasError = true;
+                    DEBUG.log(actions[i] + ': failed', result.error);
                 }
+            }
 
-                let resolved = false;
-                const cleanup = () => {
-                    if (resolved) return;
-                    resolved = true;
-                    try { document.body.removeChild(form); } catch(e) {}
-                    iframe.onload = null;
-                    Debug.log('GAS SYNC OK:', action);
-                    resolve(true);
-                };
+            if (hasError) {
+                updateSyncStatus('error', 'GAS error - menggunakan data lokal');
+            } else {
+                updateSyncStatus('synced', 'Tersinkronasi');
+            }
 
-                iframe.onload = cleanup;
-                setTimeout(cleanup, 5000); // Safety timeout
+            DEBUG.log('=== SYNC COMPLETE ===');
+        }
 
-                document.body.appendChild(form);
-                form.submit();
+        function updateSyncStatus(status, text) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            el.className = 'sync-status ' + status;
+            const icons = {
+                syncing: '<i class="fas fa-spinner fa-spin"></i>',
+                synced: '<i class="fas fa-check-circle"></i>',
+                error: '<i class="fas fa-exclamation-circle"></i>'
+            };
+            el.innerHTML = (icons[status] || '') + ' ' + text;
+        }
+
+        async function manualSync() {
+            showToast('Menyinkronkan data dari server...', 'info');
+            await syncAllFromGAS();
+
+            // Reload current view
+            if (DB.isAdmin) loadAdminPanel();
+            else if (DB.currentUser) {
+                loadDashboard();
+                loadAffiliatorLeads();
+            }
+
+            showToast('Sinkronasi selesai!', 'success');
+        }
+
+        // ==================== NAVIGATION ====================
+        function navigateTo(page) {
+            if (page !== 'home' && !DB.currentUser && !DB.isAdmin) {
+                showToast('Silakan masuk terlebih dahulu', 'warning');
+                showAuthModal('login');
+                return;
+            }
+
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            if (page === 'dashboard') loadDashboard();
+            if (page === 'leads') loadAffiliatorLeads();
+            if (page === 'admin') loadAdminPanel();
+        }
+
+        // ==================== UI HELPERS ====================
+        function setAuthButtonsEnabled(enabled) {
+            const btnRegister = document.getElementById('btnRegister');
+            const btnLogin = document.getElementById('btnLogin');
+            if (btnRegister) {
+                btnRegister.disabled = !enabled;
+                btnRegister.style.opacity = enabled ? '1' : '0.6';
+                btnRegister.style.cursor = enabled ? 'pointer' : 'not-allowed';
+            }
+            if (btnLogin) {
+                btnLogin.disabled = !enabled;
+                btnLogin.style.opacity = enabled ? '1' : '0.6';
+                btnLogin.style.cursor = enabled ? 'pointer' : 'not-allowed';
+            }
+        }
+
+        // ==================== AUTH ====================
+        function showAuthModal(mode) {
+            document.getElementById('authModal').classList.add('active');
+            switchAuthMode(mode || 'login');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function switchAuthMode(mode) {
+            if (mode === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('authModalTitle').textContent = 'Masuk';
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('authModalTitle').textContent = 'Daftar';
+            }
+        }
+
+        async function register() {
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
+                return;
+            }
+
+            const data = {
+                name: document.getElementById('regName').value.trim(),
+                email: document.getElementById('regEmail').value.trim().toLowerCase(),
+                phone: document.getElementById('regPhone').value.trim(),
+                password: document.getElementById('regPassword').value,
+                bank: document.getElementById('regBank').value.trim(),
+                referralCode: generateReferralCode(document.getElementById('regName').value.trim())
+            };
+
+            if (!data.name || !data.email || !data.phone || !data.password || !data.bank) {
+                showToast('Harap isi semua field wajib', 'error');
+                return;
+            }
+            if (data.password.length < 6) {
+                showToast('Password minimal 6 karakter', 'error');
+                return;
+            }
+
+            const existingUsers = await DBStore.getAll(CONFIG.STORE_USERS);
+            if (existingUsers.find(u => u.email === data.email)) {
+                showToast('Email sudah terdaftar', 'error');
+                return;
+            }
+
+            const newUser = {
+                ...data,
+                id: 'user_' + Date.now().toString(),
+                status: 'Active',
+                joined: new Date().toISOString()
+            };
+
+            await DataSync.saveUser(newUser);
+            SessionManager.saveSession();
+            DataSync.saveToCookieFallback();
+
+            // PERBAIKAN: Sync ke GAS
+            await syncToGAS('register', newUser);
+
+            showToast('Pendaftaran berhasil! Silakan masuk.', 'success');
+            switchAuthMode('login');
+        }
+
+        async function login() {
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
+                return;
+            }
+
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showToast('Email dan password wajib diisi', 'error');
+                return;
+            }
+
+            DEBUG.log('Login attempt:', email);
+
+            const allUsers = await DBStore.getAll(CONFIG.STORE_USERS);
+            const user = allUsers.find(u => u.email === email && u.password === password);
+
+            DEBUG.log('User found:', user ? 'YES' : 'NO');
+            DEBUG.log('Total users in DB:', allUsers.length);
+
+            if (!user) {
+                showToast('Email atau password salah', 'error');
+                return;
+            }
+
+            DB.currentUser = user;
+            SessionManager.saveSession();
+
+            updateNavbar();
+            closeAuthModal();
+            showToast('Selamat datang, ' + user.name + '!', 'success');
+            navigateTo('dashboard');
+        }
+
+        async function logout() {
+            DB.currentUser = null;
+            DB.isAdmin = false;
+            SessionManager.clearSession();
+            AdminSession.clear(); // PERBAIKAN: Clear shared admin session juga
+            updateNavbar();
+            navigateTo('home');
+            showToast('Berhasil keluar', 'success');
+        }
+
+        function adminLogin() {
+            const input = document.getElementById('adminPasswordInput').value;
+            if (input === CONFIG.ADMIN_PASSWORD) {
+                DB.isAdmin = true;
+                SessionManager.saveSession();
+                // PERBAIKAN: Simpan shared admin session untuk akses halaman admin lain
+                AdminSession.save();
+                closeModal('adminLoginModal');
+                showToast('Selamat datang, Admin!', 'success');
+                navigateTo('admin');
+                updateNavbar();
+            } else {
+                showToast('Password admin salah', 'error');
+            }
+        }
+
+        function updateNavbar() {
+            const nav = document.getElementById('navLinks');
+            if (DB.isAdmin) {
+                nav.innerHTML = `
+                    <a class="nav-link" data-page="home">Beranda</a>
+                    <a class="nav-link active" data-page="admin">Admin Panel <span class="admin-badge">ADMIN</span></a>
+                    <a href="affiliator-admin.html" class="nav-link"><i class="fas fa-users-cog"></i> Aff.Admin</a>
+                    <a href="products-admin.html" class="nav-link"><i class="fas fa-box"></i> Products</a>
+                    <a href="qr.html" class="nav-link"><i class="fas fa-qrcode"></i> QR</a>
+                    <a href="landing.html" target="_blank" class="nav-link"><i class="fas fa-external-link-alt"></i> Landing</a>
+                    <button class="btn btn-outline btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                `;
+            } else if (DB.currentUser) {
+                const refCode = DB.currentUser.referralCode;
+                nav.innerHTML = `
+                    <a class="nav-link" data-page="home">Beranda</a>
+                    <a class="nav-link active" data-page="dashboard">Dashboard</a>
+                    <a class="nav-link" data-page="leads">Leads</a>
+                    <a href="landing.html?ref=${refCode}" target="_blank" class="nav-link"><i class="fas fa-external-link-alt"></i> Landing</a>
+                    <a href="qr.html" class="nav-link"><i class="fas fa-qrcode"></i> QR</a>
+                    <span style="font-size: 0.8rem; color: var(--text-light);"><i class="fas fa-user"></i> ${DB.currentUser.name}</span>
+                    <button class="btn btn-outline btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <a class="nav-link active" data-page="home">Beranda</a>
+                    <button class="btn btn-primary btn-sm" onclick="showAuthModal()">Masuk</button>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('adminLoginModal').classList.add('active')"><i class="fas fa-shield-alt"></i> Admin</button>
+                `;
+            }
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // PERBAIKAN: Kalau link punya href (eksternal link), jangan trigger navigateTo
+                    if (this.getAttribute('href')) return;
+                    const page = this.dataset.page;
+                    if (page) {
+                        e.preventDefault();
+                        navigateTo(page);
+                    }
+                });
             });
         }
 
-        // ==================== SYNC ALL ====================
-        async function syncAllData() {
-            updateSyncStatus('syncing', 'Sinkronasi...');
-            showToast('Memuat data dari server...', 'info');
+        // ==================== AFFILIATOR DASHBOARD ====================
+        function loadDashboard() {
+            if (!DB.currentUser) return;
+            const refLink = `https://qcokopi.github.io/Affiliator/landing.html?ref=${DB.currentUser.referralCode}`;
+            document.getElementById('referralLinkInput').value = refLink;
 
-            const actions = [
-                { action: 'getUsers', key: 'users' },
-                { action: 'getLeads', key: 'leads' },
-                { action: 'getOrders', key: 'orders' },
-                { action: 'getCommissions', key: 'commissions' }
-            ];
+            const userLeads = DB.leads.filter(l => l.referralCode === DB.currentUser.referralCode);
+            const userComm = DB.commissions.filter(c => c.affiliatorId === DB.currentUser.id);
+            const totalComm = userComm.reduce((a, c) => a + c.amount, 0);
 
-            for (const item of actions) {
-                const result = await fetchFromGAS(item.action);
-                if (result.success && Array.isArray(result.data)) {
-                    DATA[item.key] = result.data;
-                }
-            }
-
-            updateSyncStatus('synced', 'Data terbaru');
-            showToast('Data berhasil dimuat!', 'success');
-            renderCurrentPage();
+            document.getElementById('dashTotalLeads').textContent = userLeads.length;
+            document.getElementById('dashValidLeads').textContent = userLeads.filter(l => l.status === 'Valid').length;
+            document.getElementById('dashTotalCommission').textContent = 'Rp ' + formatNumber(totalComm);
         }
 
-        // ==================== RENDER PAGES ====================
-        function renderDashboard() {
-            const validLeads = DATA.leads.filter(l => l.status === 'Valid');
-            const convertedLeads = DATA.leads.filter(l => l.status === 'Converted');
-            const totalComm = DATA.commissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-
-            document.getElementById('dashTotalAff').textContent = DATA.users.length;
-            document.getElementById('dashTotalLeads').textContent = DATA.leads.length;
-            document.getElementById('dashValidLeads').textContent = validLeads.length;
-            document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
-            document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
-
-            const recent = DATA.leads.slice(-5).reverse();
-            document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
-                return `<tr>
-                    <td>${formatDate(l.date)}</td>
-                    <td>${l.name}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
-                    <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
+        function loadAffiliatorLeads() {
+            if (!DB.currentUser) return;
+            const userLeads = DB.leads.filter(l => l.referralCode === DB.currentUser.referralCode);
+            document.getElementById('affLeadsBody').innerHTML = userLeads.map(lead => {
+                const comm = lead.status === 'Valid' ? 10000 : lead.status === 'Converted' ? (lead.transactionValue || 0) * 0.05 : 0;
+                return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${lead.contact}</td><td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td><td>${comm > 0 ? 'Rp ' + formatNumber(comm) : '-'}</td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center">Belum ada leads</td></tr>';
         }
 
-        function renderAffiliators() {
-            document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
-            document.getElementById('affiliatorsBody').innerHTML = DATA.users.map(u => {
-                const affLeads = DATA.leads.filter(l => l.referralCode === u.referralCode);
-                const affComm = DATA.commissions.filter(c => c.affiliatorId === u.id);
-                const totalComm = affComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-                return `<tr>
-                    <td><strong>${u.name}</strong></td>
-                    <td>${u.email}</td>
-                    <td>${u.phone || '-'}</td>
-                    <td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${u.referralCode}</code></td>
-                    <td>${u.bank || '-'}</td>
-                    <td><span class="badge badge-${(u.status === 'Active') ? 'active' : 'pending'}">${u.status || 'Active'}</span></td>
-                    <td>${affLeads.length}</td>
-                    <td>Rp ${formatNumber(totalComm)}</td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada affiliator</td></tr>';
+        function copyReferralLink() {
+            const input = document.getElementById('referralLinkInput');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link disalin!', 'success');
         }
 
-        function renderLeads() {
-            const statusFilter = document.getElementById('filterLeadStatus').value;
-            const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
+        // ==================== ADMIN PANEL ====================
+        function loadAdminPanel() {
+            if (!DB.isAdmin) return;
 
-            let leads = DATA.leads;
-            if (statusFilter) leads = leads.filter(l => l.status === statusFilter);
-            if (searchFilter) leads = leads.filter(l => (l.name || '').toLowerCase().includes(searchFilter));
+            document.getElementById('adminTotalAff').textContent = DB.users.length;
+            document.getElementById('adminTotalLeads').textContent = DB.leads.length;
+            const totalComm = DB.commissions.reduce((a, c) => a + c.amount, 0);
+            document.getElementById('adminTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-            document.getElementById('leadsBody').innerHTML = leads.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
-                return `<tr>
-                    <td>${formatDate(l.date)}</td>
-                    <td><strong>${l.name}</strong></td>
-                    <td>${l.contact || '-'}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
-                    <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td>${l.transactionValue ? 'Rp ' + formatNumber(l.transactionValue) : '-'}</td>
-                    <td>${l.source || '-'}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
+            document.getElementById('adminLeadsBody').innerHTML = DB.leads.map(lead => {
+                const aff = DB.users.find(u => u.referralCode === lead.referralCode);
+                return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${aff ? aff.name : lead.referralCode}</td><td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td><td>${lead.transactionValue ? 'Rp ' + formatNumber(lead.transactionValue) : '-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${lead.id}')"><i class="fas fa-edit"></i></button></td></tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada leads</td></tr>';
+
+            document.getElementById('adminAffBody').innerHTML = DB.users.map(aff => {
+                const affLeads = DB.leads.filter(l => l.referralCode === aff.referralCode);
+                const affComm = DB.commissions.filter(c => c.affiliatorId === aff.id);
+                const totalComm = affComm.reduce((a, c) => a + c.amount, 0);
+                return `<tr><td><strong>${aff.name}</strong></td><td>${aff.email}</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${aff.referralCode}</code></td><td>${affLeads.length}</td><td>Rp ${formatNumber(totalComm)}</td></tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center">Belum ada affiliator</td></tr>';
         }
 
-        function renderOrders() {
-            document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
-                const alamat = [o.namaJalanGedung, o.kecamatan, o.kotaKabupaten, o.provinsi, o.kodePos].filter(Boolean).join(', ');
-                return `<tr>
-                    <td>${formatDate(o.date)}</td>
-                    <td>${o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
-                    <td>${o.buyerName || '-'}</td>
-                    <td>${o.buyerPhone || '-'}<br><small>${o.buyerEmail || ''}</small></td>
-                    <td>${alamat || '-'}</td>
-                    <td>${o.price ? 'Rp ' + formatNumber(o.price) : '-'}${o.ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(o.ongkir) + '</small>' : ''}</td>
-                    <td>${o.referralCode || '-'}</td>
-                    <td><span class="badge badge-${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada orders</td></tr>';
-        }
-
-        function renderCommissions() {
-            document.getElementById('commissionsBody').innerHTML = DATA.commissions.map(c => {
-                const aff = DATA.users.find(u => u.id === c.affiliatorId);
-                return `<tr>
-                    <td>${formatDate(c.date)}</td>
-                    <td>${aff ? aff.name : c.affiliatorId}</td>
-                    <td>${c.type || '-'}</td>
-                    <td>${c.description || '-'}</td>
-                    <td>Rp ${formatNumber(parseFloat(c.amount) || 0)}</td>
-                    <td>${c.paid === 'true' || c.paid === true ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>'}</td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada komisi</td></tr>';
-        }
-
-        // ==================== UPDATE LEAD (FIXED) ====================
         function openUpdateLeadModal(leadId) {
             const select = document.getElementById('updateLeadSelect');
-            select.innerHTML = DATA.leads.map(l => `<option value="${l.id}">${l.name} (${l.status || 'Pending'})</option>`).join('');
+            select.innerHTML = DB.leads.map(l => `<option value="${l.id}">${l.name} (${l.status})</option>`).join('');
             if (leadId) select.value = leadId;
             document.getElementById('updateLeadModal').classList.add('active');
         }
@@ -583,48 +1221,33 @@
         });
 
         async function saveLeadUpdate() {
-            const leadId = document.getElementById('updateLeadSelect').value;
-            const newStatus = document.getElementById('updateLeadStatus').value;
-            const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
-            const btn = document.getElementById('btnUpdateLead');
-
-            const lead = DATA.leads.find(l => l.id === leadId);
-            if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-            Debug.log('=== UPDATE LEAD ===');
-            Debug.log('Lead ID:', leadId);
-            Debug.log('Status:', newStatus);
-
-            // PERBAIKAN: Gunakan fetch GET (terbukti bekerja) + await
-            // PERBAIKAN: Kirim 'id' (bukan 'leadId') supaya GAS updateSheetRow bisa match
-            const ok = await syncToGAS('updateLead', {
-                id: leadId,        // ← GAS updateSheetRow cari data[i][0] == id
-                status: newStatus,
-                transactionValue: transValue
-            });
-
-            Debug.log('GAS updateLead:', ok ? 'SUKSES' : 'GAGAL');
-
-            if (!ok) {
-                showToast('Gagal update ke server. Coba lagi.', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Update';
+            // PERBAIKAN: Pastikan DB siap sebelum operasi
+            try {
+                await DBStore.waitForReady();
+            } catch(e) {
+                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
+                console.error('DB not ready:', e);
                 return;
             }
 
-            // Update local state
+            const leadId = document.getElementById('updateLeadSelect').value;
+            const newStatus = document.getElementById('updateLeadStatus').value;
+            const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
+
+            const lead = DB.leads.find(l => l.id === leadId);
+            if (!lead) return;
+
+            const oldStatus = lead.status;
             lead.status = newStatus;
             if (newStatus === 'Converted') lead.transactionValue = transValue;
 
-            // Jika status jadi Valid, tambah komisi
-            if (newStatus === 'Valid' && lead.status !== 'Valid') {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
+            await DataSync.saveLead(lead);
+
+            const aff = DB.users.find(u => u.referralCode === lead.referralCode);
+            if (aff) {
+                if (newStatus === 'Valid' && oldStatus !== 'Valid') {
                     const commission = {
-                        id: 'comm_' + Date.now(),
+                        id: 'comm_' + Date.now().toString(),
                         affiliatorId: aff.id,
                         type: 'Lead',
                         description: 'Lead: ' + lead.name,
@@ -632,17 +1255,12 @@
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission:', commOk ? 'SUKSES' : 'GAGAL');
+                    await DataSync.saveCommission(commission);
+                    await syncToGAS('addCommission', commission);
                 }
-            }
-
-            // Jika status jadi Converted, tambah komisi transaksi
-            if (newStatus === 'Converted' && transValue > 0) {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
+                if (newStatus === 'Converted' && oldStatus !== 'Converted' && transValue > 0) {
                     const commission = {
-                        id: 'comm_' + (Date.now() + 1),
+                        id: 'comm_' + Date.now().toString(),
                         affiliatorId: aff.id,
                         type: 'Transaksi',
                         description: 'Transaksi ' + lead.name,
@@ -650,112 +1268,103 @@
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission (trx):', commOk ? 'SUKSES' : 'GAGAL');
+                    await DataSync.saveCommission(commission);
+                    await syncToGAS('addCommission', commission);
                 }
             }
 
+            DataSync.saveToCookieFallback();
+
+            // PERBAIKAN: Sync ke GAS
+            await syncToGAS('updateLead', { leadId: leadId, status: newStatus, transactionValue: transValue });
+
             closeModal('updateLeadModal');
-            showToast('Lead updated & tersimpan di server!', 'success');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Update';
-
-            // Refresh data dari server setelah 2 detik
-            setTimeout(() => syncAllData(), 2000);
+            showToast('Lead updated!', 'success');
+            loadAdminPanel();
         }
 
-        // ==================== NAVIGATION ====================
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-            const clicked = document.querySelector('.sidebar-menu a[data-page="' + page + '"]');
-            if (clicked) clicked.classList.add('active');
-            document.getElementById('pageTitle').textContent =
-                page === 'dashboard' ? 'Dashboard' :
-                page === 'affiliators' ? 'Affiliators' :
-                page === 'leads' ? 'Leads' :
-                page === 'orders' ? 'Orders' : 'Komisi';
-            renderCurrentPage();
-        }
+        // ==================== DEMO DATA ====================
+        async function loadDemoData() {
+            const users = await DBStore.getAll(CONFIG.STORE_USERS);
+            if (users.length === 0) {
+                DEBUG.log('Loading demo data...');
 
-        function renderCurrentPage() {
-            const activePage = document.querySelector('.page.active');
-            if (!activePage) return;
-            const pageId = activePage.id.replace('page-', '');
-            if (pageId === 'dashboard') renderDashboard();
-            if (pageId === 'affiliators') renderAffiliators();
-            if (pageId === 'leads') renderLeads();
-            if (pageId === 'orders') renderOrders();
-            if (pageId === 'commissions') renderCommissions();
-        }
+                const demoUser = {
+                    id: 'user_demo_1',
+                    name: 'Budi Affiliator',
+                    email: 'budi@demo.com',
+                    password: 'password',
+                    phone: '08123456789',
+                    bank: 'BCA 1234567890',
+                    referralCode: 'BUDI1234',
+                    status: 'Active',
+                    joined: '2026-01-15T00:00:00.000Z'
+                };
 
-        // ==================== AUTH ====================
-        function adminLogin() {
-            const input = document.getElementById('adminPassword').value;
-            if (input === CONFIG.ADMIN_PASSWORD) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                SessionManager.saveSession();
-                showToast('Selamat datang, Admin!', 'success');
-                syncAllData();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('adminPassword').value = '';
+                const demoLead1 = {
+                    id: 'lead_1',
+                    referralCode: 'BUDI1234',
+                    name: 'Andi Wijaya',
+                    contact: 'andi@email.com',
+                    status: 'Valid',
+                    date: '2026-06-20T00:00:00.000Z',
+                    transactionValue: 0
+                };
+
+                const demoLead2 = {
+                    id: 'lead_2',
+                    referralCode: 'BUDI1234',
+                    name: 'Siti Nurhaliza',
+                    contact: '08129876543',
+                    status: 'Converted',
+                    date: '2026-06-22T00:00:00.000Z',
+                    transactionValue: 2500000
+                };
+
+                const demoComm1 = {
+                    id: 'comm_1',
+                    affiliatorId: 'user_demo_1',
+                    type: 'Lead',
+                    description: 'Lead: Andi Wijaya',
+                    amount: 10000,
+                    date: '2026-06-20T00:00:00.000Z',
+                    paid: true
+                };
+
+                const demoComm2 = {
+                    id: 'comm_2',
+                    affiliatorId: 'user_demo_1',
+                    type: 'Transaksi',
+                    description: 'Transaksi Siti',
+                    amount: 125000,
+                    date: '2026-06-23T00:00:00.000Z',
+                    paid: false
+                };
+
+                await DataSync.saveUser(demoUser);
+                await DataSync.saveLead(demoLead1);
+                await DataSync.saveLead(demoLead2);
+                await DataSync.saveCommission(demoComm1);
+                await DataSync.saveCommission(demoComm2);
+
+                DataSync.saveToCookieFallback();
+                DEBUG.log('Demo data loaded');
             }
         }
-
-        function adminLogout() {
-            SessionManager.clearSession();
-            location.reload();
-        }
-
-        function checkSession() {
-            const session = SessionManager.loadSession();
-            if (session && session.isAdmin) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                syncAllData();
-            }
-        }
-
-        // ==================== SESSION ====================
-        const SessionManager = {
-            saveSession: function() {
-                try {
-                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
-                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                } catch(e) {}
-            },
-            loadSession: function() {
-                try {
-                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                    if (match) return JSON.parse(decodeURIComponent(match[1]));
-                } catch(e) {}
-                return null;
-            },
-            clearSession: function() {
-                document.cookie = 'aff_admin_session=; path=/; max-age=0';
-            }
-        };
 
         // ==================== UTILITIES ====================
-        function refreshAllData() {
-            syncAllData();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
+        function generateReferralCode(name) {
+            const prefix = name.split(' ')[0].toUpperCase().substring(0, 4);
+            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            return prefix + random;
         }
 
         function formatNumber(num) {
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
         function formatDate(dateStr) {
-            if (!dateStr) return '-';
             const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return String(dateStr);
             return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
@@ -769,22 +1378,93 @@
             setTimeout(() => toast.remove(), 4000);
         }
 
-        function updateSyncStatus(status, text) {
-            const el = document.getElementById('syncStatus');
-            if (!el) return;
-            el.className = 'sync-status ' + status;
-            const icons = { syncing: '<i class="fas fa-spinner fa-spin"></i>', synced: '<i class="fas fa-check-circle"></i>', error: '<i class="fas fa-exclamation-circle"></i>' };
-            el.innerHTML = (icons[status] || '') + ' ' + text;
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
         }
 
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            DEBUG.log('=== APP STARTING ===');
+
+            // PERBAIKAN: Cek admin session dulu - kalau admin sudah login di halaman lain
+            if (AdminSession.isActive()) {
+                DEBUG.log('Admin session detected from another page');
+                DB.isAdmin = true;
+            }
+
+            // PERBAIKAN: Selalu enable tombol - jangan depend pada storage
+            setAuthButtonsEnabled(true);
+
+            // Step 1: Initialize Storage (IndexedDB > localStorage > memory)
+            try {
+                await DBStore.init();
+                DEBUG.log('Storage initialized, mode:', DBStore.mode);
+            } catch(e) {
+                console.error('Storage init error (terjebak):', e);
+                // Force fallback ke memory
+                DBStore.mode = 'memory';
+                DBStore.ready = true;
+            }
+
+            // Step 2: Load data - wrap semua dengan try-catch
+            try {
+                await DataSync.loadAll();
+                DEBUG.log('Data loaded:', DB.users.length, 'users,', DB.leads.length, 'leads');
+            } catch(e) {
+                console.error('DataSync.loadAll error:', e);
+                // Jangan biarkan error ini crash app
+            }
+
+            // Step 3: Load demo data
+            try {
+                await loadDemoData();
+            } catch(e) {
+                console.error('loadDemoData error:', e);
+            }
+
+            // Step 4: Sync dari GAS
+            try {
+                await syncAllFromGAS();
+            } catch(e) {
+                DEBUG.log('GAS sync failed:', e.message);
+            }
+
+            // Step 5: Restore session
+            try {
+                const sessionRestored = await SessionManager.restoreSession();
+                DEBUG.log('Session restored:', sessionRestored);
+                if (sessionRestored) {
+                    if (DB.isAdmin) navigateTo('admin');
+                    else if (DB.currentUser) navigateTo('dashboard');
+                }
+                // PERBAIKAN: Kalau ada admin session dari halaman lain, langsung ke admin
+                else if (AdminSession.isActive()) {
+                    DB.isAdmin = true;
+                    navigateTo('admin');
+                }
+            } catch(e) {
+                console.error('Session restore error:', e);
+            }
+
+            // Step 6: Update UI
+            try {
+                updateNavbar();
+            } catch(e) {
+                console.error('updateNavbar error:', e);
+            }
+
+            // PERBAIKAN: Force enable tombol setelah semua init selesai
+            setAuthButtonsEnabled(true);
+
+            DEBUG.log('=== APP READY ===');
+            DEBUG.log('Storage mode:', DBStore.mode);
+            DEBUG.log('Users:', DB.users.length);
+            DEBUG.log('Leads:', DB.leads.length);
         });
 
-        // Init
-        document.addEventListener('DOMContentLoaded', function() {
-            checkSession();
+        // Close modal on overlay click
+        document.getElementById('authModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAuthModal();
         });
     </script>
 </body>
