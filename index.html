@@ -95,7 +95,6 @@
         .toast.error { border-left-color: var(--danger); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .hidden { display: none !important; }
-        .admin-badge { background: var(--danger); color: white; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; }
         .debug-panel { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
         .debug-panel.show { display: block; }
         .sync-status { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-light); margin-left: 0.5rem; }
@@ -200,61 +199,9 @@
                 <h2 class="section-title">Daftar Leads</h2>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead><tr><th>Tanggal</th><th>Nama</th><th>Kontak</th><th>Status</th><th>Komisi</th></tr></thead>
+                        <thead><tr><th>Tanggal</th><th>Nama</th><th>Kontak</th><th>Status</th><th>Nilai Transaksi</th><th>Komisi</th></tr></thead>
                         <tbody id="affLeadsBody"></tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ADMIN: PANEL -->
-        <div id="page-admin" class="page-section">
-            <div class="section">
-                <h2 class="section-title">Admin Panel <span class="admin-badge">ADMIN</span></h2>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" id="adminTotalAff">0</div>
-                        <div class="stat-label">Affiliators</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
-                        <div class="stat-value" id="adminTotalLeads">0</div>
-                        <div class="stat-label">Total Leads</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon orange"><i class="fas fa-money-bill-wave"></i></div>
-                        <div class="stat-value" id="adminTotalComm">Rp 0</div>
-                        <div class="stat-label">Total Komisi</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3>Manage Leads</h3>
-                        <div style="display:flex; gap:0.5rem; align-items:center;">
-                            <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Sinkronasi...</span>
-                            <button class="btn btn-primary btn-sm" onclick="manualSync()"><i class="fas fa-sync-alt"></i> Sync</button>
-                            <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Lead</button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Affiliator</th><th>Status</th><th>Nilai</th><th>Aksi</th></tr></thead>
-                            <tbody id="adminLeadsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 1.5rem;">
-                    <div class="card-header"><h3>Daftar Affiliators</h3></div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead><tr><th>Nama</th><th>Email</th><th>Referral</th><th>Leads</th><th>Komisi</th></tr></thead>
-                            <tbody id="adminAffBody"></tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -276,7 +223,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+                        <input type="password" class="form-input" id="loginPassword" placeholder="******">
                     </div>
                     <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="btnLogin" onclick="login()">
                         <i class="fas fa-sign-in-alt"></i> Masuk
@@ -340,48 +287,9 @@
         </div>
     </div>
 
-    <!-- UPDATE LEAD MODAL -->
-    <div class="modal-overlay" id="updateLeadModal">
-        <div class="modal" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Update Lead</h3>
-                <button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Pilih Lead</label>
-                    <select class="form-select" id="updateLeadSelect"></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status Baru</label>
-                    <select class="form-select" id="updateLeadStatus">
-                        <option value="Pending">Pending</option>
-                        <option value="Valid">Valid</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                <div class="form-group" id="transValueGroup" style="display:none;">
-                    <label class="form-label">Nilai Transaksi (Rp)</label>
-                    <input type="number" class="form-input" id="updateTransValue" placeholder="0">
-                </div>
-                <div style="background: #E8F5E9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                    <p style="color: var(--success); font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-calculator"></i> Komisi:</p>
-                    <p>Lead Valid: Rp 10.000</p>
-                    <p>Transaksi: 5% dari nilai transaksi</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ==================== CONFIG ====================
         const CONFIG = {
-            // PERBAIKAN: GAS URL yang benar sesuai dari user
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
             COMMISSION_PER_LEAD: 10000,
             COMMISSION_PERCENTAGE: 5,
@@ -430,18 +338,16 @@
         const DBStore = {
             db: null,
             ready: false,
-            mode: 'unknown', // 'indexeddb' | 'localstorage' | 'memory'
+            mode: 'unknown',
             memory: { users: [], leads: [], commissions: [], products: [], orders: [] },
             initPromise: null,
 
             init: function() {
                 if (this.initPromise) return this.initPromise;
-                // PERBAIKAN: Paksa resolve dalam 3.5 detik - tidak peduli apa yang terjadi
                 this.initPromise = Promise.race([
                     this._tryInit(),
                     new Promise(resolve => setTimeout(() => {
                         if (!this.ready) {
-                            console.log('Storage init FORCED timeout - using memory mode');
                             this.mode = 'memory';
                             this.ready = true;
                         }
@@ -452,7 +358,6 @@
             },
 
             _tryInit: async function() {
-                // PERBAIKAN: Coba IndexedDB dulu dengan timeout 3 detik
                 try {
                     await this._initIndexedDB(3000);
                     this.mode = 'indexeddb';
@@ -462,8 +367,6 @@
                 } catch(e) {
                     DEBUG.log('IndexedDB gagal:', e.message || e);
                 }
-
-                // PERBAIKAN: Fallback ke localStorage
                 try {
                     this._testLocalStorage();
                     this.mode = 'localstorage';
@@ -473,8 +376,6 @@
                 } catch(e) {
                     DEBUG.log('localStorage gagal:', e.message || e);
                 }
-
-                // PERBAIKAN: Terakhir, pakai memory only
                 this.mode = 'memory';
                 this.ready = true;
                 DEBUG.log('Storage: in-memory only');
@@ -483,34 +384,17 @@
 
             _initIndexedDB: function(timeoutMs) {
                 return new Promise((resolve, reject) => {
-                    if (!window.indexedDB) {
-                        reject('IndexedDB not supported');
-                        return;
-                    }
-
-                    const timer = setTimeout(() => {
-                        reject('IndexedDB timeout - mungkin diblokir oleh iframe/browser');
-                    }, timeoutMs);
-
+                    if (!window.indexedDB) { reject('IndexedDB not supported'); return; }
+                    const timer = setTimeout(() => reject('IndexedDB timeout'), timeoutMs);
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
-
-                    request.onerror = () => {
-                        clearTimeout(timer);
-                        reject(request.error);
-                    };
-
-                    request.onblocked = () => {
-                        clearTimeout(timer);
-                        reject('blocked');
-                    };
-
+                    request.onerror = () => { clearTimeout(timer); reject(request.error); };
+                    request.onblocked = () => { clearTimeout(timer); reject('blocked'); };
                     request.onsuccess = () => {
                         clearTimeout(timer);
                         this.db = request.result;
                         this.db.onversionchange = () => { this.db.close(); location.reload(); };
                         resolve(this.db);
                     };
-
                     request.onupgradeneeded = (event) => {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
@@ -523,11 +407,8 @@
             },
 
             _testLocalStorage: function() {
-                // PERBAIKAN: Lebih robust untuk iframe context
-                // Di Google Sites iframe, localStorage bisa throw SecurityError
                 try {
                     if (typeof window.localStorage === 'undefined') throw new Error('not available');
-                    // Coba akses - ini bisa throw DOMException: SecurityError
                     const storage = window.localStorage;
                     const k = '_aff_test_' + Date.now();
                     storage.setItem(k, '1');
@@ -536,7 +417,6 @@
                     if (v !== '1') throw new Error('mismatch');
                     return true;
                 } catch(e) {
-                    console.log('localStorage blocked:', e.name || e.message || 'unknown');
                     throw new Error('blocked');
                 }
             },
@@ -544,26 +424,17 @@
             waitForReady: async function() {
                 if (this.ready) return;
                 if (this.initPromise) { await this.initPromise; return; }
-                // PERBAIKAN: Kalau init belum pernah dipanggil, panggil sekarang
                 await this.init();
             },
 
-            // KEY: prefix + storeName, misal: aff_users
             _lsKey: function(storeName) { return 'aff_' + storeName; },
-
             _lsGet: function(storeName) {
-                try {
-                    const raw = localStorage.getItem(this._lsKey(storeName));
-                    return raw ? JSON.parse(raw) : [];
-                } catch(e) { return []; }
+                try { const raw = localStorage.getItem(this._lsKey(storeName)); return raw ? JSON.parse(raw) : []; }
+                catch(e) { return []; }
             },
-
             _lsSet: function(storeName, data) {
-                try {
-                    localStorage.setItem(this._lsKey(storeName), JSON.stringify(data));
-                } catch(e) {
-                    // localStorage penuh
-                }
+                try { localStorage.setItem(this._lsKey(storeName), JSON.stringify(data)); }
+                catch(e) {}
             },
 
             getAll: function(storeName) {
@@ -591,27 +462,24 @@
                         req.onsuccess = () => resolve(req.result || null);
                         req.onerror = () => resolve(null);
                     } else {
-                        this.getAll(storeName).then(items => {
-                            resolve(items.find(x => x.id === id) || null);
-                        });
+                        this.getAll(storeName).then(items => resolve(items.find(x => x.id === id) || null));
                     }
                 });
             },
 
             put: function(storeName, data) {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
                         const tx = this.db.transaction(storeName, 'readwrite');
                         const store = tx.objectStore(storeName);
                         const req = store.put(data);
                         req.onsuccess = () => resolve();
-                        req.onerror = () => reject(req.error);
+                        req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
                         const items = this._lsGet(storeName);
                         const idx = items.findIndex(x => x.id === data.id);
                         if (idx >= 0) items[idx] = data; else items.push(data);
-                        this._lsSet(storeName, items);
-                        resolve();
+                        this._lsSet(storeName, items); resolve();
                     } else {
                         const items = this.memory[storeName] || [];
                         const idx = items.findIndex(x => x.id === data.id);
@@ -622,17 +490,16 @@
             },
 
             delete: function(storeName, id) {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
                         const tx = this.db.transaction(storeName, 'readwrite');
                         const store = tx.objectStore(storeName);
                         const req = store.delete(id);
                         req.onsuccess = () => resolve();
-                        req.onerror = () => reject(req.error);
+                        req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
                         const items = this._lsGet(storeName).filter(x => x.id !== id);
-                        this._lsSet(storeName, items);
-                        resolve();
+                        this._lsSet(storeName, items); resolve();
                     } else {
                         this.memory[storeName] = (this.memory[storeName] || []).filter(x => x.id !== id);
                         resolve();
@@ -649,109 +516,16 @@
                         req.onsuccess = () => resolve();
                         req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
-                        localStorage.removeItem(this._lsKey(storeName));
-                        resolve();
+                        localStorage.removeItem(this._lsKey(storeName)); resolve();
                     } else {
-                        this.memory[storeName] = [];
-                        resolve();
+                        this.memory[storeName] = []; resolve();
                     }
                 });
             }
         };
 
         // ==================== IN-MEMORY CACHE ====================
-        let DB = {
-            users: [],
-            leads: [],
-            commissions: [],
-            currentUser: null,
-            isAdmin: false
-        };
-
-        // ==================== SHARED ADMIN SESSION (cross-page) ====================
-        const AdminSession = {
-            save: function() {
-                try {
-                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
-                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                } catch(e) {}
-            },
-            load: function() {
-                try {
-                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                    if (match) return JSON.parse(decodeURIComponent(match[1]));
-                } catch(e) {}
-                return null;
-            },
-            clear: function() {
-                document.cookie = 'aff_admin_session=; path=/; max-age=0';
-            },
-            isActive: function() {
-                const s = this.load();
-                return !!(s && s.isAdmin);
-            }
-        };
-
-        // ==================== SESSION MANAGEMENT ====================
-        const SessionManager = {
-            saveSession: function() {
-                const sessionData = {
-                    userId: DB.currentUser ? DB.currentUser.id : null,
-                    isAdmin: DB.isAdmin,
-                    timestamp: Date.now()
-                };
-                const json = encodeURIComponent(JSON.stringify(sessionData));
-                document.cookie = 'aff_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                DEBUG.log('Session saved to cookie', sessionData);
-            },
-
-            loadSession: function() {
-                try {
-                    const match = document.cookie.match(/aff_session=([^;]+)/);
-                    if (match) {
-                        const session = JSON.parse(decodeURIComponent(match[1]));
-                        DEBUG.log('Session loaded from cookie', session);
-                        return session;
-                    }
-                } catch(e) {
-                    DEBUG.log('Session cookie error:', e.message);
-                }
-                return null;
-            },
-
-            clearSession: function() {
-                document.cookie = 'aff_session=; path=/; max-age=0';
-                DEBUG.log('Session cleared');
-            },
-
-            restoreSession: async function() {
-                const sessionCookie = this.loadSession();
-                if (!sessionCookie) {
-                    DEBUG.log('No session cookie found');
-                    return false;
-                }
-
-                if (sessionCookie.isAdmin) {
-                    DB.isAdmin = true;
-                    DEBUG.log('Admin session restored');
-                    return true;
-                }
-
-                if (sessionCookie.userId) {
-                    const user = await DBStore.getById(CONFIG.STORE_USERS, sessionCookie.userId);
-                    if (user) {
-                        DB.currentUser = user;
-                        DEBUG.log('User session restored', user.email);
-                        return true;
-                    } else {
-                        DEBUG.log('User not found in DB, clearing session');
-                        this.clearSession();
-                    }
-                }
-
-                return false;
-            }
-        };
+        let DB = { users: [], leads: [], commissions: [], currentUser: null, isAdmin: false };
 
         // ==================== DATA SYNC ====================
         const DataSync = {
@@ -760,75 +534,29 @@
                     DB.users = await DBStore.getAll(CONFIG.STORE_USERS);
                     DB.leads = await DBStore.getAll(CONFIG.STORE_LEADS);
                     DB.commissions = await DBStore.getAll(CONFIG.STORE_COMMISSIONS);
-                    DEBUG.log('Data loaded from IndexedDB', {
-                        users: DB.users.length,
-                        leads: DB.leads.length,
-                        commissions: DB.commissions.length
-                    });
+                    DEBUG.log('Data loaded', { users: DB.users.length, leads: DB.leads.length, commissions: DB.commissions.length });
                 } catch(e) {
-                    DEBUG.log('Error loading from IndexedDB:', e.message);
-                    this.loadFromCookieFallback();
+                    DEBUG.log('Error loading:', e.message);
                 }
             },
-
             saveUser: async function(user) {
                 await DBStore.put(CONFIG.STORE_USERS, user);
                 const idx = DB.users.findIndex(u => u.id === user.id);
-                if (idx >= 0) DB.users[idx] = user;
-                else DB.users.push(user);
-                DEBUG.log('User saved', user.email);
+                if (idx >= 0) DB.users[idx] = user; else DB.users.push(user);
             },
-
             saveLead: async function(lead) {
                 await DBStore.put(CONFIG.STORE_LEADS, lead);
                 const idx = DB.leads.findIndex(l => l.id === lead.id);
-                if (idx >= 0) DB.leads[idx] = lead;
-                else DB.leads.push(lead);
-                DEBUG.log('Lead saved', lead.name);
+                if (idx >= 0) DB.leads[idx] = lead; else DB.leads.push(lead);
             },
-
             saveCommission: async function(commission) {
                 await DBStore.put(CONFIG.STORE_COMMISSIONS, commission);
                 const idx = DB.commissions.findIndex(c => c.id === commission.id);
-                if (idx >= 0) DB.commissions[idx] = commission;
-                else DB.commissions.push(commission);
-                DEBUG.log('Commission saved', commission.amount);
-            },
-
-            loadFromCookieFallback: function() {
-                try {
-                    const saved = document.cookie.match(/affiliate_db=([^;]+)/);
-                    if (saved) {
-                        const data = JSON.parse(decodeURIComponent(saved[1]));
-                        DB.users = data.users || [];
-                        DB.leads = data.leads || [];
-                        DB.commissions = data.commissions || [];
-                        DEBUG.log('Data loaded from cookie fallback');
-                    }
-                } catch(e) {
-                    DEBUG.log('Cookie fallback failed:', e.message);
-                }
-            },
-
-            saveToCookieFallback: function() {
-                try {
-                    const data = {
-                        users: DB.users,
-                        leads: DB.leads,
-                        commissions: DB.commissions
-                    };
-                    const json = encodeURIComponent(JSON.stringify(data));
-                    if (json.length < 3500) {
-                        document.cookie = 'affiliate_db=' + json + '; path=/; max-age=31536000; SameSite=Lax';
-                        DEBUG.log('Data saved to cookie fallback');
-                    }
-                } catch(e) {
-                    DEBUG.log('Cookie fallback save failed:', e.message);
-                }
+                if (idx >= 0) DB.commissions[idx] = commission; else DB.commissions.push(commission);
             }
         };
 
-        // ==================== GAS INTEGRATION (ROBUST) ====================
+        // ==================== GAS INTEGRATION ====================
         async function syncToGAS(action, data) {
             const params = new URLSearchParams();
             params.append('action', action);
@@ -840,8 +568,6 @@
                 DEBUG.log('GAS sync OK:', action);
                 return true;
             } catch(err) {
-                DEBUG.log('GAS fetch failed:', err.message);
-                // Fallback iframe
                 const iframe = document.getElementById('gasFrame');
                 const form = document.createElement('form');
                 form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
@@ -854,20 +580,12 @@
             }
         }
 
-        // ==================== GAS INTEGRATION (FETCH) - PERBAIKAN BARU ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-                const response = await fetch(url, {
-                    method: 'GET',
-                    // mode: 'no-cors' would hide the response, so we try with cors first
-                });
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
-                }
-                const result = await response.json();
-                DEBUG.log('GAS fetch [' + action + ']:', result.success ? 'OK' : 'FAIL');
-                return result;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
             } catch(err) {
                 DEBUG.log('GAS fetch error [' + action + ']:', err.message);
                 return { success: false, error: err.message };
@@ -875,69 +593,113 @@
         }
 
         async function syncAllFromGAS() {
-            updateSyncStatus('syncing', 'Sinkronasi...');
-            DEBUG.log('=== SYNCING FROM GAS ===');
-
             const actions = ['getUsers', 'getLeads', 'getCommissions'];
             const stores = [CONFIG.STORE_USERS, CONFIG.STORE_LEADS, CONFIG.STORE_COMMISSIONS];
             const arrays = ['users', 'leads', 'commissions'];
-
-            let hasError = false;
-
             for (let i = 0; i < actions.length; i++) {
                 const result = await fetchFromGAS(actions[i]);
                 if (result.success && Array.isArray(result.data)) {
-                    // Merge data: add new items, skip existing
                     for (const item of result.data) {
                         if (!item || !item.id) continue;
                         const existing = DB[arrays[i]].find(x => x.id === item.id);
                         if (!existing) {
                             DB[arrays[i]].push(item);
                             await DBStore.put(stores[i], item);
-                            DEBUG.log('Added from GAS:', item.id);
                         }
                     }
-                    DEBUG.log(actions[i] + ': fetched ' + result.data.length + ' items');
-                } else {
-                    hasError = true;
-                    DEBUG.log(actions[i] + ': failed', result.error);
                 }
             }
+        }
 
-            if (hasError) {
-                updateSyncStatus('error', 'GAS error - menggunakan data lokal');
-            } else {
-                updateSyncStatus('synced', 'Tersinkronasi');
+        // ==================== SESSION MANAGEMENT (FIXED) ====================
+        // PERBAIKAN: Simpan user data lengkap ke cookie agar login tetap works meski DB belum sync
+        const SessionManager = {
+            saveSession: function() {
+                if (DB.currentUser) {
+                    const sessionData = {
+                        userId: DB.currentUser.id,
+                        email: DB.currentUser.email,
+                        password: DB.currentUser.password,
+                        name: DB.currentUser.name,
+                        referralCode: DB.currentUser.referralCode,
+                        isAdmin: DB.isAdmin,
+                        timestamp: Date.now()
+                    };
+                    document.cookie = 'aff_session=' + encodeURIComponent(JSON.stringify(sessionData)) + '; path=/; max-age=86400; SameSite=Lax';
+                    DEBUG.log('Session saved with user data');
+                } else if (DB.isAdmin) {
+                    const sessionData = { isAdmin: true, timestamp: Date.now() };
+                    document.cookie = 'aff_session=' + encodeURIComponent(JSON.stringify(sessionData)) + '; path=/; max-age=86400; SameSite=Lax';
+                }
+            },
+
+            loadSession: function() {
+                try {
+                    const match = document.cookie.match(/aff_session=([^;]+)/);
+                    if (match) return JSON.parse(decodeURIComponent(match[1]));
+                } catch(e) {}
+                return null;
+            },
+
+            clearSession: function() {
+                document.cookie = 'aff_session=; path=/; max-age=0';
+                document.cookie = 'aff_admin_session=; path=/; max-age=0';
+            },
+
+            // PERBAIKAN: Restore session dengan fallback ke cookie data kalau DB belum punya user
+            restoreSession: async function() {
+                const session = this.loadSession();
+                if (!session) return false;
+
+                if (session.isAdmin) {
+                    DB.isAdmin = true;
+                    return true;
+                }
+
+                if (session.userId) {
+                    // Coba cari user di DB dulu
+                    let user = await DBStore.getById(CONFIG.STORE_USERS, session.userId);
+
+                    // PERBAIKAN: Kalau tidak ada di DB tapi ada email+password di cookie, buat user object dari cookie
+                    if (!user && session.email && session.password) {
+                        user = {
+                            id: session.userId,
+                            email: session.email,
+                            password: session.password,
+                            name: session.name || session.email,
+                            referralCode: session.referralCode || ''
+                        };
+                        // Simpan ke DB untuk next time
+                        await DBStore.put(CONFIG.STORE_USERS, user);
+                        DB.users.push(user);
+                        DEBUG.log('User restored from cookie fallback');
+                    }
+
+                    if (user) {
+                        DB.currentUser = user;
+                        return true;
+                    }
+                }
+                return false;
             }
+        };
 
-            DEBUG.log('=== SYNC COMPLETE ===');
-        }
-
-        function updateSyncStatus(status, text) {
-            const el = document.getElementById('syncStatus');
-            if (!el) return;
-            el.className = 'sync-status ' + status;
-            const icons = {
-                syncing: '<i class="fas fa-spinner fa-spin"></i>',
-                synced: '<i class="fas fa-check-circle"></i>',
-                error: '<i class="fas fa-exclamation-circle"></i>'
-            };
-            el.innerHTML = (icons[status] || '') + ' ' + text;
-        }
-
-        async function manualSync() {
-            showToast('Menyinkronkan data dari server...', 'info');
-            await syncAllFromGAS();
-
-            // Reload current view
-            if (DB.isAdmin) loadAdminPanel();
-            else if (DB.currentUser) {
-                loadDashboard();
-                loadAffiliatorLeads();
+        // ==================== SHARED ADMIN SESSION ====================
+        const AdminSession = {
+            save: function() {
+                try {
+                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
+                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
+                } catch(e) {}
+            },
+            isActive: function() {
+                try {
+                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
+                    if (match) { const s = JSON.parse(decodeURIComponent(match[1])); return !!(s && s.isAdmin); }
+                } catch(e) {}
+                return false;
             }
-
-            showToast('Sinkronasi selesai!', 'success');
-        }
+        };
 
         // ==================== NAVIGATION ====================
         function navigateTo(page) {
@@ -946,30 +708,19 @@
                 showAuthModal('login');
                 return;
             }
-
             document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-
             if (page === 'dashboard') loadDashboard();
             if (page === 'leads') loadAffiliatorLeads();
-            if (page === 'admin') loadAdminPanel();
         }
 
         // ==================== UI HELPERS ====================
         function setAuthButtonsEnabled(enabled) {
             const btnRegister = document.getElementById('btnRegister');
             const btnLogin = document.getElementById('btnLogin');
-            if (btnRegister) {
-                btnRegister.disabled = !enabled;
-                btnRegister.style.opacity = enabled ? '1' : '0.6';
-                btnRegister.style.cursor = enabled ? 'pointer' : 'not-allowed';
-            }
-            if (btnLogin) {
-                btnLogin.disabled = !enabled;
-                btnLogin.style.opacity = enabled ? '1' : '0.6';
-                btnLogin.style.cursor = enabled ? 'pointer' : 'not-allowed';
-            }
+            if (btnRegister) { btnRegister.disabled = !enabled; btnRegister.style.opacity = enabled ? '1' : '0.6'; btnRegister.style.cursor = enabled ? 'pointer' : 'not-allowed'; }
+            if (btnLogin) { btnLogin.disabled = !enabled; btnLogin.style.opacity = enabled ? '1' : '0.6'; btnLogin.style.cursor = enabled ? 'pointer' : 'not-allowed'; }
         }
 
         // ==================== AUTH ====================
@@ -977,11 +728,7 @@
             document.getElementById('authModal').classList.add('active');
             switchAuthMode(mode || 'login');
         }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.remove('active');
-        }
-
+        function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
         function switchAuthMode(mode) {
             if (mode === 'login') {
                 document.getElementById('loginForm').classList.remove('hidden');
@@ -995,15 +742,7 @@
         }
 
         async function register() {
-            // PERBAIKAN: Pastikan DB siap sebelum operasi
-            try {
-                await DBStore.waitForReady();
-            } catch(e) {
-                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
-                console.error('DB not ready:', e);
-                return;
-            }
-
+            try { await DBStore.waitForReady(); } catch(e) { showToast('Database belum siap. Tunggu sebentar.', 'error'); return; }
             const data = {
                 name: document.getElementById('regName').value.trim(),
                 email: document.getElementById('regEmail').value.trim().toLowerCase(),
@@ -1012,77 +751,60 @@
                 bank: document.getElementById('regBank').value.trim(),
                 referralCode: generateReferralCode(document.getElementById('regName').value.trim())
             };
-
-            if (!data.name || !data.email || !data.phone || !data.password || !data.bank) {
-                showToast('Harap isi semua field wajib', 'error');
-                return;
-            }
-            if (data.password.length < 6) {
-                showToast('Password minimal 6 karakter', 'error');
-                return;
-            }
-
+            if (!data.name || !data.email || !data.phone || !data.password || !data.bank) { showToast('Harap isi semua field wajib', 'error'); return; }
+            if (data.password.length < 6) { showToast('Password minimal 6 karakter', 'error'); return; }
             const existingUsers = await DBStore.getAll(CONFIG.STORE_USERS);
-            if (existingUsers.find(u => u.email === data.email)) {
-                showToast('Email sudah terdaftar', 'error');
-                return;
-            }
+            if (existingUsers.find(u => u.email === data.email)) { showToast('Email sudah terdaftar', 'error'); return; }
 
-            const newUser = {
-                ...data,
-                id: 'user_' + Date.now().toString(),
-                status: 'Active',
-                joined: new Date().toISOString()
-            };
-
+            const newUser = { ...data, id: 'user_' + Date.now().toString(), status: 'Active', joined: new Date().toISOString() };
             await DataSync.saveUser(newUser);
+            DB.currentUser = newUser;
             SessionManager.saveSession();
-            DataSync.saveToCookieFallback();
-
-            // PERBAIKAN: Sync ke GAS
             await syncToGAS('register', newUser);
-
-            showToast('Pendaftaran berhasil! Silakan masuk.', 'success');
-            switchAuthMode('login');
+            showToast('Pendaftaran berhasil!', 'success');
+            closeAuthModal();
+            updateNavbar();
+            navigateTo('dashboard');
         }
 
         async function login() {
-            // PERBAIKAN: Pastikan DB siap sebelum operasi
-            try {
-                await DBStore.waitForReady();
-            } catch(e) {
-                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
-                console.error('DB not ready:', e);
-                return;
-            }
-
+            try { await DBStore.waitForReady(); } catch(e) { showToast('Database belum siap. Tunggu sebentar.', 'error'); return; }
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
-
-            if (!email || !password) {
-                showToast('Email dan password wajib diisi', 'error');
-                return;
-            }
+            if (!email || !password) { showToast('Email dan password wajib diisi', 'error'); return; }
 
             DEBUG.log('Login attempt:', email);
 
+            // Cari user di DB lokal
             const allUsers = await DBStore.getAll(CONFIG.STORE_USERS);
-            const user = allUsers.find(u => u.email === email && u.password === password);
+            let user = allUsers.find(u => u.email === email && u.password === password);
+
+            // PERBAIKAN: Kalau tidak ketemu di DB lokal, coba sync dari GAS lalu coba lagi
+            if (!user) {
+                DEBUG.log('User not in local DB, trying GAS sync...');
+                showToast('Mencari data di server...', 'info');
+                const result = await fetchFromGAS('getUsers');
+                if (result.success && Array.isArray(result.data)) {
+                    for (const u of result.data) {
+                        if (!u || !u.id) continue;
+                        await DBStore.put(CONFIG.STORE_USERS, u);
+                        const existing = DB.users.find(x => x.id === u.id);
+                        if (!existing) DB.users.push(u);
+                    }
+                    // Coba lagi setelah sync
+                    user = result.data.find(u => u.email === email && u.password === password);
+                }
+            }
 
             DEBUG.log('User found:', user ? 'YES' : 'NO');
-            DEBUG.log('Total users in DB:', allUsers.length);
 
-            if (!user) {
-                showToast('Email atau password salah', 'error');
-                return;
-            }
+            if (!user) { showToast('Email atau password salah', 'error'); return; }
 
             DB.currentUser = user;
             SessionManager.saveSession();
-
-            updateNavbar();
             closeAuthModal();
             showToast('Selamat datang, ' + user.name + '!', 'success');
+            updateNavbar();
             navigateTo('dashboard');
         }
 
@@ -1090,47 +812,36 @@
             DB.currentUser = null;
             DB.isAdmin = false;
             SessionManager.clearSession();
-            AdminSession.clear(); // PERBAIKAN: Clear shared admin session juga
             updateNavbar();
             navigateTo('home');
             showToast('Berhasil keluar', 'success');
         }
 
+        // PERBAIKAN: Admin login redirect ke affiliator-admin.html
         function adminLogin() {
             const input = document.getElementById('adminPasswordInput').value;
             if (input === CONFIG.ADMIN_PASSWORD) {
-                DB.isAdmin = true;
-                SessionManager.saveSession();
-                // PERBAIKAN: Simpan shared admin session untuk akses halaman admin lain
                 AdminSession.save();
+                SessionManager.saveSession();
                 closeModal('adminLoginModal');
-                showToast('Selamat datang, Admin!', 'success');
-                navigateTo('admin');
-                updateNavbar();
+                showToast('Redirect ke Admin Panel...', 'success');
+                // Redirect ke affiliator-admin.html
+                window.location.href = 'affiliator-admin.html';
             } else {
                 showToast('Password admin salah', 'error');
             }
         }
 
+        // ==================== NAVBAR ====================
         function updateNavbar() {
             const nav = document.getElementById('navLinks');
-            if (DB.isAdmin) {
-                nav.innerHTML = `
-                    <a class="nav-link" data-page="home">Beranda</a>
-                    <a class="nav-link active" data-page="admin">Admin Panel <span class="admin-badge">ADMIN</span></a>
-                    <a href="affiliator-admin.html" class="nav-link"><i class="fas fa-users-cog"></i> Aff.Admin</a>
-                    <a href="products-admin.html" class="nav-link"><i class="fas fa-box"></i> Products</a>
-                    <a href="qr.html" class="nav-link"><i class="fas fa-qrcode"></i> QR</a>
-                    <a href="landing.html" target="_blank" class="nav-link"><i class="fas fa-external-link-alt"></i> Landing</a>
-                    <button class="btn btn-outline btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
-                `;
-            } else if (DB.currentUser) {
+            if (DB.currentUser) {
                 const refCode = DB.currentUser.referralCode;
                 nav.innerHTML = `
                     <a class="nav-link" data-page="home">Beranda</a>
                     <a class="nav-link active" data-page="dashboard">Dashboard</a>
                     <a class="nav-link" data-page="leads">Leads</a>
-                    <a href="landing.html?ref=${refCode}" target="_blank" class="nav-link"><i class="fas fa-external-link-alt"></i> Landing</a>
+                    <a href="landing.html?ref=${refCode}" class="nav-link"><i class="fas fa-external-link-alt"></i> Landing</a>
                     <a href="qr.html" class="nav-link"><i class="fas fa-qrcode"></i> QR</a>
                     <span style="font-size: 0.8rem; color: var(--text-light);"><i class="fas fa-user"></i> ${DB.currentUser.name}</span>
                     <button class="btn btn-outline btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
@@ -1143,29 +854,24 @@
                 `;
             }
 
+            // Re-attach click handlers
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // PERBAIKAN: Kalau link punya href (eksternal link), jangan trigger navigateTo
-                    if (this.getAttribute('href')) return;
+                    if (this.getAttribute('href')) return; // external link, normal navigation
                     const page = this.dataset.page;
-                    if (page) {
-                        e.preventDefault();
-                        navigateTo(page);
-                    }
+                    if (page) { e.preventDefault(); navigateTo(page); }
                 });
             });
         }
 
-        // ==================== AFFILIATOR DASHBOARD ====================
+        // ==================== DASHBOARD ====================
         function loadDashboard() {
             if (!DB.currentUser) return;
-            const refLink = `https://qcokopi.github.io/Affiliator/landing.html?ref=${DB.currentUser.referralCode}`;
+            const refLink = 'https://qcokopi.github.io/Affiliator/landing.html?ref=' + DB.currentUser.referralCode;
             document.getElementById('referralLinkInput').value = refLink;
-
             const userLeads = DB.leads.filter(l => l.referralCode === DB.currentUser.referralCode);
             const userComm = DB.commissions.filter(c => c.affiliatorId === DB.currentUser.id);
-            const totalComm = userComm.reduce((a, c) => a + c.amount, 0);
-
+            const totalComm = userComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
             document.getElementById('dashTotalLeads').textContent = userLeads.length;
             document.getElementById('dashValidLeads').textContent = userLeads.filter(l => l.status === 'Valid').length;
             document.getElementById('dashTotalCommission').textContent = 'Rp ' + formatNumber(totalComm);
@@ -1175,9 +881,10 @@
             if (!DB.currentUser) return;
             const userLeads = DB.leads.filter(l => l.referralCode === DB.currentUser.referralCode);
             document.getElementById('affLeadsBody').innerHTML = userLeads.map(lead => {
-                const comm = lead.status === 'Valid' ? 10000 : lead.status === 'Converted' ? (lead.transactionValue || 0) * 0.05 : 0;
-                return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${lead.contact}</td><td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td><td>${comm > 0 ? 'Rp ' + formatNumber(comm) : '-'}</td></tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center">Belum ada leads</td></tr>';
+                const comm = lead.status === 'Valid' ? 10000 : lead.status === 'Converted' ? (parseFloat(lead.transactionValue) || 0) * 0.05 : 0;
+                const transValue = lead.transactionValue ? 'Rp ' + formatNumber(parseFloat(lead.transactionValue) || 0) : '-';
+                return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${lead.contact}</td><td><span class="badge badge-${(lead.status || 'pending').toLowerCase()}">${lead.status || 'Pending'}</span></td><td>${transValue}</td><td>${comm > 0 ? 'Rp ' + formatNumber(Math.round(comm)) : '-'}</td></tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada leads</td></tr>';
         }
 
         function copyReferralLink() {
@@ -1187,282 +894,54 @@
             showToast('Link disalin!', 'success');
         }
 
-        // ==================== ADMIN PANEL ====================
-        function loadAdminPanel() {
-            if (!DB.isAdmin) return;
-
-            document.getElementById('adminTotalAff').textContent = DB.users.length;
-            document.getElementById('adminTotalLeads').textContent = DB.leads.length;
-            const totalComm = DB.commissions.reduce((a, c) => a + c.amount, 0);
-            document.getElementById('adminTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
-
-            document.getElementById('adminLeadsBody').innerHTML = DB.leads.map(lead => {
-                const aff = DB.users.find(u => u.referralCode === lead.referralCode);
-                return `<tr><td>${formatDate(lead.date)}</td><td>${lead.name}</td><td>${aff ? aff.name : lead.referralCode}</td><td><span class="badge badge-${lead.status.toLowerCase()}">${lead.status}</span></td><td>${lead.transactionValue ? 'Rp ' + formatNumber(lead.transactionValue) : '-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${lead.id}')"><i class="fas fa-edit"></i></button></td></tr>`;
-            }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada leads</td></tr>';
-
-            document.getElementById('adminAffBody').innerHTML = DB.users.map(aff => {
-                const affLeads = DB.leads.filter(l => l.referralCode === aff.referralCode);
-                const affComm = DB.commissions.filter(c => c.affiliatorId === aff.id);
-                const totalComm = affComm.reduce((a, c) => a + c.amount, 0);
-                return `<tr><td><strong>${aff.name}</strong></td><td>${aff.email}</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${aff.referralCode}</code></td><td>${affLeads.length}</td><td>Rp ${formatNumber(totalComm)}</td></tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center">Belum ada affiliator</td></tr>';
-        }
-
-        function openUpdateLeadModal(leadId) {
-            const select = document.getElementById('updateLeadSelect');
-            select.innerHTML = DB.leads.map(l => `<option value="${l.id}">${l.name} (${l.status})</option>`).join('');
-            if (leadId) select.value = leadId;
-            document.getElementById('updateLeadModal').classList.add('active');
-        }
-
-        document.getElementById('updateLeadStatus').addEventListener('change', function() {
-            document.getElementById('transValueGroup').style.display = this.value === 'Converted' ? 'block' : 'none';
-        });
-
-        async function saveLeadUpdate() {
-            // PERBAIKAN: Pastikan DB siap sebelum operasi
-            try {
-                await DBStore.waitForReady();
-            } catch(e) {
-                showToast('Database belum siap. Tunggu sebentar dan coba lagi.', 'error');
-                console.error('DB not ready:', e);
-                return;
-            }
-
-            const leadId = document.getElementById('updateLeadSelect').value;
-            const newStatus = document.getElementById('updateLeadStatus').value;
-            const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
-
-            const lead = DB.leads.find(l => l.id === leadId);
-            if (!lead) return;
-
-            const oldStatus = lead.status;
-            lead.status = newStatus;
-            if (newStatus === 'Converted') lead.transactionValue = transValue;
-
-            await DataSync.saveLead(lead);
-
-            const aff = DB.users.find(u => u.referralCode === lead.referralCode);
-            if (aff) {
-                if (newStatus === 'Valid' && oldStatus !== 'Valid') {
-                    const commission = {
-                        id: 'comm_' + Date.now().toString(),
-                        affiliatorId: aff.id,
-                        type: 'Lead',
-                        description: 'Lead: ' + lead.name,
-                        amount: 10000,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    await DataSync.saveCommission(commission);
-                    await syncToGAS('addCommission', commission);
-                }
-                if (newStatus === 'Converted' && oldStatus !== 'Converted' && transValue > 0) {
-                    const commission = {
-                        id: 'comm_' + Date.now().toString(),
-                        affiliatorId: aff.id,
-                        type: 'Transaksi',
-                        description: 'Transaksi ' + lead.name,
-                        amount: transValue * 0.05,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    await DataSync.saveCommission(commission);
-                    await syncToGAS('addCommission', commission);
-                }
-            }
-
-            DataSync.saveToCookieFallback();
-
-            // PERBAIKAN: Sync ke GAS
-            await syncToGAS('updateLead', { leadId: leadId, status: newStatus, transactionValue: transValue });
-
-            closeModal('updateLeadModal');
-            showToast('Lead updated!', 'success');
-            loadAdminPanel();
-        }
-
-        // ==================== DEMO DATA ====================
-        async function loadDemoData() {
-            const users = await DBStore.getAll(CONFIG.STORE_USERS);
-            if (users.length === 0) {
-                DEBUG.log('Loading demo data...');
-
-                const demoUser = {
-                    id: 'user_demo_1',
-                    name: 'Budi Affiliator',
-                    email: 'budi@demo.com',
-                    password: 'password',
-                    phone: '08123456789',
-                    bank: 'BCA 1234567890',
-                    referralCode: 'BUDI1234',
-                    status: 'Active',
-                    joined: '2026-01-15T00:00:00.000Z'
-                };
-
-                const demoLead1 = {
-                    id: 'lead_1',
-                    referralCode: 'BUDI1234',
-                    name: 'Andi Wijaya',
-                    contact: 'andi@email.com',
-                    status: 'Valid',
-                    date: '2026-06-20T00:00:00.000Z',
-                    transactionValue: 0
-                };
-
-                const demoLead2 = {
-                    id: 'lead_2',
-                    referralCode: 'BUDI1234',
-                    name: 'Siti Nurhaliza',
-                    contact: '08129876543',
-                    status: 'Converted',
-                    date: '2026-06-22T00:00:00.000Z',
-                    transactionValue: 2500000
-                };
-
-                const demoComm1 = {
-                    id: 'comm_1',
-                    affiliatorId: 'user_demo_1',
-                    type: 'Lead',
-                    description: 'Lead: Andi Wijaya',
-                    amount: 10000,
-                    date: '2026-06-20T00:00:00.000Z',
-                    paid: true
-                };
-
-                const demoComm2 = {
-                    id: 'comm_2',
-                    affiliatorId: 'user_demo_1',
-                    type: 'Transaksi',
-                    description: 'Transaksi Siti',
-                    amount: 125000,
-                    date: '2026-06-23T00:00:00.000Z',
-                    paid: false
-                };
-
-                await DataSync.saveUser(demoUser);
-                await DataSync.saveLead(demoLead1);
-                await DataSync.saveLead(demoLead2);
-                await DataSync.saveCommission(demoComm1);
-                await DataSync.saveCommission(demoComm2);
-
-                DataSync.saveToCookieFallback();
-                DEBUG.log('Demo data loaded');
-            }
-        }
-
         // ==================== UTILITIES ====================
         function generateReferralCode(name) {
             const prefix = name.split(' ')[0].toUpperCase().substring(0, 4);
             const random = Math.random().toString(36).substring(2, 6).toUpperCase();
             return prefix + random;
         }
-
         function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
-
         function formatDate(dateStr) {
+            if (!dateStr) return '-';
             const d = new Date(dateStr);
-            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
         }
-
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + (type || 'info');
             const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> <span>${message}</span>`;
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async function() {
             DEBUG.log('=== APP STARTING ===');
-
-            // PERBAIKAN: Cek admin session dulu - kalau admin sudah login di halaman lain
-            if (AdminSession.isActive()) {
-                DEBUG.log('Admin session detected from another page');
-                DB.isAdmin = true;
-            }
-
-            // PERBAIKAN: Selalu enable tombol - jangan depend pada storage
             setAuthButtonsEnabled(true);
 
-            // Step 1: Initialize Storage (IndexedDB > localStorage > memory)
-            try {
-                await DBStore.init();
-                DEBUG.log('Storage initialized, mode:', DBStore.mode);
-            } catch(e) {
-                console.error('Storage init error (terjebak):', e);
-                // Force fallback ke memory
-                DBStore.mode = 'memory';
-                DBStore.ready = true;
-            }
+            try { await DBStore.init(); } catch(e) { DBStore.mode = 'memory'; DBStore.ready = true; }
+            try { await DataSync.loadAll(); } catch(e) {}
 
-            // Step 2: Load data - wrap semua dengan try-catch
-            try {
-                await DataSync.loadAll();
-                DEBUG.log('Data loaded:', DB.users.length, 'users,', DB.leads.length, 'leads');
-            } catch(e) {
-                console.error('DataSync.loadAll error:', e);
-                // Jangan biarkan error ini crash app
-            }
+            // Sync dari GAS
+            try { await syncAllFromGAS(); } catch(e) { DEBUG.log('GAS sync failed:', e.message); }
 
-            // Step 3: Load demo data
+            // Restore session (dengan cookie fallback)
             try {
-                await loadDemoData();
-            } catch(e) {
-                console.error('loadDemoData error:', e);
-            }
+                const restored = await SessionManager.restoreSession();
+                DEBUG.log('Session restored:', restored);
+                if (restored && DB.currentUser) { navigateTo('dashboard'); }
+            } catch(e) {}
 
-            // Step 4: Sync dari GAS
-            try {
-                await syncAllFromGAS();
-            } catch(e) {
-                DEBUG.log('GAS sync failed:', e.message);
-            }
-
-            // Step 5: Restore session
-            try {
-                const sessionRestored = await SessionManager.restoreSession();
-                DEBUG.log('Session restored:', sessionRestored);
-                if (sessionRestored) {
-                    if (DB.isAdmin) navigateTo('admin');
-                    else if (DB.currentUser) navigateTo('dashboard');
-                }
-                // PERBAIKAN: Kalau ada admin session dari halaman lain, langsung ke admin
-                else if (AdminSession.isActive()) {
-                    DB.isAdmin = true;
-                    navigateTo('admin');
-                }
-            } catch(e) {
-                console.error('Session restore error:', e);
-            }
-
-            // Step 6: Update UI
-            try {
-                updateNavbar();
-            } catch(e) {
-                console.error('updateNavbar error:', e);
-            }
-
-            // PERBAIKAN: Force enable tombol setelah semua init selesai
+            updateNavbar();
             setAuthButtonsEnabled(true);
-
             DEBUG.log('=== APP READY ===');
-            DEBUG.log('Storage mode:', DBStore.mode);
-            DEBUG.log('Users:', DB.users.length);
-            DEBUG.log('Leads:', DB.leads.length);
         });
 
-        // Close modal on overlay click
         document.getElementById('authModal').addEventListener('click', function(e) {
             if (e.target === this) closeAuthModal();
         });

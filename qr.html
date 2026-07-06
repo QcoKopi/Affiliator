@@ -6,7 +6,6 @@
     <title>QR Generator - Kopi Affiliate</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
@@ -154,7 +153,7 @@
             </ol>
         </div>
 
-        <!-- BACK LINKS -->
+        <!-- BACK LINK -->
         <div style="text-align: center; margin-top: 2rem;">
             <a href="index.html" style="color: white; text-decoration: none; opacity: 0.8; font-size: 0.9rem;">
                 <i class="fas fa-arrow-left"></i> Kembali ke Affiliator
@@ -168,11 +167,10 @@
             BASE_URL: 'https://qcokopi.github.io/Affiliator/landing.html',
             DB_NAME: 'KopiAffiliateDB',
             DB_VERSION: 2,
-            // PERBAIKAN: Tambahkan GAS URL
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec'
         };
 
-        // ==================== GAS INTEGRATION (PERBAIKAN BARU) ====================
+        // ==================== GAS INTEGRATION ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
@@ -180,7 +178,6 @@
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 return await response.json();
             } catch(err) {
-                console.error('GAS fetch error:', err.message);
                 return { success: false, error: err.message };
             }
         }
@@ -188,20 +185,13 @@
         async function syncUsersFromGAS() {
             const result = await fetchFromGAS('getUsers');
             if (result.success && Array.isArray(result.data)) {
-                let added = 0;
-                for (const user of result.data) {
-                    if (!user || !user.id) continue;
-                    // Simpan ke IndexedDB
-                    await DBStore.put('users', user);
-                    added++;
-                }
-                console.log('Users synced from GAS:', added, 'users');
+                for (const user of result.data) { if (user && user.id) await DBStore.put('users', user); }
                 return true;
             }
             return false;
         }
 
-        // ==================== STORAGE ENGINE (IndexedDB > localStorage > Memory) ====================
+        // ==================== STORAGE ENGINE ====================
         const DBStore = {
             db: null, ready: false, mode: 'unknown',
             memory: { users: [], leads: [], commissions: [], products: [], orders: [] },
@@ -212,24 +202,13 @@
                 this.initPromise = this._tryInit();
                 return this.initPromise;
             },
-
             _tryInit: async function() {
-                try {
-                    await this._initIndexedDB(3000);
-                    this.mode = 'indexeddb'; this.ready = true;
-                    console.log('Storage: IndexedDB'); return;
-                } catch(e) { console.log('IndexedDB gagal:', e.message || e); }
-
-                try {
-                    this._testLocalStorage();
-                    this.mode = 'localstorage'; this.ready = true;
-                    console.log('Storage: localStorage'); return;
-                } catch(e) { console.log('localStorage gagal:', e.message || e); }
-
+                try { await this._initIndexedDB(3000); this.mode = 'indexeddb'; this.ready = true; return; }
+                catch(e) { console.log('IndexedDB gagal:', e.message || e); }
+                try { this._testLocalStorage(); this.mode = 'localstorage'; this.ready = true; return; }
+                catch(e) { console.log('localStorage gagal:', e.message || e); }
                 this.mode = 'memory'; this.ready = true;
-                console.log('Storage: in-memory only');
             },
-
             _initIndexedDB: function(timeoutMs) {
                 return new Promise((resolve, reject) => {
                     if (!window.indexedDB) { reject('not supported'); return; }
@@ -237,12 +216,7 @@
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
                     request.onerror = () => { clearTimeout(timer); reject(request.error); };
                     request.onblocked = () => { clearTimeout(timer); reject('blocked'); };
-                    request.onsuccess = () => {
-                        clearTimeout(timer);
-                        this.db = request.result;
-                        this.db.onversionchange = () => { this.db.close(); location.reload(); };
-                        resolve(this.db);
-                    };
+                    request.onsuccess = () => { clearTimeout(timer); this.db = request.result; resolve(this.db); };
                     request.onupgradeneeded = (event) => {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
@@ -251,17 +225,11 @@
                     };
                 });
             },
-
             _testLocalStorage: function() {
                 const k = '_aff_test_'; localStorage.setItem(k, '1');
                 if (localStorage.getItem(k) !== '1') throw new Error('fail');
                 localStorage.removeItem(k);
             },
-
-            _lsKey: function(s) { return 'aff_' + s; },
-            _lsGet: function(s) { try { const r = localStorage.getItem(this._lsKey(s)); return r ? JSON.parse(r) : []; } catch(e) { return []; } },
-            _lsSet: function(s, d) { try { localStorage.setItem(this._lsKey(s), JSON.stringify(d)); } catch(e) {} },
-
             getAll: function(storeName) {
                 return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
@@ -271,26 +239,25 @@
                         req.onsuccess = () => resolve(req.result || []);
                         req.onerror = () => resolve([]);
                     } else if (this.mode === 'localstorage') {
-                        resolve(this._lsGet(storeName));
-                    } else {
-                        resolve(this.memory[storeName] || []);
-                    }
+                        try { const r = localStorage.getItem('aff_' + storeName); resolve(r ? JSON.parse(r) : []); }
+                        catch(e) { resolve([]); }
+                    } else { resolve(this.memory[storeName] || []); }
                 });
             },
-
             put: function(storeName, data) {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
                         const tx = this.db.transaction(storeName, 'readwrite');
                         const store = tx.objectStore(storeName);
                         const req = store.put(data);
                         req.onsuccess = () => resolve();
-                        req.onerror = () => reject(req.error);
+                        req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
-                        const items = this._lsGet(storeName);
+                        try { const items = JSON.parse(localStorage.getItem('aff_' + storeName) || '[]');
                         const idx = items.findIndex(x => x.id === data.id);
                         if (idx >= 0) items[idx] = data; else items.push(data);
-                        this._lsSet(storeName, items); resolve();
+                        localStorage.setItem('aff_' + storeName, JSON.stringify(items)); } catch(e) {}
+                        resolve();
                     } else {
                         const items = this.memory[storeName] || [];
                         const idx = items.findIndex(x => x.id === data.id);
@@ -307,16 +274,11 @@
         // ==================== QR GENERATOR ====================
         async function generateQR() {
             const code = document.getElementById('referralCodeInput').value.trim().toUpperCase();
-            if (!code) {
-                showToast('Masukkan referral code', 'error');
-                return;
-            }
+            if (!code) { showToast('Masukkan referral code', 'error'); return; }
 
-            // Cek di IndexedDB
             let users = await DBStore.getAll('users');
             let affiliator = users.find(u => u.referralCode === code);
 
-            // PERBAIKAN: Kalau tidak ketemu di lokal, coba sync dari GAS dulu
             if (!affiliator) {
                 showToast('Mencari di server...', 'info');
                 const synced = await syncUsersFromGAS();
@@ -334,73 +296,48 @@
 
             document.getElementById('errorMsg').classList.remove('active');
             currentAffiliator = affiliator;
+            const refLink = CONFIG.BASE_URL + '?ref=' + code;
 
-            // Build referral link
-            const refLink = `${CONFIG.BASE_URL}?ref=${code}`;
-
-            // Generate QR
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             qrCodeObj = new QRCode(qrContainer, {
-                text: refLink,
-                width: 200,
-                height: 200,
-                colorDark: '#5D4037',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                text: refLink, width: 200, height: 200,
+                colorDark: '#5D4037', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Show result
             document.getElementById('referralLinkDisplay').value = refLink;
             document.getElementById('qrResult').classList.add('active');
             document.getElementById('inputCard').style.display = 'none';
-
-            // Show affiliator info
             document.getElementById('affName').textContent = affiliator.name;
             document.getElementById('affEmail').textContent = affiliator.email;
             document.getElementById('affiliatorInfo').classList.add('active');
-
-            // Load stats
             await loadAffiliatorStats(affiliator);
-
             showToast('QR Code berhasil dibuat!', 'success');
         }
 
         async function loadAffiliatorStats(aff) {
-            // PERBAIKAN: Sync leads dan commissions dari GAS dulu
             await syncLeadsFromGAS();
             await syncCommissionsFromGAS();
-
             const leads = await DBStore.getAll('leads');
             const commissions = await DBStore.getAll('commissions');
-
             const userLeads = leads.filter(l => l.referralCode === aff.referralCode);
             const userComm = commissions.filter(c => c.affiliatorId === aff.id);
             const totalComm = userComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-
             document.getElementById('affTotalLeads').textContent = userLeads.length;
             document.getElementById('affValidLeads').textContent = userLeads.filter(l => l.status === 'Valid').length;
             document.getElementById('affTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
         }
 
-        // PERBAIKAN: Tambahkan sync leads dan commissions
         async function syncLeadsFromGAS() {
             const result = await fetchFromGAS('getLeads');
             if (result.success && Array.isArray(result.data)) {
-                for (const lead of result.data) {
-                    if (!lead || !lead.id) continue;
-                    await DBStore.put('leads', lead);
-                }
+                for (const lead of result.data) { if (lead && lead.id) await DBStore.put('leads', lead); }
             }
         }
-
         async function syncCommissionsFromGAS() {
             const result = await fetchFromGAS('getCommissions');
             if (result.success && Array.isArray(result.data)) {
-                for (const comm of result.data) {
-                    if (!comm || !comm.id) continue;
-                    await DBStore.put('commissions', comm);
-                }
+                for (const comm of result.data) { if (comm && comm.id) await DBStore.put('commissions', comm); }
             }
         }
 
@@ -410,19 +347,15 @@
             document.execCommand('copy');
             showToast('Link disalin!', 'success');
         }
-
         function downloadQR() {
             const qrCanvas = document.querySelector('#qrcode canvas');
             if (!qrCanvas) return;
-
             const link = document.createElement('a');
             link.download = 'QR-Referral-' + (currentAffiliator ? currentAffiliator.referralCode : 'code') + '.png';
             link.href = qrCanvas.toDataURL('image/png');
             link.click();
-
             showToast('QR Code di-download!', 'success');
         }
-
         function resetQR() {
             document.getElementById('qrResult').classList.remove('active');
             document.getElementById('affiliatorInfo').classList.remove('active');
@@ -434,15 +367,14 @@
 
         // ==================== UTILITIES ====================
         function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
-
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + (type || 'info');
             const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> <span>${message}</span>`;
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
@@ -451,15 +383,8 @@
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 await DBStore.init();
-                console.log('IndexedDB initialized for QR Generator');
-
-                // PERBAIKAN: Sync users dari GAS saat init
                 await syncUsersFromGAS();
-            } catch(e) {
-                console.log('IndexedDB error:', e);
-            }
-
-            // Check URL parameter for auto-fill
+            } catch(e) { console.log('IndexedDB error:', e); }
             const urlParams = new URLSearchParams(window.location.search);
             const refCode = urlParams.get('ref');
             if (refCode) {

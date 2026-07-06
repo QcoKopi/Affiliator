@@ -120,9 +120,7 @@
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
-    <!-- DEBUG LOG -->
     <div class="debug-log" id="debugLog"></div>
     <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
@@ -214,7 +212,7 @@
                     <div class="card-body">
                         <div class="table-container">
                             <table class="data-table">
-                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Aksi</th></tr></thead>
+                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Aksi</th></tr></thead>
                                 <tbody id="recentLeadsBody"></tbody>
                             </table>
                         </div>
@@ -350,10 +348,10 @@
         (function checkAccess() {
             try {
                 const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) { window.location.href = 'index.html'; return; }
+                if (!match) { return; }
                 const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
-            } catch(e) { window.location.href = 'index.html'; }
+                if (!session || !session.isAdmin) { return; }
+            } catch(e) {}
         })();
 
         // ==================== CONFIG ====================
@@ -385,7 +383,7 @@
         // ==================== STATE ====================
         let DATA = { users: [], leads: [], orders: [], commissions: [] };
 
-        // ==================== GAS: FETCH GET (TERBUKTI BEKERJA) ====================
+        // ==================== GAS: FETCH GET ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
@@ -401,16 +399,11 @@
             }
         }
 
-        // ==================== GAS: SYNC WRITE (iframe form POST - PRIMARY) ====================
-        // Iframe form POST = paling reliable untuk kirim data ke GAS
-        // Tidak ada batasan URL length (masalah utama fetch GET untuk addCommission)
+        // ==================== GAS: SYNC WRITE (iframe form POST) ====================
         async function syncToGAS(action, data) {
             Debug.log('GAS SYNC:', action);
             const iframe = document.getElementById('gasFrame');
-            if (!iframe) {
-                Debug.log('ERROR: gasFrame tidak ditemukan');
-                return false;
-            }
+            if (!iframe) { Debug.log('ERROR: gasFrame tidak ditemukan'); return false; }
             return new Promise((resolve) => {
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -441,7 +434,7 @@
                 };
 
                 iframe.onload = cleanup;
-                setTimeout(cleanup, 5000); // Safety timeout
+                setTimeout(cleanup, 5000);
 
                 document.body.appendChild(form);
                 form.submit();
@@ -475,7 +468,6 @@
         // ==================== RENDER PAGES ====================
         function renderDashboard() {
             const validLeads = DATA.leads.filter(l => l.status === 'Valid');
-            const convertedLeads = DATA.leads.filter(l => l.status === 'Converted');
             const totalComm = DATA.commissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
 
             document.getElementById('dashTotalAff').textContent = DATA.users.length;
@@ -487,14 +479,16 @@
             const recent = DATA.leads.slice(-5).reverse();
             document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
                 const aff = DATA.users.find(u => u.referralCode === l.referralCode);
+                const transVal = l.transactionValue ? 'Rp ' + formatNumber(l.transactionValue) : '-';
                 return `<tr>
                     <td>${formatDate(l.date)}</td>
                     <td>${l.name}</td>
                     <td>${aff ? aff.name : l.referralCode}</td>
                     <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
+                    <td>${transVal}</td>
                     <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
                 </tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
+            }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
         }
 
         function renderAffiliators() {
@@ -526,13 +520,15 @@
 
             document.getElementById('leadsBody').innerHTML = leads.map(l => {
                 const aff = DATA.users.find(u => u.referralCode === l.referralCode);
+                // PERBAIKAN: parseFloat transactionValue
+                const transVal = l.transactionValue ? 'Rp ' + formatNumber(parseFloat(l.transactionValue) || 0) : '-';
                 return `<tr>
                     <td>${formatDate(l.date)}</td>
                     <td><strong>${l.name}</strong></td>
                     <td>${l.contact || '-'}</td>
                     <td>${aff ? aff.name : l.referralCode}</td>
                     <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td>${l.transactionValue ? 'Rp ' + formatNumber(l.transactionValue) : '-'}</td>
+                    <td>${transVal}</td>
                     <td>${l.source || '-'}</td>
                     <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
                 </tr>`;
@@ -542,13 +538,15 @@
         function renderOrders() {
             document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
                 const alamat = [o.namaJalanGedung, o.kecamatan, o.kotaKabupaten, o.provinsi, o.kodePos].filter(Boolean).join(', ');
+                const price = parseFloat(o.price) || 0;
+                const ongkir = parseFloat(o.ongkir) || 0;
                 return `<tr>
                     <td>${formatDate(o.date)}</td>
                     <td>${o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
                     <td>${o.buyerName || '-'}</td>
                     <td>${o.buyerPhone || '-'}<br><small>${o.buyerEmail || ''}</small></td>
                     <td>${alamat || '-'}</td>
-                    <td>${o.price ? 'Rp ' + formatNumber(o.price) : '-'}${o.ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(o.ongkir) + '</small>' : ''}</td>
+                    <td>${price > 0 ? 'Rp ' + formatNumber(price) : '-'}${ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(ongkir) + '</small>' : ''}</td>
                     <td>${o.referralCode || '-'}</td>
                     <td><span class="badge badge-${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span></td>
                 </tr>`;
@@ -569,7 +567,7 @@
             }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada komisi</td></tr>';
         }
 
-        // ==================== UPDATE LEAD (FIXED) ====================
+        // ==================== UPDATE LEAD ====================
         function openUpdateLeadModal(leadId) {
             const select = document.getElementById('updateLeadSelect');
             select.innerHTML = DATA.leads.map(l => `<option value="${l.id}">${l.name} (${l.status || 'Pending'})</option>`).join('');
@@ -596,11 +594,14 @@
             Debug.log('=== UPDATE LEAD ===');
             Debug.log('Lead ID:', leadId);
             Debug.log('Status:', newStatus);
+            Debug.log('TransactionValue:', transValue);
 
-            // PERBAIKAN: Gunakan fetch GET (terbukti bekerja) + await
-            // PERBAIKAN: Kirim 'id' (bukan 'leadId') supaya GAS updateSheetRow bisa match
+            // Simpan status lama SEBELUM update
+            const oldStatus = lead.status;
+
+            // PERBAIKAN: Kirim transactionValue selalu (bukan hanya saat Converted)
             const ok = await syncToGAS('updateLead', {
-                id: leadId,        // ← GAS updateSheetRow cari data[i][0] == id
+                id: leadId,
                 status: newStatus,
                 transactionValue: transValue
             });
@@ -613,16 +614,13 @@
                 btn.innerHTML = '<i class="fas fa-save"></i> Update';
                 return;
             }
-            // Simpan status lama SEBELUM update
-            const oldStatus = lead.status;
 
             // Update local state
-lead.status = newStatus;
-if (newStatus === 'Converted') lead.transactionValue = transValue;
+            lead.status = newStatus;
+            if (newStatus === 'Converted') lead.transactionValue = transValue;
 
-// Jika status BARU jadi Valid dan sebelumnya bukan Valid
-if (newStatus === 'Valid' && oldStatus !== 'Valid') {
-    
+            // Jika status BARU jadi Valid dan sebelumnya bukan Valid
+            if (newStatus === 'Valid' && oldStatus !== 'Valid') {
                 const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
                 if (aff) {
                     const commission = {
@@ -634,8 +632,9 @@ if (newStatus === 'Valid' && oldStatus !== 'Valid') {
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission:', commOk ? 'SUKSES' : 'GAGAL');
+                    DATA.commissions.push(commission);
+                    await syncToGAS('addCommission', commission);
+                    Debug.log('GAS addCommission Lead:', 'OK');
                 }
             }
 
@@ -652,8 +651,9 @@ if (newStatus === 'Valid' && oldStatus !== 'Valid') {
                         date: new Date().toISOString(),
                         paid: false
                     };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission (trx):', commOk ? 'SUKSES' : 'GAGAL');
+                    DATA.commissions.push(commission);
+                    await syncToGAS('addCommission', commission);
+                    Debug.log('GAS addCommission Transaksi:', 'OK');
                 }
             }
 
@@ -709,7 +709,7 @@ if (newStatus === 'Valid' && oldStatus !== 'Valid') {
 
         function adminLogout() {
             SessionManager.clearSession();
-            location.reload();
+            location.href = 'index.html';
         }
 
         function checkSession() {
@@ -742,16 +742,12 @@ if (newStatus === 'Valid' && oldStatus !== 'Valid') {
         };
 
         // ==================== UTILITIES ====================
-        function refreshAllData() {
-            syncAllData();
-        }
+        function refreshAllData() { syncAllData(); }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         function formatNumber(num) {
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
         function formatDate(dateStr) {
@@ -764,9 +760,9 @@ if (newStatus === 'Valid' && oldStatus !== 'Valid') {
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + (type || 'info');
             const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> <span>${message}</span>`;
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }

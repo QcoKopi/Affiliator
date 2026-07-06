@@ -119,11 +119,7 @@
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
-
-    <!-- DEBUG LOG PANEL -->
     <div class="debug-log" id="debugLog"></div>
     <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
@@ -142,10 +138,9 @@
             </button>
             <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                <button class="btn btn-outline" style="width: 100%; font-size: 0.8rem;" onclick="clearDatabase()">
-                    <i class="fas fa-trash"></i> Clear Database (if error)
-                </button>
-                <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.5rem;">Klik ini kalau ada error database</p>
+                <a href="index.html" style="color: var(--primary); text-decoration: none; font-size: 0.85rem;">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
+                </a>
             </div>
         </div>
     </div>
@@ -160,7 +155,8 @@
             <li><a onclick="showPage('products')" data-page="products"><i class="fas fa-box"></i> Products</a></li>
             <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
             <li><a onclick="showPage('preview')" data-page="preview"><i class="fas fa-eye"></i> Preview Landing</a></li>
-            <li><a href="index.html"><i class="fas fa-shield-alt"></i> Affiliate Admin</a></li>
+            <li><a href="affiliator-admin.html"><i class="fas fa-users-cog"></i> Affiliate Admin</a></li>
+            <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
             <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
         </ul>
     </aside>
@@ -255,7 +251,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title"><i class="fas fa-eye"></i> Preview Landing Page</div>
-                        <a href="landing.html" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing Page</a>
+                        <a href="landing.html" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing Page</a>
                     </div>
                     <div class="card-body">
                         <p style="color: var(--text-light); margin-bottom: 1rem;">Tampilan yang terlihat di landing page:</p>
@@ -329,23 +325,11 @@
     </div>
 
     <script>
-        // ==================== ACCESS CONTROL ====================
-        (function checkAccess() {
-            try {
-                const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) { window.location.href = 'index.html'; return; }
-                const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
-            } catch(e) { window.location.href = 'index.html'; }
-        })();
-
         // ==================== CONFIG ====================
         const CONFIG = {
             ADMIN_PASSWORD: 'admin123',
             DB_NAME: 'KopiAffiliateDB',
-            // SAMA dengan index.html agar IndexedDB kompatibel
             DB_VERSION: 2,
-            // GAS DEPLOYMENT URL
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec'
         };
 
@@ -368,15 +352,6 @@
                 panel.scrollTop = panel.scrollHeight;
             }
         };
-        // Toggle debug panel: tombol pojok kanan bawah, atau shortcut Ctrl+Alt+D / Cmd+Option+D
-        document.addEventListener('keydown', function(e) {
-            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-            const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
-            if (ctrlKey && e.altKey && e.key === 'd') {
-                e.preventDefault();
-                document.getElementById('debugLog').classList.toggle('show');
-            }
-        });
 
         // ==================== STORAGE ENGINE ====================
         const DBStore = {
@@ -389,22 +364,13 @@
                 this.initPromise = this._tryInit();
                 return this.initPromise;
             },
-
             _tryInit: async function() {
-                try {
-                    await this._initIndexedDB(3000);
-                    this.mode = 'indexeddb'; this.ready = true;
-                    Debug.log('Storage: IndexedDB'); return;
-                } catch(e) { Debug.log('IndexedDB gagal:', e.message); }
-                try {
-                    this._testLocalStorage();
-                    this.mode = 'localstorage'; this.ready = true;
-                    Debug.log('Storage: localStorage'); return;
-                } catch(e) { Debug.log('localStorage gagal:', e.message); }
+                try { await this._initIndexedDB(3000); this.mode = 'indexeddb'; this.ready = true; return; }
+                catch(e) { Debug.log('IndexedDB gagal:', e.message); }
+                try { this._testLocalStorage(); this.mode = 'localstorage'; this.ready = true; return; }
+                catch(e) { Debug.log('localStorage gagal:', e.message); }
                 this.mode = 'memory'; this.ready = true;
-                Debug.log('Storage: memory');
             },
-
             _initIndexedDB: function(timeoutMs) {
                 return new Promise((resolve, reject) => {
                     if (!window.indexedDB) { reject('not supported'); return; }
@@ -412,12 +378,7 @@
                     const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
                     request.onerror = () => { clearTimeout(timer); reject(request.error); };
                     request.onblocked = () => { clearTimeout(timer); reject('blocked'); };
-                    request.onsuccess = () => {
-                        clearTimeout(timer);
-                        this.db = request.result;
-                        this.db.onversionchange = () => { this.db.close(); location.reload(); };
-                        resolve(this.db);
-                    };
+                    request.onsuccess = () => { clearTimeout(timer); this.db = request.result; resolve(this.db); };
                     request.onupgradeneeded = (event) => {
                         const db = event.target.result;
                         if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
@@ -425,11 +386,9 @@
                         if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id' });
-                        if (!db.objectStoreNames.contains('session')) db.createObjectStore('session', { keyPath: 'key' });
                     };
                 });
             },
-
             _testLocalStorage: function() {
                 try {
                     if (typeof window.localStorage === 'undefined') throw new Error('not available');
@@ -440,17 +399,11 @@
                     if (v !== '1') throw new Error('mismatch');
                 } catch(e) { throw new Error('blocked'); }
             },
-
             waitForReady: async function() {
                 if (this.ready) return;
                 if (this.initPromise) { await this.initPromise; return; }
                 await this.init();
             },
-
-            _lsKey: function(s) { return 'aff_' + s; },
-            _lsGet: function(s) { try { const r = localStorage.getItem(this._lsKey(s)); return r ? JSON.parse(r) : []; } catch(e) { return []; } },
-            _lsSet: function(s, d) { try { localStorage.setItem(this._lsKey(s), JSON.stringify(d)); } catch(e) {} },
-
             getAll: function(storeName) {
                 return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
@@ -460,26 +413,25 @@
                         req.onsuccess = () => resolve(req.result || []);
                         req.onerror = () => resolve([]);
                     } else if (this.mode === 'localstorage') {
-                        resolve(this._lsGet(storeName));
-                    } else {
-                        resolve(this.memory[storeName] || []);
-                    }
+                        try { const r = localStorage.getItem('aff_' + storeName); resolve(r ? JSON.parse(r) : []); }
+                        catch(e) { resolve([]); }
+                    } else { resolve(this.memory[storeName] || []); }
                 });
             },
-
             put: function(storeName, data) {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
                         const tx = this.db.transaction(storeName, 'readwrite');
                         const store = tx.objectStore(storeName);
                         const req = store.put(data);
                         req.onsuccess = () => resolve();
-                        req.onerror = () => reject(req.error);
+                        req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
-                        const items = this._lsGet(storeName);
+                        try { const items = JSON.parse(localStorage.getItem('aff_' + storeName) || '[]');
                         const idx = items.findIndex(x => x.id === data.id);
                         if (idx >= 0) items[idx] = data; else items.push(data);
-                        this._lsSet(storeName, items); resolve();
+                        localStorage.setItem('aff_' + storeName, JSON.stringify(items)); } catch(e) {}
+                        resolve();
                     } else {
                         const items = this.memory[storeName] || [];
                         const idx = items.findIndex(x => x.id === data.id);
@@ -488,7 +440,6 @@
                     }
                 });
             },
-
             delete: function(storeName, id) {
                 return new Promise((resolve) => {
                     if (this.mode === 'indexeddb' && this.db) {
@@ -498,8 +449,9 @@
                         req.onsuccess = () => resolve();
                         req.onerror = () => resolve();
                     } else if (this.mode === 'localstorage') {
-                        const items = this._lsGet(storeName).filter(x => x.id !== id);
-                        this._lsSet(storeName, items); resolve();
+                        try { const items = JSON.parse(localStorage.getItem('aff_' + storeName) || '[]').filter(x => x.id !== id);
+                        localStorage.setItem('aff_' + storeName, JSON.stringify(items)); } catch(e) {}
+                        resolve();
                     } else {
                         this.memory[storeName] = (this.memory[storeName] || []).filter(x => x.id !== id);
                         resolve();
@@ -528,19 +480,15 @@
             }
         };
 
-        // ==================== GAS: FETCH GET (PRIMARY) ====================
-        // TERBUKTI BEKERJA - getProducts sudah OK di log
-        // GAS code user handle semua action (saveProduct, register, dll) di doGet
+        // ==================== GAS: SYNC ====================
         async function syncToGAS(action, data) {
             const params = new URLSearchParams();
             params.append('action', action);
             for (let key in data) {
                 params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
             }
-
             const url = CONFIG.GAS_URL + '?' + params.toString();
             Debug.log('GAS GET URL length:', url.length);
-
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -549,63 +497,31 @@
                 return result.success;
             } catch(err) {
                 Debug.log('GAS GET ERROR:', action + ': ' + err.message);
-                // Fallback: iframe form
                 return syncToGASIframe(action, data);
             }
         }
 
-        // Fallback: iframe form (hanya kalau fetch GET gagal)
         function syncToGASIframe(action, data) {
             return new Promise((resolve) => {
                 const iframe = document.getElementById('gasFrame');
                 if (!iframe) { resolve(false); return; }
-
                 const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = CONFIG.GAS_URL;
-                form.target = 'gasFrame';
-                form.style.display = 'none';
-
-                const actionField = document.createElement('input');
-                actionField.name = 'action';
-                actionField.value = action;
-                form.appendChild(actionField);
-
-                for (let key in data) {
-                    const field = document.createElement('input');
-                    field.name = key;
-                    field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
-                    form.appendChild(field);
-                }
-
-                const cleanup = () => {
-                    try { document.body.removeChild(form); } catch(e) {}
-                    iframe.onload = null;
-                    Debug.log('GAS iframe fallback selesai');
-                    resolve(true);
-                };
-
-                iframe.onload = cleanup;
-                setTimeout(cleanup, 5000);
-
-                document.body.appendChild(form);
-                form.submit();
-                Debug.log('GAS iframe fallback submitted');
+                form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
+                const actionField = document.createElement('input'); actionField.name = 'action'; actionField.value = action; form.appendChild(actionField);
+                for (let key in data) { const field = document.createElement('input'); field.name = key; field.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''); form.appendChild(field); }
+                const cleanup = () => { try { document.body.removeChild(form); } catch(e) {} iframe.onload = null; resolve(true); };
+                iframe.onload = cleanup; setTimeout(cleanup, 5000);
+                document.body.appendChild(form); form.submit();
             });
         }
 
-        // ==================== GAS: FETCH GET (READ ONLY) ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-                Debug.log('GAS GET:', url.substring(0, 80) + '...');
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
-                const result = await response.json();
-                Debug.log('GAS GET OK:', action, 'count=' + (result.data ? result.data.length : 0));
-                return result;
+                return await response.json();
             } catch(err) {
-                Debug.log('GAS GET ERROR:', action + ': ' + err.message);
                 return { success: false, error: err.message };
             }
         }
@@ -620,16 +536,17 @@
                     if (!item || !item.id) continue;
                     const existing = Data.products.find(p => p.id === item.id);
                     if (!existing) {
+                        // PERBAIKAN: parseFloat harga
+                        item.price = parseFloat(item.price) || 0;
+                        item.originalPrice = parseFloat(item.originalPrice) || 0;
                         Data.products.push(item);
                         await DBStore.put('products', item);
                         added++;
                     }
                 }
                 updateSyncStatus('synced', Data.products.length + ' produk');
-                Debug.log('Sync products dari GAS:', 'added=' + added + ', total=' + Data.products.length);
             } else {
                 updateSyncStatus('error', 'GAS error');
-                Debug.log('Sync products GAGAL:', result.error || 'unknown');
             }
         }
 
@@ -641,12 +558,12 @@
                     if (!item || !item.id) continue;
                     const existing = Data.orders.find(o => o.id === item.id);
                     if (!existing) {
+                        item.price = parseFloat(item.price) || 0;
                         Data.orders.push(item);
                         await DBStore.put('orders', item);
                         added++;
                     }
                 }
-                Debug.log('Sync orders dari GAS:', 'added=' + added + ', total=' + Data.orders.length);
             }
         }
 
@@ -702,25 +619,22 @@
 
         function adminLogout() {
             SessionManager.clearSession();
-            location.reload();
+            location.href = 'index.html';
         }
 
         // ==================== DEMO PRODUCTS ====================
         async function loadDemoProducts() {
             const existing = await DBStore.getAll('products');
             if (existing.length > 0) { Debug.log('Demo skip:', existing.length + ' produk sudah ada'); return; }
-
             Debug.log('Loading demo products...');
             const demoProducts = [
                 { id: 'prod_1', name: 'Arabika Gayo Premium', category: 'Arabika', price: 125000, originalPrice: 150000, imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop', description: 'Single origin dari Aceh. Notes: floral, citrus, chocolate.', status: 'Active', createdAt: '2026-01-01T00:00:00.000Z' },
                 { id: 'prod_2', name: 'Robusta Temanggung', category: 'Robusta', price: 85000, originalPrice: 100000, imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop', description: 'Full body, earthy, low acidity. Cocok untuk espresso.', status: 'Active', createdAt: '2026-01-02T00:00:00.000Z' },
                 { id: 'prod_3', name: 'House Blend Special', category: 'House Blend', price: 95000, originalPrice: 110000, imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop', description: 'Campuran Arabika & Robusta. Balance & smooth.', status: 'Active', createdAt: '2026-01-03T00:00:00.000Z' }
             ];
-
             for (const p of demoProducts) {
                 await DBStore.put('products', p);
-                const ok = await syncToGAS('saveProduct', p);
-                Debug.log('Demo product:', p.name, ok ? 'tersimpan di GAS' : 'GAS gagal');
+                await syncToGAS('saveProduct', p);
             }
         }
 
@@ -746,9 +660,10 @@
             document.getElementById('dashActiveProducts').textContent = active.length;
             document.getElementById('dashTotalOrders').textContent = Data.orders.length;
             const recent = Data.orders.slice(-5).reverse();
-            document.getElementById('recentOrdersBody').innerHTML = recent.map(o => `
-                <tr><td>${formatDate(o.date)}</td><td>${o.productName}</td><td>${o.buyerName}</td><td>${o.buyerCity}</td><td>${o.referralCode}</td><td><span class="badge badge-${o.status === 'Pending' ? 'inactive' : 'active'}">${o.status}</span></td></tr>
-            `).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada orders</td></tr>';
+            document.getElementById('recentOrdersBody').innerHTML = recent.map(o => {
+                const price = parseFloat(o.price) || 0;
+                return `<tr><td>${formatDate(o.date)}</td><td>${o.productName}</td><td>${o.buyerName}</td><td>${o.buyerCity}</td><td>${o.referralCode}</td><td><span class="badge badge-${o.status === 'Pending' ? 'inactive' : 'active'}">${o.status}</span></td></tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center">Belum ada orders</td></tr>';
         }
 
         // ==================== PRODUCTS ====================
@@ -761,7 +676,7 @@
             document.getElementById('productsBody').innerHTML = data.map(p => {
                 const hasImg = p.imageUrl && p.imageUrl.trim() !== '';
                 const imgHtml = hasImg
-                    ? `<div class="product-img-preview"><img src="${p.imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-coffee\'></i>'"></div>`
+                    ? `<div class="product-img-preview"><img src="${p.imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'fas fa-coffee\\'></i>'"></div>`
                     : `<div class="product-img-preview"><i class="fas fa-coffee"></i></div>`;
                 return `<tr>
                     <td>${imgHtml}</td>
@@ -812,7 +727,6 @@
 
         async function saveProduct() {
             await DBStore.waitForReady();
-
             const id = document.getElementById('productId').value;
             const name = document.getElementById('prodName').value.trim();
             const category = document.getElementById('prodCategory').value;
@@ -821,7 +735,6 @@
             const imageUrl = document.getElementById('prodImageUrl').value.trim();
             const description = document.getElementById('prodDescription').value.trim();
             const status = document.getElementById('prodStatus').checked ? 'Active' : 'Inactive';
-
             if (!name || !price) { showToast('Nama dan harga wajib diisi', 'error'); return; }
 
             const product = {
@@ -830,42 +743,13 @@
                 createdAt: id ? (Data.products.find(p => p.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
             };
 
-            Debug.log('=== SAVE PRODUCT ===');
-            Debug.log('Product:', JSON.stringify(product));
-
-            // 1. Simpan ke IndexedDB (lokal)
             await DBStore.put('products', product);
-            Debug.log('IndexedDB OK');
-
-            // 2. Kirim ke GAS via fetch GET (TERBUKTI BEKERJA)
             showToast('Menyimpan ke server...', 'info');
             const gasOk = await syncToGAS('saveProduct', product);
-            Debug.log('GAS save:', gasOk ? 'SUKSES' : 'GAGAL');
-
-            // 3. Tutup modal dan refresh UI
             closeModal('productModal');
             showToast(gasOk ? 'Produk disimpan di server!' : 'Produk disimpan lokal.', gasOk ? 'success' : 'warning');
             loadProducts();
             loadDashboard();
-
-            // 4. Verifikasi: fetch dari GAS setelah 2 detik
-            setTimeout(async () => {
-                Debug.log('Verifikasi: fetch products dari GAS...');
-                const result = await fetchFromGAS('getProducts');
-                if (result.success && Array.isArray(result.data)) {
-                    const found = result.data.find(p => p.id === product.id);
-                    if (found) {
-                        Debug.log('VERIFIKASI OK: Produk ditemukan di GAS!');
-                        updateSyncStatus('synced', result.data.length + ' produk di GAS');
-                    } else {
-                        Debug.log('VERIFIKASI GAGAL: Produk tidak ditemukan');
-                        Debug.log('GAS total products:', result.data.length);
-                        updateSyncStatus('error', 'Belum sinkron');
-                    }
-                } else {
-                    Debug.log('VERIFIKASI ERROR:', result.error || 'fetch gagal');
-                }
-            }, 2000);
         }
 
         async function toggleProductStatus(productId, isActive) {
@@ -883,10 +767,7 @@
             if (!confirm('Yakin ingin menghapus produk ini?')) return;
             const p = Data.products.find(p => p.id === productId);
             await DBStore.delete('products', productId);
-            if (p) {
-                p.status = 'Deleted';
-                await syncToGAS('saveProduct', p);
-            }
+            if (p) { p.status = 'Deleted'; await syncToGAS('saveProduct', p); }
             showToast('Produk dihapus', 'success');
             loadProducts();
             loadDashboard();
@@ -900,21 +781,22 @@
         async function loadOrders() {
             Data.orders = await DBStore.getAll('orders');
             const all = Data.orders.sort((a, b) => new Date(b.date) - new Date(a.date));
-            document.getElementById('allOrdersBody').innerHTML = all.map(o => `
-                <tr><td>${formatDate(o.date)}</td><td>${o.productName}</td><td>${o.buyerName}</td><td>${o.buyerPhone}<br><small>${o.buyerEmail}</small></td><td>${o.buyerCity}</td><td>Rp ${formatNumber(o.price)}</td><td>${o.referralCode}</td><td><span class="badge badge-${o.status === 'Pending' ? 'inactive' : 'active'}">${o.status}</span></td></tr>
-            `).join('') || '<tr><td colspan="8" style="text-align:center">Belum ada orders</td></tr>';
+            document.getElementById('allOrdersBody').innerHTML = all.map(o => {
+                const price = parseFloat(o.price) || 0;
+                return `<tr><td>${formatDate(o.date)}</td><td>${o.productName}</td><td>${o.buyerName}</td><td>${o.buyerPhone}<br><small>${o.buyerEmail}</small></td><td>${o.buyerCity}</td><td>Rp ${formatNumber(price)}</td><td>${o.referralCode}</td><td><span class="badge badge-${o.status === 'Pending' ? 'inactive' : 'active'}">${o.status}</span></td></tr>`;
+            }).join('') || '<tr><td colspan="8" style="text-align:center">Belum ada orders</td></tr>';
         }
 
         // ==================== UTILITIES ====================
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function formatNumber(num) { return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function formatDate(dateStr) { const d = new Date(dateStr); return isNaN(d) ? '-' : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); }
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + (type || 'info');
             const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> <span>${message}</span>`;
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
         }
@@ -925,13 +807,9 @@
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async function() {
             Debug.log('=== PRODUCTS ADMIN START ===');
-            Debug.log('GAS URL:', CONFIG.GAS_URL.substring(0, 60) + '...');
-
             DBStore.init().catch(() => { DBStore.mode = 'memory'; DBStore.ready = true; });
             let attempts = 0;
             while (!DBStore.ready && attempts < 10) { await new Promise(r => setTimeout(r, 200)); attempts++; }
-            Debug.log('Storage ready:', DBStore.mode);
-
             try {
                 await loadDemoProducts();
                 checkAdminSession();
@@ -941,7 +819,6 @@
                     await syncOrdersFromGAS();
                 }
             } catch(e) { Debug.log('Init error:', e.message); }
-
             Debug.log('=== INIT COMPLETE ===');
         });
     </script>

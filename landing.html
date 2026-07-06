@@ -56,14 +56,12 @@
         .product-btn.added { background: var(--success); }
         .product-btn.added:hover { background: #3d8b40; }
 
-        /* CART FLOATING BUTTON */
         .cart-float { position: fixed; bottom: 24px; right: 24px; z-index: 900; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 20px rgba(93,64,55,0.3); transition: all 0.3s; border: none; }
         .cart-float:hover { transform: scale(1.1); }
         .cart-float .badge-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; font-size: 0.7rem; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .cart-float.pulse { animation: pulse 0.4s ease; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* CART PANEL */
         .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1100; display: none; }
         .cart-overlay.active { display: block; }
         .cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 420px; background: var(--card-bg); z-index: 1101; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
@@ -93,7 +91,6 @@
         .cart-checkout-btn:hover { background: var(--primary-dark); }
         .cart-checkout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* FORM SECTION */
         .form-section { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border); max-width: 640px; margin: 0 auto; }
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
@@ -107,7 +104,6 @@
         .btn-primary:hover { background: var(--primary-dark); }
         .btn-block { width: 100%; justify-content: center; }
 
-        /* CART SUMMARY IN FORM */
         .cart-summary { background: var(--bg); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
         .cart-summary-title { font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; color: var(--primary-dark); }
         .cart-summary-item { display: flex; justify-content: space-between; padding: 0.4rem 0; font-size: 0.9rem; border-bottom: 1px dashed var(--border); }
@@ -150,17 +146,13 @@
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
 
-    <!-- CART FLOATING BUTTON -->
     <button class="cart-float" id="cartFloatBtn" onclick="toggleCart()">
         <i class="fas fa-shopping-cart"></i>
         <span class="badge-count" id="cartBadge" style="display:none;">0</span>
     </button>
 
-    <!-- CART OVERLAY & PANEL -->
     <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
     <div class="cart-panel" id="cartPanel">
         <div class="cart-header">
@@ -246,7 +238,6 @@
         <p class="section-subtitle">Isi data Anda untuk pemesanan</p>
 
         <div class="form-section">
-            <!-- CART SUMMARY -->
             <div class="cart-summary" id="cartSummary">
                 <div class="cart-summary-title"><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</div>
                 <div id="cartSummaryContent">
@@ -287,7 +278,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Kota / Kabupaten <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="buyerCity" placeholder="Bandung">
+                    <input type="text" class="form-input" id="buyerCity2" placeholder="Bandung">
                 </div>
             </div>
             <div class="form-row">
@@ -343,43 +334,31 @@
         function getCart() { return Cart; }
         function addToCart(product) {
             const existing = Cart.find(item => item.id === product.id);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                Cart.push({ ...product, qty: 1 });
-            }
+            if (existing) { existing.qty += 1; }
+            else { Cart.push({ ...product, qty: 1 }); }
             updateCartUI();
-            // Pulse animation
             const btn = document.getElementById('cartFloatBtn');
-            btn.classList.remove('pulse');
-            void btn.offsetWidth; // trigger reflow
-            btn.classList.add('pulse');
+            btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
             showToast(product.name + ' ditambahkan ke keranjang', 'success');
         }
-        function removeFromCart(productId) {
-            Cart = Cart.filter(item => item.id !== productId);
-            updateCartUI();
-        }
+        function removeFromCart(productId) { Cart = Cart.filter(item => item.id !== productId); updateCartUI(); }
         function updateQty(productId, delta) {
             const item = Cart.find(i => i.id === productId);
             if (!item) return;
             item.qty += delta;
-            if (item.qty <= 0) {
-                removeFromCart(productId);
-            } else {
-                updateCartUI();
-            }
+            if (item.qty <= 0) removeFromCart(productId);
+            else updateCartUI();
         }
+
+        // PERBAIKAN: parseFloat harga karena dari GAS bisa jadi string
         function getCartTotal() {
-            return Cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            return Cart.reduce((sum, item) => {
+                const price = parseFloat(item.price) || 0;
+                return sum + (price * (item.qty || 1));
+            }, 0);
         }
-        function getCartCount() {
-            return Cart.reduce((sum, item) => sum + item.qty, 0);
-        }
-        function clearCart() {
-            Cart = [];
-            updateCartUI();
-        }
+        function getCartCount() { return Cart.reduce((sum, item) => sum + (item.qty || 1), 0); }
+        function clearCart() { Cart = []; updateCartUI(); }
 
         // ==================== CART UI ====================
         function updateCartUI() {
@@ -389,51 +368,21 @@
             const body = document.getElementById('cartBody');
             const footer = document.getElementById('cartFooter');
             const totalEl = document.getElementById('cartTotal');
-
-            // Badge
             badge.textContent = count;
             badge.style.display = count > 0 ? 'flex' : 'none';
-
-            // Cart panel body
             if (count === 0) {
-                body.innerHTML = `
-                    <div class="cart-empty">
-                        <i class="fas fa-shopping-basket"></i>
-                        <p>Keranjang masih kosong</p>
-                        <p style="font-size:0.8rem;margin-top:0.5rem;">Pilih produk favorit Anda</p>
-                    </div>`;
+                body.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Keranjang masih kosong</p><p style="font-size:0.8rem;margin-top:0.5rem;">Pilih produk favorit Anda</p></div>';
                 footer.style.display = 'none';
             } else {
                 body.innerHTML = Cart.map(item => {
                     const hasImg = item.imageUrl && item.imageUrl.trim() !== '';
-                    const imgHtml = hasImg
-                        ? `<img src="${item.imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-coffee\'></i>'">`
-                        : '<i class="fas fa-coffee"></i>';
-                    return `
-                        <div class="cart-item">
-                            <div class="cart-item-img">${imgHtml}</div>
-                            <div class="cart-item-info">
-                                <div class="cart-item-name">${item.name}</div>
-                                <div class="cart-item-price">Rp ${formatNumber(item.price)}</div>
-                                <div class="cart-item-qty">
-                                    <button onclick="updateQty('${item.id}', -1)"><i class="fas fa-minus"></i></button>
-                                    <span>${item.qty}</span>
-                                    <button onclick="updateQty('${item.id}', 1)"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                            <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Hapus">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    `;
+                    const imgHtml = hasImg ? `<img src="${item.imageUrl}" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'fas fa-coffee\\'></i>'">` : '<i class="fas fa-coffee"></i>';
+                    const price = parseFloat(item.price) || 0;
+                    return `<div class="cart-item"><div class="cart-item-img">${imgHtml}</div><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">Rp ${formatNumber(price)}</div><div class="cart-item-qty"><button onclick="updateQty('${item.id}', -1)"><i class="fas fa-minus"></i></button><span>${item.qty}</span><button onclick="updateQty('${item.id}', 1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Hapus"><i class="fas fa-trash-alt"></i></button></div>`;
                 }).join('');
                 footer.style.display = 'block';
             }
-
-            // Total
             totalEl.textContent = 'Rp ' + formatNumber(total);
-
-            // Cart summary in form
             updateCartSummary();
         }
 
@@ -442,17 +391,10 @@
             if (Cart.length === 0) {
                 container.innerHTML = '<div class="cart-summary-empty">Belum ada produk dipilih</div>';
             } else {
-                container.innerHTML = Cart.map(item => `
-                    <div class="cart-summary-item">
-                        <span>${item.name} x${item.qty}</span>
-                        <span>Rp ${formatNumber(item.price * item.qty)}</span>
-                    </div>
-                `).join('') + `
-                    <div class="cart-summary-total">
-                        <span>Total</span>
-                        <span>Rp ${formatNumber(getCartTotal())}</span>
-                    </div>
-                `;
+                container.innerHTML = Cart.map(item => {
+                    const price = parseFloat(item.price) || 0;
+                    return `<div class="cart-summary-item"><span>${item.name} x${item.qty}</span><span>Rp ${formatNumber(price * item.qty)}</span></div>`;
+                }).join('') + `<div class="cart-summary-total"><span>Total</span><span>Rp ${formatNumber(getCartTotal())}</span></div>`;
             }
         }
 
@@ -460,11 +402,7 @@
             document.getElementById('cartOverlay').classList.toggle('active');
             document.getElementById('cartPanel').classList.toggle('active');
         }
-
-        function goToCheckout() {
-            toggleCart();
-            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
-        }
+        function goToCheckout() { toggleCart(); document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' }); }
 
         // ==================== GAS INTEGRATION ====================
         async function syncToGAS(action, data) {
@@ -475,7 +413,6 @@
             }
             try {
                 await fetch(CONFIG.GAS_URL, { method: 'POST', body: params });
-                console.log('GAS sync OK:', action);
                 return true;
             } catch(err) {
                 const iframe = document.getElementById('gasFrame');
@@ -497,7 +434,6 @@
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 return await response.json();
             } catch(err) {
-                console.error('GAS fetch error:', err.message);
                 return { success: false, error: err.message };
             }
         }
@@ -557,7 +493,10 @@
                         const req = store.getAll();
                         req.onsuccess = () => resolve(req.result || []);
                         req.onerror = () => resolve([]);
-                    } else { resolve([]); }
+                    } else if (this.mode === 'localstorage') {
+                        try { const r = localStorage.getItem('aff_' + storeName); resolve(r ? JSON.parse(r) : []); }
+                        catch(e) { resolve([]); }
+                    } else { resolve(this.memory[storeName] || []); }
                 });
             },
             put: function(storeName, data) {
@@ -568,7 +507,18 @@
                         const req = store.put(data);
                         req.onsuccess = () => resolve();
                         req.onerror = () => resolve();
-                    } else { resolve(); }
+                    } else if (this.mode === 'localstorage') {
+                        try { const items = JSON.parse(localStorage.getItem('aff_' + storeName) || '[]');
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        localStorage.setItem('aff_' + storeName, JSON.stringify(items)); } catch(e) {}
+                        resolve();
+                    } else {
+                        const items = this.memory[storeName] || [];
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        resolve();
+                    }
                 });
             }
         };
@@ -580,54 +530,32 @@
             try {
                 const result = await fetchFromGAS('getProducts');
                 if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-                    allProducts = result.data;
-                    for (const p of result.data) { if (p && p.id) await DBStore.put('products', p); }
+                    // PERBAIKAN: Pastikan price adalah number
+                    allProducts = result.data.map(p => ({...p, price: parseFloat(p.price) || 0}));
+                    for (const p of allProducts) { if (p && p.id) await DBStore.put('products', p); }
                 }
             } catch(e) { console.log('GAS fetch failed:', e.message); }
 
             if (allProducts.length === 0) {
-                allProducts = await DBStore.getAll('products');
+                const cached = await DBStore.getAll('products');
+                allProducts = cached.map(p => ({...p, price: parseFloat(p.price) || 0}));
             }
             AllProducts = allProducts;
-
             const activeProducts = allProducts.filter(p => p.status === 'Active' || !p.status);
 
             if (activeProducts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-box-open"></i>
-                        <h3>Belum Ada Produk</h3>
-                        <p>Admin belum menambahkan produk. Silakan cek kembali nanti.</p>
-                    </div>`;
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><h3>Belum Ada Produk</h3><p>Admin belum menambahkan produk. Silakan cek kembali nanti.</p></div>';
                 return;
             }
-
             container.innerHTML = '<div class="products-grid" id="productsGrid"></div>';
             const grid = document.getElementById('productsGrid');
-
             grid.innerHTML = activeProducts.map(product => {
                 const hasImage = product.imageUrl && product.imageUrl.trim() !== '';
-                const imgHtml = hasImage
-                    ? `<img src="${product.imageUrl}" alt="${product.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-coffee\'></i>';">`
-                    : '<i class="fas fa-coffee"></i>';
-                const hasOriginalPrice = product.originalPrice && product.originalPrice > product.price;
+                const imgHtml = hasImage ? `<img src="${product.imageUrl}" alt="${product.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-coffee\\'></i>';">` : '<i class="fas fa-coffee"></i>';
+                const hasOriginalPrice = product.originalPrice && parseFloat(product.originalPrice) > parseFloat(product.price);
                 const originalPriceHtml = hasOriginalPrice ? `<small>Rp ${formatNumber(product.originalPrice)}</small>` : '';
                 const inCart = Cart.find(c => c.id === product.id);
-
-                return `
-                    <div class="product-card" data-id="${product.id}">
-                        <div class="product-img">${imgHtml}</div>
-                        <div class="product-body">
-                            <div class="product-name">${product.name}</div>
-                            <div class="product-desc">${product.description || ''}</div>
-                            <div class="product-price">Rp ${formatNumber(product.price)} ${originalPriceHtml}</div>
-                            <button class="product-btn ${inCart ? 'added' : ''}" id="btn-${product.id}" onclick="handleProductClick('${product.id}')">
-                                <i class="fas ${inCart ? 'fa-check' : 'fa-cart-plus'}"></i> 
-                                ${inCart ? 'Ditambahkan (' + inCart.qty + ')' : 'Tambah ke Keranjang'}
-                            </button>
-                        </div>
-                    </div>
-                `;
+                return `<div class="product-card" data-id="${product.id}"><div class="product-img">${imgHtml}</div><div class="product-body"><div class="product-name">${product.name}</div><div class="product-desc">${product.description || ''}</div><div class="product-price">Rp ${formatNumber(product.price)} ${originalPriceHtml}</div><button class="product-btn ${inCart ? 'added' : ''}" id="btn-${product.id}" onclick="handleProductClick('${product.id}')"><i class="fas ${inCart ? 'fa-check' : 'fa-cart-plus'}"></i> ${inCart ? 'Ditambahkan (' + inCart.qty + ')' : 'Tambah ke Keranjang'}</button></div></div>`;
             }).join('');
         }
 
@@ -635,20 +563,12 @@
             const product = AllProducts.find(p => p.id === productId);
             if (!product) return;
             addToCart(product);
-            // Update button text
             const btn = document.getElementById('btn-' + productId);
-            if (btn) {
-                const inCart = Cart.find(c => c.id === productId);
-                btn.className = 'product-btn added';
-                btn.innerHTML = `<i class="fas fa-check"></i> Ditambahkan (${inCart ? inCart.qty : 1})`;
-            }
+            if (btn) { const inCart = Cart.find(c => c.id === productId); btn.className = 'product-btn added'; btn.innerHTML = `<i class="fas fa-check"></i> Ditambahkan (${inCart ? inCart.qty : 1})`; }
         }
 
         // ==================== REFERRAL ====================
-        function getRefCode() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('ref') || '';
-        }
+        function getRefCode() { const params = new URLSearchParams(window.location.search); return params.get('ref') || ''; }
 
         async function loadAffiliatorInfo() {
             const refCode = getRefCode();
@@ -667,14 +587,11 @@
             document.getElementById('refAffiliatorName').textContent = aff ? aff.name : refCode;
         }
 
-        // ==================== SUBMIT LEAD ====================
+        // ==================== SUBMIT LEAD (FIXED) ====================
         async function submitLead() {
             const btn = document.querySelector('button[onclick="submitLead()"]');
             const originalBtnText = btn.innerHTML;
-
-            if (!DBStore.ready && DBStore.initPromise) {
-                try { await DBStore.initPromise; } catch(e) {}
-            }
+            if (!DBStore.ready && DBStore.initPromise) { try { await DBStore.initPromise; } catch(e) {} }
 
             const refCode = document.getElementById('refCode').value;
             const name = document.getElementById('buyerName').value.trim();
@@ -683,19 +600,14 @@
             const street = document.getElementById('buyerStreet').value.trim();
             const province = document.getElementById('buyerProvince').value.trim();
             const city = document.getElementById('buyerCity').value.trim();
+            const city2 = document.getElementById('buyerCity2').value.trim();
             const district = document.getElementById('buyerDistrict').value.trim();
             const postal = document.getElementById('buyerPostal').value.trim();
             const notes = document.getElementById('buyerNotes').value.trim();
 
             // Validasi
-            if (Cart.length === 0) {
-                showToast('Silakan pilih produk terlebih dahulu', 'error');
-                document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
-                return;
-            }
-            if (!name || !email || !phone || !street || !province || !city || !district || !postal) {
-                showToast('Harap isi semua field wajib', 'error'); return;
-            }
+            if (Cart.length === 0) { showToast('Silakan pilih produk terlebih dahulu', 'error'); return; }
+            if (!name || !email || !phone || !street || !province || !city || !district || !postal) { showToast('Harap isi semua field wajib', 'error'); return; }
             if (!email.includes('@') || !email.includes('.')) { showToast('Format email tidak valid', 'error'); return; }
             const phoneDigits = phone.replace(/\D/g, '');
             if (phoneDigits.length < 10) { showToast('Nomor WhatsApp minimal 10 digit', 'error'); return; }
@@ -706,9 +618,10 @@
             try {
                 const now = new Date().toISOString();
                 const leadId = 'lead_' + Date.now();
-                const total = getCartTotal();
+                const total = getCartTotal(); // PERBAIKAN: Sudah parseFloat di dalamnya
                 const productNames = Cart.map(c => c.name + ' x' + c.qty).join(', ');
 
+                // PERBAIKAN: transactionValue dikirim sebagai angka
                 const leadData = {
                     id: leadId,
                     referralCode: refCode || 'DIRECT',
@@ -716,18 +629,18 @@
                     contact: email + ' / ' + phone,
                     status: 'Pending',
                     date: now,
-                    transactionValue: total,
+                    transactionValue: Math.round(total),
                     source: 'Landing Page',
                     notes: 'Produk: ' + productNames + ' | Alamat: ' + street + ', ' + district + ', ' + city + ', ' + province + ' ' + postal + ' | Catatan: ' + notes
                 };
 
-                // Simpan lead
                 await DBStore.put('leads', leadData);
                 await syncToGAS('addLead', leadData);
 
-                // Simpan setiap produk sebagai order terpisah
+                // Simpan setiap produk sebagai order
                 for (const item of Cart) {
                     const orderId = 'order_' + Date.now() + '_' + item.id;
+                    const itemPrice = parseFloat(item.price) || 0;
                     const orderData = {
                         id: orderId,
                         leadId: leadId,
@@ -735,10 +648,14 @@
                         buyerName: name,
                         buyerEmail: email,
                         buyerPhone: phone,
-                        buyerCity: city + ', ' + province,
-                        buyerAddress: street + ', ' + district + ', ' + postal,
-                        price: item.price * item.qty,
+                        namaJalanGedung: street,
+                        provinsi: province,
+                        kotaKabupaten: city + (city2 ? ' / ' + city2 : ''),
+                        kecamatan: district,
+                        kodePos: postal,
+                        price: Math.round(itemPrice * item.qty),
                         qty: item.qty,
+                        ongkir: 0,
                         referralCode: refCode || 'DIRECT',
                         status: 'Pending',
                         date: now
@@ -747,26 +664,13 @@
                     await syncToGAS('addOrder', orderData);
                 }
 
-                // Success
                 document.getElementById('successModal').classList.add('active');
-
-                // Clear everything
                 clearCart();
-                document.getElementById('buyerName').value = '';
-                document.getElementById('buyerEmail').value = '';
-                document.getElementById('buyerPhone').value = '';
-                document.getElementById('buyerStreet').value = '';
-                document.getElementById('buyerProvince').value = '';
-                document.getElementById('buyerCity').value = '';
-                document.getElementById('buyerDistrict').value = '';
-                document.getElementById('buyerPostal').value = '';
-                document.getElementById('buyerNotes').value = '';
-
-                // Reset product buttons
-                document.querySelectorAll('.product-btn').forEach(btn => {
-                    btn.className = 'product-btn';
-                    btn.innerHTML = '<i class="fas fa-cart-plus"></i> Tambah ke Keranjang';
+                // Reset form
+                ['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerProvince','buyerCity','buyerCity2','buyerDistrict','buyerPostal','buyerNotes'].forEach(id => {
+                    const el = document.getElementById(id); if (el) el.value = '';
                 });
+                document.querySelectorAll('.product-btn').forEach(btn => { btn.className = 'product-btn'; btn.innerHTML = '<i class="fas fa-cart-plus"></i> Tambah ke Keranjang'; });
 
             } catch(err) {
                 console.error('Submit error:', err);
@@ -777,20 +681,18 @@
             }
         }
 
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.remove('active');
-        }
+        function closeSuccessModal() { document.getElementById('successModal').classList.remove('active'); }
 
         function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + (type || 'info');
             const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> <span>${message}</span>`;
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
