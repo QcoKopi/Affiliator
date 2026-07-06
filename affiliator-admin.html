@@ -355,7 +355,7 @@
                 // Check cookie expired (8 hours max)
                 const now = Date.now();
                 const eightHours = 8 * 60 * 60 * 1000;
-                if (!session || !session.isAdmin || !session.ts || (now - session.ts) > eightHours) {
+                if (!session || !session.isAdmin || (session.ts && (now - session.ts) > eightHours)) {
                     document.cookie = 'aff_admin_session=; path=/; max-age=0';
                     window.location.href = 'index.html';
                     return;
