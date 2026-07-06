@@ -401,42 +401,50 @@
             }
         }
 
-        // ==================== GAS: SYNC WRITE (fetch GET - PRIMARY) ====================
+        // ==================== GAS: SYNC WRITE (iframe form POST - PRIMARY) ====================
+        // Iframe form POST = paling reliable untuk kirim data ke GAS
+        // Tidak ada batasan URL length (masalah utama fetch GET untuk addCommission)
         async function syncToGAS(action, data) {
-            const params = new URLSearchParams();
-            params.append('action', action);
-            for (let key in data) {
-                params.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''));
-            }
-            const url = CONFIG.GAS_URL + '?' + params.toString();
             Debug.log('GAS SYNC:', action);
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const result = await response.json();
-                Debug.log('GAS SYNC OK:', action + ' ' + (result.success ? 'success' : 'fail'));
-                return result.success;
-            } catch(err) {
-                Debug.log('GAS SYNC ERROR:', action + ': ' + err.message);
-                // Fallback: iframe form
-                return syncToGASIframe(action, data);
+            const iframe = document.getElementById('gasFrame');
+            if (!iframe) {
+                Debug.log('ERROR: gasFrame tidak ditemukan');
+                return false;
             }
-        }
-
-        // Fallback: iframe form
-        function syncToGASIframe(action, data) {
             return new Promise((resolve) => {
-                const iframe = document.getElementById('gasFrame');
-                if (!iframe) { resolve(false); return; }
                 const form = document.createElement('form');
-                form.method = 'POST'; form.action = CONFIG.GAS_URL; form.target = 'gasFrame'; form.style.display = 'none';
-                const af = document.createElement('input'); af.name = 'action'; af.value = action; form.appendChild(af);
-                for (let key in data) { const f = document.createElement('input'); f.name = key; f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || ''); form.appendChild(f); }
-                const cleanup = () => { try { document.body.removeChild(form); } catch(e) {} iframe.onload = null; };
-                iframe.onload = cleanup; setTimeout(cleanup, 5000);
-                document.body.appendChild(form); form.submit();
-                Debug.log('GAS iframe fallback:', action);
-                resolve(true);
+                form.method = 'POST';
+                form.action = CONFIG.GAS_URL;
+                form.target = 'gasFrame';
+                form.style.display = 'none';
+
+                const af = document.createElement('input');
+                af.name = 'action';
+                af.value = action;
+                form.appendChild(af);
+
+                for (let key in data) {
+                    const f = document.createElement('input');
+                    f.name = key;
+                    f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
+                    form.appendChild(f);
+                }
+
+                let resolved = false;
+                const cleanup = () => {
+                    if (resolved) return;
+                    resolved = true;
+                    try { document.body.removeChild(form); } catch(e) {}
+                    iframe.onload = null;
+                    Debug.log('GAS SYNC OK:', action);
+                    resolve(true);
+                };
+
+                iframe.onload = cleanup;
+                setTimeout(cleanup, 5000); // Safety timeout
+
+                document.body.appendChild(form);
+                form.submit();
             });
         }
 
