@@ -351,8 +351,6 @@
         // ==================== CONFIG ====================
         const CONFIG = {
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
-            ADMIN_EMAIL: 'admin@kopiaffiliate.com',
-            ADMIN_PASSWORD: 'admin123'
         };
 
         // ==================== STATE ====================
@@ -445,8 +443,7 @@
             });
         }
 
-        // ==================== AUTHENTICATION HANDLING ====================
-        async function handleLogin() {
+       async function handleLogin() {
             const emailInput = document.getElementById('userEmail').value.trim();
             const passwordInput = document.getElementById('userPassword').value;
             const btn = document.getElementById('btnLogin');
@@ -461,57 +458,46 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
             errorEl.style.display = 'none';
 
-            // 1. Cek jika Hardcoded Admin
-            if (emailInput === CONFIG.ADMIN_EMAIL && passwordInput === CONFIG.ADMIN_PASSWORD) {
-                const sessionData = { isAdmin: true, name: 'Admin Kopi', email: emailInput, ts: Date.now() };
-                SessionManager.saveSession(sessionData);
-                checkAccess();
-                showToast('Selamat datang, Admin!', 'success');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
-                return;
-            }
-
-            // 2. Jika bukan admin, fetch data Users dari Google Sheet via GAS
-            Debug.log('Memverifikasi akun user ke server GAS...');
-            const result = await fetchFromGAS('getUsers');
-            
-            if (result.success && Array.isArray(result.data)) {
-                // Cari user yang email & password-nya cocok (case-insensitive email)
-                const userMatch = result.data.find(u => 
-                    String(u.email).toLowerCase() === emailInput.toLowerCase() && 
-                    String(u.password) === passwordInput
-                );
-
-                if (userMatch) {
-                    if (userMatch.status === 'Pending' || userMatch.status === 'Inactive') {
-                        showToast('Akun Anda belum aktif atau dinonaktifkan!', 'warning');
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
-                        return;
-                    }
-
+            try {
+                // Mengirim email & password ke server GAS untuk diverifikasi secara aman
+                Debug.log('Mengirim kredensial login ke server untuk diverifikasi...');
+                const url = CONFIG.GAS_URL + 
+                            '?action=login' + 
+                            '&email=' + encodeURIComponent(emailInput) + 
+                            '&password=' + encodeURIComponent(passwordInput);
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Koneksi server gagal (' + response.status + ')');
+                
+                const result = await response.json();
+                
+                if (result.success && result.user) {
+                    // Login berhasil, buat data session resmi
                     const sessionData = {
-                        isAdmin: false,
-                        id: userMatch.id,
-                        name: userMatch.name,
-                        email: userMatch.email,
-                        referralCode: userMatch.referralcode || userMatch.referralCode,
+                        isAdmin: result.user.isAdmin,
+                        id: result.user.id || '',
+                        name: result.user.name,
+                        email: result.user.email,
+                        referralCode: result.user.referralCode || '',
                         ts: Date.now()
                     };
                     
                     SessionManager.saveSession(sessionData);
                     checkAccess();
-                    showToast(`Selamat datang, ${userMatch.name}!`, 'success');
+                    showToast(`Selamat datang, ${result.user.name}!`, 'success');
                 } else {
+                    // Jika gagal login (karena salah password atau akun nonaktif)
+                    errorEl.textContent = result.error || 'Email atau Password salah!';
                     errorEl.style.display = 'block';
+                    showToast(result.error || 'Login Gagal', 'error');
                 }
-            } else {
-                showToast('Gagal terhubung ke database server!', 'error');
+            } catch (err) {
+                Debug.log('LOGIN ERROR:', err.message);
+                showToast('Gagal terhubung ke server login!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
             }
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
         }
 
         // ==================== SYNC ALL DATA ====================
