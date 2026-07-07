@@ -260,31 +260,31 @@ function renderCommissions(){
     if (!bodyEl) return;
     
     bodyEl.innerHTML = DATA.commissions.map(c => {
-        // 1. Sesuaikan dengan header asli Google Sheets Anda (dikonversi ke huruf kecil oleh GAS)
-        const commId = c.id || ''; 
-        const affId = c.affiliatorid || '';
-        const cType = c.type || '';
-        const cDesc = c.description || '';
-        const cAmount = parseFloat(c.amount) || 0;
-        const cDate = c.date || '';
-        const cPaid = c.paid || 'false';
+        // 1. FAKTA DATA: Ambil ID langsung dari properti 'id' (bukan commid atau commId)
+        const commId = c.id ? String(c.id).trim() : ''; 
         
-        // 2. Cari data nama affiliator berdasarkan ID
-        const aff = DATA.users.find(u => String(u.id) === String(affId));
+        // 2. Ambil ID affiliator dari properti 'affiliatorid'
+        const affId = c.affiliatorid ? String(c.affiliatorid).trim() : ''; 
         
-        // 3. Cek status pembayaran
-        const isPaid = String(cPaid).toLowerCase() === 'true' || cPaid === true;
+        // 3. Cari data nama affiliator ke dalam database Users
+        const aff = DATA.users.find(u => String(u.id).trim() === affId);
+        
+        // 4. FAKTA DATA: Cek status 'paid' (Antisipasi teks 'FALSE' atau 'TRUE' huruf besar dari CSV)
+        const isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
         const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
         
-        // 4. Kondisi tombol aksi (Wajib muncul jika belum dibayar dan ID komisi ada)
+        // 5. VALIDASI TOMBOL: Jika BELUM dibayar (isPaid = false) DAN id komisi ada, tombol WAJIB KELUAR
         const actionBtn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
         
+        const amount = parseFloat(c.amount) || 0;
+        const dateStr = c.date || '';
+        
         return `<tr>
-            <td>${formatDate(cDate)}</td>
+            <td>${formatDate(dateStr)}</td>
             <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
-            <td>${cType || '-'}</td>
-            <td>${cDesc || '-'}</td>
-            <td>Rp ${formatNumber(cAmount)}</td>
+            <td>${c.type || '-'}</td>
+            <td>${c.description || '-'}</td>
+            <td>Rp ${formatNumber(amount)}</td>
             <td>${statusBadge}</td>
             <td>${actionBtn}</td>
         </tr>`;
