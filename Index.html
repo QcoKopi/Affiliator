@@ -3,124 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kopi Nusantara - Integrated Affiliate System</title>
+    <title>Kopi Nusantara - Integrated System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #5D4037;
-            --primary-light: #8D6E63;
-            --primary-dark: #3E2723;
-            --accent: #A1887F;
-            --bg: #FAFAF8;
-            --card-bg: #FFFFFF;
-            --text: #2C2C2C;
-            --text-light: #6B6B6B;
-            --border: #E8E4E0;
-            --success: #4CAF50;
-            --warning: #FF9800;
-            --danger: #E53935;
-            --info: #2196F3;
-            --shadow: 0 4px 20px rgba(93,64,55,0.08);
-            --shadow-lg: 0 10px 40px rgba(93,64,55,0.12);
-            --radius: 12px;
-            --radius-sm: 8px;
+            --primary: #5D4037; --primary-light: #8D6E63; --primary-dark: #3E2723;
+            --bg: #FAFAF8; --card-bg: #FFFFFF; --text: #2C2C2C; --text-light: #6B6B6B;
+            --border: #E8E4E0; --success: #4CAF50; --warning: #FF9800; --danger: #E53935;
+            --shadow: 0 4px 20px rgba(93,64,55,0.08); --radius: 12px; --radius-sm: 8px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
         
-        /* Layout & Navigation */
+        /* Nav & Layout */
         .navbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
-        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); cursor: pointer; }
         
-        .sidebar { width: 260px; background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.5rem; overflow-y: auto; z-index: 1005; display: none; }
-        .sidebar-brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar { width: 260px; background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.5rem; z-index: 1005; display: none; }
+        .sidebar-brand { font-size: 1.2rem; font-weight: 700; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-menu { list-style: none; }
         .sidebar-menu li { margin-bottom: 0.5rem; }
-        .sidebar-menu a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: all 0.3s; cursor: pointer; }
+        .sidebar-menu a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); cursor: pointer; }
         .sidebar-menu a:hover, .sidebar-menu a.active { color: white; background: rgba(255,255,255,0.1); }
         
-        .main-portal { margin-left: 260px; padding-top: 60px; min-height: 100vh; display: none; }
-        .portal-header { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .main-portal { margin-left: 260px; padding-top: 80px; min-height: 100vh; display: none; }
         .portal-content { padding: 2rem; }
-
-        /* Public Storefront */
-        .storefront { margin-top: 60px; display: block; }
-        .hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 6rem 2rem 4rem; text-align: center; }
-        .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
-        .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 1.5rem; }
-        .ref-banner { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: var(--radius); padding: 1rem 1.5rem; display: inline-flex; align-items: center; gap: 1rem; margin-top: 1rem; }
+        .storefront { margin-top: 70px; display: block; }
         
-        .section { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
-        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-dark); text-align: center; }
-        .section-subtitle { color: var(--text-light); margin-bottom: 2rem; text-align: center; }
+        /* Component UI */
+        .hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 4rem 2rem; text-align: center; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .product-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
         
-        /* Cards & Grid */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .product-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.3s, box-shadow 0.3s; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
-        .product-img { height: 200px; background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
-        .product-body { padding: 1.5rem; }
-        .product-name { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 0.5rem; }
-        .product-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; }
-        .product-price { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .form-section { background: var(--card-bg); border-radius: var(--radius); padding: 2rem; max-width: 600px; margin: 2rem auto; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.3rem; font-weight: 500; }
+        .form-input { width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); }
         
-        /* Form & Buttons */
-        .btn, .product-btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .btn-primary, .product-btn { background: var(--primary); color: white; justify-content: center; width: 100%; }
-        .btn-primary:hover, .product-btn:hover { background: var(--primary-dark); }
-        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; width: auto; }
-        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); width: auto; }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn { padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-success { background: var(--success); color: white; }
-
-        .form-section { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border); max-width: 640px; margin: 0 auto; }
-        .form-group { margin-bottom: 1.25rem; }
-        .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         
-        /* Tables & Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
-        .stat-icon.blue { background: #E3F2FD; color: var(--info); }
-        .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
-        .stat-icon.green { background: #E8F5E9; color: var(--success); }
-        .stat-icon.red { background: #FFEBEE; color: var(--danger); }
-        .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); }
-        .stat-label { font-size: 0.8rem; color: var(--text-light); }
+        /* Stats & Tables */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; border: 1px solid var(--border); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); }
         
-        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
-        .table-container { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; border-bottom: 2px solid var(--border); }
-        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+        .data-table { width: 100%; border-collapse: collapse; background: white; font-size: 0.85rem; }
+        .data-table th { background: #F5F3F0; padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+        .data-table td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
         
-        /* Floating Cart & Panels */
-        .cart-float { position: fixed; bottom: 24px; right: 24px; z-index: 900; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 20px rgba(93,64,55,0.3); border: none; }
-        .cart-float .badge-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; font-size: 0.7rem; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .cart-overlay, .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1100; display: none; }
-        .cart-overlay.active, .modal-overlay.active { display: block; }
-        .cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 420px; background: var(--card-bg); z-index: 1101; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; }
-        .cart-panel.active { transform: translateX(0); }
-        .cart-header, .cart-footer { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .cart-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
-        .cart-item { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); }
-        .cart-summary { background: var(--bg); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; }
-        
-        .modal-overlay { display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 2000; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 500px; width: 100%; padding: 1.5rem; }
-        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; }
+        .modal { background: white; padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 400px; }
+        
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: white; padding: 1rem 1.5rem; border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
         
-        .footer { background: var(--primary-dark); color: white; padding: 2rem; text-align: center; margin-top: 3rem; }
-        @media(max-width: 768px) { .main-portal { margin-left: 0; } .sidebar { width: 100%; } .form-row { grid-template-columns: 1fr; } }
+        .admin-only { display: none; }
     </style>
 </head>
 <body>
@@ -128,265 +72,293 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <nav class="navbar">
-        <div class="navbar-brand" onclick="showPublicStore()"><i class="fas fa-coffee"></i> <span>Kopi Nusantara</span></div>
+        <div class="navbar-brand" onclick="showPublicStore()"><i class="fas fa-coffee"></i> Kopi Nusantara</div>
         <div id="navAuthSection">
-            <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')"><i class="fas fa-sign-in-alt"></i> Portal Login</button>
+            <button class="btn btn-outline" onclick="openModal('loginModal')"><i class="fas fa-sign-in-alt"></i> Login Portal</button>
         </div>
     </nav>
-
-    <button class="cart-float" id="cartFloatBtn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i><span class="badge-count" id="cartBadge" style="display:none">0</span></button>
-    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-    <div class="cart-panel" id="cartPanel">
-        <div class="cart-header"><h3>Keranjang</h3><button style="background:none;border:none;font-size:1.5rem;cursor:pointer" onclick="toggleCart()">&times;</button></div>
-        <div class="cart-body" id="cartBody"></div>
-        <div class="cart-footer" id="cartFooter" style="display:none;"><div>Total: <span id="cartTotal">Rp 0</span></div><button class="btn btn-primary btn-sm" onclick="goToCheckout()">Checkout</button></div>
-    </div>
 
     <div id="publicStorefront" class="storefront">
         <div class="hero">
             <h1>Kopi Nusantara Premium</h1>
-            <p>Langsung dari kebun pilihan ke cangkir Anda.</p>
-            <div class="ref-banner" id="refBanner" style="display:none;"><i class="fas fa-user-friends"></i><div style="text-align:left"><small>Rekomendasi dari</small><br><strong id="refAffiliatorName"></strong></div></div>
-        </div>
-        <div class="section">
-            <h2 class="section-title">Produk Pilihan</h2>
-            <div id="productsContainer" class="products-grid"></div>
-        </div>
-        <div class="section" id="formSection">
-            <h2 class="section-title">Formulir Pemesanan</h2>
-            <div class="form-section">
-                <div class="cart-summary"><div id="cartSummaryContent">Belum ada produk dipilih</div></div>
-                <input type="hidden" id="refCode">
-                <div class="form-row">
-                    <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="buyerName"></div>
-                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="buyerEmail"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label class="form-label">No. WhatsApp</label><input type="tel" class="form-input" id="buyerPhone"></div>
-                    <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input type="text" class="form-input" id="buyerCity"></div>
-                </div>
-                <div class="form-group"><label class="form-label">Alamat Pengiriman Lengkap</label><input type="text" class="form-input" id="buyerStreet"></div>
-                <button class="btn btn-primary" onclick="submitLead()">Kirim Pesanan Via WhatsApp</button>
+            <p>Sistem Kemitraan Affiliator Terintegrasi</p>
+            <div id="refBanner" style="display:none; margin-top: 1rem; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px;">
+                Dirokomendasikan oleh: <strong id="refCodeName"></strong>
             </div>
         </div>
-        <div class="footer"><p>&copy; 2026 Kopi Nusantara System</p></div>
+        
+        <h2 style="text-align:center; margin-top:2rem;">Katalog Produk</h2>
+        <div id="productsContainer" class="products-grid"></div>
+
+        <div class="form-section">
+            <h3>Formulir Pembelian</h3><br>
+            <input type="hidden" id="buyerRefCode" value="DIRECT">
+            <div class="form-group"><label>Pilih Produk</label><select id="buyerProduct" class="form-input"></select></div>
+            <div class="form-group"><label>Nama Lengkap</label><input type="text" id="buyerName" class="form-input"></div>
+            <div class="form-group"><label>No. WhatsApp</label><input type="text" id="buyerPhone" class="form-input"></div>
+            <div class="form-group"><label>Alamat Lengkap</label><input type="text" id="buyerStreet" class="form-input"></div>
+            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="submitOrder()">Kirim Pesanan</button>
+        </div>
     </div>
 
     <aside class="sidebar" id="portalSidebar">
-        <div class="sidebar-brand"><i class="fas fa-user-shield"></i> <span id="roleText">Portal</span></div>
+        <div class="sidebar-brand"><i class="fas fa-user-circle"></i> <span id="sessionName">User Portal</span></div>
         <ul class="sidebar-menu">
-            <li><a class="active" onclick="switchPortalPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li class="admin-only"><a onclick="switchPortalPage('products')" data-page="products"><i class="fas fa-box"></i> Kelola Produk</a></li>
-            <li class="admin-only"><a onclick="switchPortalPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
-            <li><a onclick="switchPortalPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Data Leads</a></li>
-            <li><a onclick="switchPortalPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi Anda</a></li>
-            <li><a onclick="logoutPortal()" style="margin-top:2rem;color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Keluar Portal</a></li>
+            <li><a class="active" onclick="switchPage('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a onclick="switchPage('leads')"><i class="fas fa-address-book"></i> Data Leads</a></li>
+            <li><a onclick="switchPage('commissions')"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
+            <li class="admin-only"><a onclick="switchPage('users')"><i class="fas fa-users"></i> Kelola Affiliator</a></li>
+            <li><a onclick="logoutPortal()" style="color:var(--danger); margin-top:3rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
         </ul>
     </aside>
 
     <div class="main-portal" id="mainPortal">
-        <div class="portal-header">
-            <h1 id="portalPageTitle">Dashboard</h1>
-            <div><button class="btn btn-outline btn-sm" onclick="syncAllData()"><i class="fas fa-sync-alt"></i> Sync Data</button></div>
-        </div>
         <div class="portal-content">
-            <div id="portal-dashboard" class="portal-page">
+            <div id="page-dashboard" class="portal-page">
                 <div class="stats-grid">
-                    <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliator</div></div>
-                    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Leads</div></div>
-                    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Leads Valid</div></div>
-                    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
+                    <div class="stat-card"><div class="stat-value" id="statLeads">0</div><div>Total Leads</div></div>
+                    <div class="stat-card"><div class="stat-value" id="statCommissions">Rp 0</div><div>Total Komisi</div></div>
                 </div>
             </div>
 
-            <div id="portal-products" class="portal-page" style="display:none;">
-                <div class="card">
-                    <div class="card-header"><div class="card-title">Manajemen Data Produk</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
-                </div>
+            <div id="page-leads" class="portal-page" style="display:none;">
+                <h3>Data Pengunjung / Leads</h3><br>
+                <table class="data-table">
+                    <thead><tr><th>Tanggal</th><th>Nama</th><th>Kontak</th><th>Referral</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="leadsTableBody"></tbody>
+                </table>
             </div>
 
-            <div id="portal-leads" class="portal-page" style="display:none;">
-                <div class="card">
-                    <div class="card-header"><div class="card-title">Manajemen Data Leads</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Kontak</th><th>Referral</th><th>Status</th><th>Nilai</th><th class="admin-only">Aksi</th></tr></thead><tbody id="leadsTableBody"></tbody></table></div>
-                </div>
+            <div id="page-commissions" class="portal-page" style="display:none;">
+                <h3>Data Komisi</h3><br>
+                <table class="data-table">
+                    <thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th></tr></thead>
+                    <tbody id="commissionsTableBody"></tbody>
+                </table>
             </div>
 
-            <div id="portal-affiliators" class="portal-page" style="display:none;">
-                <div class="card">
-                    <div class="card-header"><div class="card-title">Daftar Affiliator Aktif</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Kode Ref</th></tr></thead><tbody id="affiliatorsTableBody"></tbody></table></div>
-                </div>
-            </div>
-
-            <div id="portal-commissions" class="portal-page" style="display:none;">
-                <div class="card">
-                    <div class="card-header"><div class="card-title">Data Pencairan Komisi</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th><th class="admin-only">Aksi</th></tr></thead><tbody id="commissionsTableBody"></tbody></table></div>
-                </div>
+            <div id="page-users" class="portal-page" style="display:none;">
+                <h3>Daftar Affiliator</h3><br>
+                <table class="data-table">
+                    <thead><tr><th>Nama</th><th>Email</th><th>Kode Ref</th></tr></thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
-            <h3>Sistem Terpadu Login Portal</h3><br>
-            <div class="form-group"><label class="form-label">Email Kredensial</label><input type="email" class="form-input" id="loginEmail"></div>
-            <div class="form-group"><label class="form-label">Password / Code</label><input type="password" class="form-input" id="loginPass"></div>
-            <button class="btn btn-primary" onclick="processPortalAuth()">Masuk Dashboard</button><br><br>
+            <h3>Login Portal</h3><br>
+            <div class="form-group"><label>Email</label><input type="email" id="loginEmail" class="form-input"></div>
+            <div class="form-group"><label>Password / Code Ref</label><input type="password" id="loginPassword" class="form-input"></div><br>
+            <button class="btn btn-primary" onclick="executeLogin()">Masuk</button>
             <button class="btn btn-outline" onclick="closeModal('loginModal')">Batal</button>
         </div>
     </div>
 
     <script>
-        // GANTI INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA YANG AKTIF
+        // ==================== PASTIKAN URL INI BENAR ====================
         const API_URL = 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec';
         
-        let DATABASE = { users: [], leads: [], commissions: [], products: [] };
-        let Cart = [];
-        let CurrentActiveSession = null;
+        let APP_DATA = { products: [], users: [], leads: [], commissions: [] };
+        let SESSION = null;
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            initUrlReferralCheck();
-            await syncAllData();
-            checkSessionPersistence();
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUrlReferral();
+            loadInitialData();
         });
 
-        // Menggunakan metode POST/Menerima JSON terbungkus objek agar tidak memicu 404 dari GAS
-        async function syncAllData() {
-            try {
-                const actions = ['getUsers', 'getLeads', 'getCommissions', 'getProducts'];
-                const fetches = actions.map(act => fetch(`${API_URL}?action=${act}`).then(r => r.json()).catch(() => ({success:false, data:[]})));
-                const results = await Promise.all(fetches);
-                
-                DATABASE.users = results[0].success ? results[0].data : [];
-                DATABASE.leads = results[1].success ? results[1].data : [];
-                DATABASE.commissions = results[2].success ? results[2].data : [];
-                DATABASE.products = results[3].success ? results[3].data : [];
-                
-                renderPublicProducts();
-                if(CurrentActiveSession) renderPortalCoreUI();
-            } catch(e) { showNotification('Sistem memuat database lokal/fallback.', 'warning'); }
+        function checkUrlReferral() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if(ref) {
+                document.getElementById('buyerRefCode').value = ref;
+                document.getElementById('refBanner').style.display = 'block';
+                document.getElementById('refCodeName').textContent = ref;
+            }
         }
 
-        function renderPublicProducts() {
+        async function loadInitialData() {
+            try {
+                // Memanggil satu per satu secara aman agar tidak memicu kegagalan parsial Google
+                const prodRes = await fetch(`${API_URL}?action=getProducts`).then(r => r.json());
+                if(prodRes.success) APP_DATA.products = prodRes.data;
+                
+                renderStorefront();
+            } catch (e) {
+                showToast('Gagal terhubung ke Google Sheets API. Periksa deployment GAS Anda.', 'error');
+            }
+        }
+
+        function renderStorefront() {
             const container = document.getElementById('productsContainer');
-            if (DATABASE.products.length === 0) {
-                container.innerHTML = '<p>Sedang memuat data kopi pilihan...</p>';
+            const select = document.getElementById('buyerProduct');
+            
+            if(!APP_DATA.products.length) {
+                container.innerHTML = '<p>Tidak ada produk aktif atau API belum terhubung.</p>';
                 return;
             }
-            container.innerHTML = DATABASE.products.map(p => `
+
+            container.innerHTML = APP_DATA.products.map(p => `
                 <div class="product-card">
-                    <div class="product-img"><i class="fas fa-coffee"></i></div>
-                    <div class="product-body">
-                        <div class="product-name">${p.name || p.Nama || ''}</div>
-                        <div class="product-desc">${p.category || p.Kategori || 'Premium Blend'}</div>
-                        <div class="product-price">Rp ${formatNumber(p.price || p.Harga || 0)}</div><br>
-                        <button class="product-btn" onclick="addItemToCart('${p.id || p.ID}')">Tambah</button>
-                    </div>
+                    <h4>${p.name || p.Nama || ''}</h4>
+                    <p style="color:var(--text-light); font-size:0.9rem;">${p.category || p.Kategori || ''}</p><br>
+                    <strong style="color:var(--primary)">Rp ${formatNumber(p.price || p.Harga || 0)}</strong>
                 </div>
+            `).join('');
+
+            select.innerHTML = APP_DATA.products.map(p => `
+                <option value="${p.id || p.ID}">${p.name || p.Nama} - Rp ${formatNumber(p.price || p.Harga)}</option>
             `).join('');
         }
 
-        function addItemToCart(id) {
-            const item = DATABASE.products.find(p => String(p.id || p.ID) === String(id));
-            if(!item) return;
-            const exist = Cart.find(c => String(c.id) === String(id));
-            if(exist) exist.qty++; else Cart.push({id: item.id || item.ID, name: item.name || item.Nama, price: item.price || item.Harga, qty: 1});
-            updateCartUI();
-            showNotification(`${item.name || item.Nama} masuk keranjang.`);
-        }
-
-        function updateCartUI() {
-            const totalCount = Cart.reduce((s, i) => s + i.qty, 0);
-            const badge = document.getElementById('cartBadge');
-            badge.textContent = totalCount;
-            badge.style.display = totalCount > 0 ? 'flex' : 'none';
-            
-            const body = document.getElementById('cartBody');
-            if(Cart.length === 0) {
-                body.innerHTML = '<p style="text-align:center;padding:2rem;">Keranjang kosong</p>';
-                document.getElementById('cartFooter').style.display = 'none';
-            } else {
-                body.innerHTML = Cart.map(c => `
-                    <div class="cart-item">
-                        <div><strong>${c.name}</strong> (x${c.qty})</div>
-                        <div>Rp ${formatNumber(c.price * c.qty)}</div>
-                    </div>
-                `).join('');
-                document.getElementById('cartFooter').style.display = 'flex';
-                document.getElementById('cartTotal').textContent = 'Rp ' + formatNumber(Cart.reduce((s,i)=>s+(i.price*i.qty),0));
-            }
-            updateFormSummary();
-        }
-
-        function updateFormSummary() {
-            const sumCont = document.getElementById('cartSummaryContent');
-            if(Cart.length === 0) { sumCont.textContent = 'Belum ada produk dipilih'; return;}
-            sumCont.innerHTML = Cart.map(c => `<div>${c.name} x${c.qty} - Rp ${formatNumber(c.price*c.qty)}</div>`).join('') + `<hr><br><strong>Total Akhir: Rp ${formatNumber(Cart.reduce((s,i)=>s+(i.price*i.qty),0))}</strong>`;
-        }
-
-        function toggleCart() { document.getElementById('cartPanel').classList.toggle('active'); }
-        function goToCheckout() { toggleCart(); document.getElementById('formSection').scrollIntoView({behavior:'smooth'}); }
-
-        function submitLead() {
-            if(Cart.length === 0) return showNotification('Keranjang belanja kosong!', 'error');
+        async function submitOrder() {
+            const prodId = document.getElementById('buyerProduct').value;
             const name = document.getElementById('buyerName').value.trim();
             const phone = document.getElementById('buyerPhone').value.trim();
             const street = document.getElementById('buyerStreet').value.trim();
-            const ref = document.getElementById('refCode').value || 'DIRECT';
-            
-            if(!name || !phone || !street) return showNotification('Nama, WA, dan Alamat harus diisi!', 'error');
-            
-            const totalVal = Cart.reduce((s,i)=>s+(i.price*i.qty),0);
-            const textWA = `Halo Admin, saya ingin memesan Kopi Nusantara:\n\n` + 
-                           Cart.map(c => `- ${c.name} x${c.qty}`).join('\n') + 
-                           `\n\nTotal: Rp ${formatNumber(totalVal)}\nNama: ${name}\nAlamat: ${street}\nRef Code: ${ref}`;
-                           
-            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(textWA)}`, '_blank');
-            showNotification('Membuka WhatsApp untuk konfirmasi pesanan.', 'success');
-        }
+            const ref = document.getElementById('buyerRefCode').value;
 
-        async function processPortalAuth() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const pass = document.getElementById('loginPass').value;
-            
-            // Hardcoded Admin Fallback dari file Code.gs Anda
-            if(email === 'admin@kopiaffiliate.com' && pass === 'admin123') {
-                CurrentActiveSession = { isAdmin: true, name: 'Super Admin', referralCode: 'ADMIN' };
-            } else {
-                const matchedUser = DATABASE.users.find(u => u.email === email && String(u.referralcode || u.referralCode || u.Code) === String(pass));
-                if(matchedUser) {
-                    CurrentActiveSession = { isAdmin: false, name: matchedUser.name || matchedUser.Nama, referralCode: matchedUser.referralcode || matchedUser.referralCode || matchedUser.Code };
-                }
+            if(!name || !phone || !street) {
+                showToast('Mohon lengkapi semua data formulir!', 'error');
+                return;
             }
 
-            if(CurrentActiveSession) {
-                sessionStorage.setItem('active_session_kopi', JSON.stringify(CurrentActiveSession));
-                closeModal('loginModal');
-                showNotification(`Selamat datang kembali, ${CurrentActiveSession.name}`);
-                renderPortalCoreUI();
-            } else { showNotification('Email atau Password salah!', 'error'); }
+            const selectedProd = APP_DATA.products.find(p => String(p.id || p.ID) === String(prodId));
+            const price = selectedProd ? (selectedProd.price || selectedProd.Harga) : 0;
+
+            // Sesuaikan parameter persis seperti fungsi 'addLead' di Code.gs Anda
+            const params = new URLSearchParams({
+                action: 'addLead',
+                id: 'L-' + Date.now(),
+                referralCode: ref,
+                name: name,
+                contact: phone,
+                status: 'Pending',
+                date: new Date().toISOString(),
+                transactionValue: price,
+                source: 'Landing Page'
+            });
+
+            showToast('Sedang mengirim data ke Google Sheets...', 'info');
+            try {
+                const res = await fetch(`${API_URL}?${params.toString()}`).then(r => r.json());
+                if(res.success) {
+                    showToast('Pesanan tersimpan di Google Sheets!', 'success');
+                    // Redirect ke WA sebagai backup/pemenuhan alur asli
+                    const waTxt = `Halo Admin, saya memesan kopi lewat web.\nNama: ${name}\nProduk ID: ${prodId}\nRef: ${ref}`;
+                    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(waTxt)}`, '_blank');
+                } else {
+                    showToast('Gagal menyimpan: ' + res.error, 'error');
+                }
+            } catch(e) {
+                showToast('Terjadi kesalahan jaringan atau CORS.', 'error');
+            }
         }
 
-        function checkSessionPersistence() {
-            const session = sessionStorage.getItem('active_session_kopi');
-            if(session) { CurrentActiveSession = JSON.parse(session); renderPortalCoreUI(); }
+        async function executeLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            if(!email || !pass) return showToast('Isi email dan password!', 'error');
+
+            showToast('Memverifikasi kredensial...', 'info');
+            try {
+                const res = await fetch(`${API_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}`).then(r => r.json());
+                if(res.success) {
+                    SESSION = res.data; // berisi informasi user dari checkLogin() GAS
+                    closeModal('loginModal');
+                    showToast('Login Berhasil!', 'success');
+                    loadPortalData();
+                } else {
+                    showToast('Kredensial salah atau tidak ditemukan.', 'error');
+                }
+            } catch(e) {
+                showToast('Eror saat menghubungi endpoint login.', 'error');
+            }
         }
 
-        function renderPortalCoreUI() {
+        async function loadPortalData() {
+            // Ambil seluruh data pendukung untuk dashboard setelah berhasil login
+            try {
+                const [usersRes, leadsRes, commsRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getUsers`).then(r => r.json()),
+                    fetch(`${API_URL}?action=getLeads`).then(r => r.json()),
+                    fetch(`${API_URL}?action=getCommissions`).then(r => r.json())
+                ]);
+
+                if(usersRes.success) APP_DATA.users = usersRes.data;
+                if(leadsRes.success) APP_DATA.leads = leadsRes.data;
+                if(commsRes.success) APP_DATA.commissions = commsRes.data;
+
+                renderPortalDashboard();
+            } catch(e) {
+                showToast('Gagal memuat beberapa data sheet.', 'error');
+            }
+        }
+
+        function renderPortalDashboard() {
             document.getElementById('publicStorefront').style.display = 'none';
             document.getElementById('portalSidebar').style.display = 'block';
             document.getElementById('mainPortal').style.display = 'block';
-            document.getElementById('roleText').textContent = CurrentActiveSession.name;
             
-            if(CurrentActiveSession.isAdmin) {
+            document.getElementById('sessionName').textContent = SESSION.name || SESSION.Nama || 'Affiliator';
+
+            // Filter data jika bukan admin (Gunakan role-checking dari GAS Anda)
+            const isAdmin = (SESSION.email === 'admin@kopiaffiliate.com');
+            const myRefCode = SESSION.referralCode || SESSION.referralcode || SESSION.Code;
+
+            if(isAdmin) {
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            } else {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
             }
-            renderPortalDataLists();
+
+            const myLeads = isAdmin ? APP_DATA.leads : APP_DATA.leads.filter(l => String(l.referralCode || l.referralcode) === String(myRefCode));
+            const myComms = isAdmin ? APP_DATA.commissions : APP_DATA.commissions.filter(c => String(c.affiliatorCode || c.affiliatorcode) === String(myRefCode));
+
+            document.getElementById('statLeads').textContent = myLeads.length;
+            
+            const totalComm = myComms.reduce((sum, c) => sum + (parseFloat(c.amount || c.Jumlah) || 0), 0);
+            document.getElementById('statCommissions').textContent = 'Rp ' + formatNumber(totalComm);
+
+            // Render Tables
+            document.getElementById('leadsTableBody').innerHTML = myLeads.map(l => `
+                <tr>
+                    <td>${l.date ? l.date.split('T')[0] : '-'}</td>
+                    <td>${l.name || ''}</td>
+                    <td>${l.contact || ''}</td>
+                    <td>${l.referralCode || l.referralcode || ''}</td>
+                    <td><span style="font-weight:600; color:var(--warning)">${l.status || 'Pending'}</span></td>
+                    <td>${isAdmin && l.status === 'Pending' ? `<button class="btn btn-success" style="padding:2px 8px; font-size:0.75rem;" onclick="updateLeadStatus('${l.id || l.ID}', 'Valid')">Sahkan</button>` : '-'}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('commissionsTableBody').innerHTML = myComms.map(c => `
+                <tr>
+                    <td>${c.date ? c.date.split('T')[0] : '-'}</td>
+                    <td>${c.description || ''}</td>
+                    <td>Rp ${formatNumber(c.amount || c.Jumlah || 0)}</td>
+                    <td>${c.status || ''}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('usersTableBody').innerHTML = APP_DATA.users.map(u => `
+                <tr>
+                    <td>${u.name || u.Nama || ''}</td>
+                    <td>${u.email || ''}</td>
+                    <td>${u.referralCode || u.referralcode || u.Code || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateLeadStatus(id, newStatus) {
+            try {
+                const res = await fetch(`${API_URL}?action=updateLead&id=${id}&status=${newStatus}`).then(r => r.json());
+                if(res.success) {
+                    showToast('Status lead diperbarui!', 'success');
+                    loadPortalData();
+                }
+            } catch(e) { showToast('Gagal merubah status.', 'error'); }
         }
 
         function showPublicStore() {
@@ -394,62 +366,19 @@
             document.getElementById('portalSidebar').style.display = 'none';
             document.getElementById('mainPortal').style.display = 'none';
         }
-
-        function logoutPortal() {
-            sessionStorage.removeItem('active_session_kopi');
-            CurrentActiveSession = null;
-            showPublicStore();
-        }
-
-        function switchPortalPage(targetId) {
+        function logoutPortal() { SESSION = null; showPublicStore(); }
+        function switchPage(pageId) {
             document.querySelectorAll('.portal-page').forEach(p => p.style.display = 'none');
-            document.getElementById(`portal-${targetId}`).style.display = 'block';
-            document.getElementById('portalPageTitle').textContent = targetId.toUpperCase();
-        }
-
-        function renderPortalDataLists() {
-            const filteredLeads = CurrentActiveSession.isAdmin ? DATABASE.leads : DATABASE.leads.filter(l => String(l.referralCode || l.referralcode) === String(CurrentActiveSession.referralCode));
-            
-            document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
-            document.getElementById('dashValidLeads').textContent = filteredLeads.filter(l => l.status === 'Valid' || l.status === 'Converted').length;
-            
-            if(CurrentActiveSession.isAdmin) {
-                document.getElementById('dashTotalAff').textContent = DATABASE.users.length;
-            }
-
-            document.getElementById('productsTableBody').innerHTML = DATABASE.products.map(p => `
-                <tr><td>${p.name || p.Nama || ''}</td><td>${p.category || p.Kategori || ''}</td><td>Rp ${formatNumber(p.price || p.Harga || 0)}</td><td>Active</td></tr>
-            `).join('');
-
-            document.getElementById('leadsTableBody').innerHTML = filteredLeads.map(l => `
-                <tr><td>${formatDate(l.date || l.Tanggal)}</td><td>${l.name || l.Nama || ''}</td><td>${l.contact || l.Kontak || ''}</td><td>${l.referralCode || l.referralcode || ''}</td><td>${l.status || ''}</td><td>Rp ${formatNumber(l.transactionValue || l.transactionvalue || 0)}</td>
-                <td class="admin-only"><button class="btn btn-success btn-sm" onclick="patchLeadStatus('${l.id || l.ID}','Valid')">Validasi</button></td></tr>
-            `).join('');
-        }
-
-        async function patchLeadStatus(id, nextStatus) {
-            // Mengirim request dengan pengaman parameter aksi modifikasi baris data
-            fetch(`${API_URL}?action=updateLead&id=${id}&status=${nextStatus}`)
-            .then(() => { showNotification('Status diperbarui'); syncAllData(); });
-        }
-
-        function initUrlReferralCheck() {
-            const ref = new URLSearchParams(window.location.search).get('ref');
-            if(ref) {
-                document.getElementById('refCode').value = ref;
-                document.getElementById('refBanner').style.display = 'inline-flex';
-                document.getElementById('refAffiliatorName').textContent = ref;
-            }
+            document.getElementById('page-' + pageId).style.display = 'block';
         }
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function formatNumber(n) { return Math.round(parseFloat(n)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-        function formatDate(d) { return d ? new Date(d).toLocaleDateString('id-ID', {day:'2-digit', month:'short'}) : '-'; }
-        function showNotification(msg, type='success') {
+        function formatNumber(num) { return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function showToast(message, type) {
             const container = document.getElementById('toastContainer');
-            const el = document.createElement('div'); el.className = `toast ${type}`;
-            el.innerHTML = `<span>${msg}</span>`; container.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
+            const toast = document.createElement('div'); toast.className = `toast ${type || 'info'}`;
+            toast.innerHTML = `<span>${message}</span>`; container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
     </script>
 </body>
