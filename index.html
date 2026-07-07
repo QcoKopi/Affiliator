@@ -160,6 +160,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
+<!-- REFERRAL LINK CARD (Affiliator Only) -->
+<div class="card" id="refLinkCard" style="display:none">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-link"></i> Link Referral Anda</div>
+<span class="badge badge-active" id="refCodeBadge">-</span>
+</div>
+<div class="card-body">
+<div class="referral-link-box" style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;display:flex;gap:0.5rem;align-items:center;border:1.5px solid var(--border)">
+<i class="fas fa-globe" style="color:var(--primary-light)"></i>
+<input type="text" id="refLinkInput" readonly style="flex:1;border:none;background:transparent;font-family:inherit;font-size:0.9rem;color:var(--text);outline:none">
+<button class="btn btn-outline btn-sm" onclick="copyReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
+</div>
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+<a id="refLinkOpen" href="landing.html" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing</a>
+<a id="refLinkQR" href="qr.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-qrcode"></i> Generate QR</a>
+</div>
+</div>
+</div>
+
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Leads Terbaru</div></div>
 <div class="card-body">
@@ -187,6 +206,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <tbody id="productsBody"></tbody>
 </table>
 </div>
+</div>
+</div>
+
+<!-- LIVE PREVIEW LANDING PAGE -->
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-desktop"></i> Preview Landing Page (Live)</div>
+<div style="display:flex;gap:0.5rem;align-items:center">
+<span class="sync-status" id="previewStatus"><i class="fas fa-circle" style="color:var(--success)"></i> Live</span>
+<button class="btn btn-outline btn-sm" onclick="refreshLandingPreview()"><i class="fas fa-sync-alt"></i> Refresh</button>
+<a href="landing.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i> Buka Full</a>
+</div>
+</div>
+<div class="card-body" style="padding:0">
+<iframe id="landingPreviewFrame" src="landing.html" style="width:100%;height:500px;border:none;display:block"></iframe>
 </div>
 </div>
 </div>
@@ -550,6 +584,18 @@ document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
 document.getElementById('dashValidLeads').textContent = validLeads.length;
 document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
+// Tampilkan card referral link untuk affiliator (bukan admin)
+if (currentUser && !currentUser.isAdmin && currentUser.referralCode) {
+document.getElementById('refLinkCard').style.display = '';
+document.getElementById('refCodeBadge').textContent = currentUser.referralCode;
+const fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
+document.getElementById('refLinkInput').value = fullLink;
+document.getElementById('refLinkOpen').href = 'landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
+document.getElementById('refLinkQR').href = 'qr.html?ref=' + encodeURIComponent(currentUser.referralCode);
+} else {
+document.getElementById('refLinkCard').style.display = 'none';
+}
+
 const recent = filteredLeads.slice(-5).reverse();
 document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
 const aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
@@ -570,7 +616,10 @@ body.innerHTML = DATA.products.map(p => {
 const pId = p.id || '';
 const isAct = String(p.active).toLowerCase() === 'true';
 const imgTag = p.img ? '<div class="product-img-preview"><img src="' + p.img + '" onerror="this.src=\'https://placehold.co/50?text=Kopi\'"></div>' : '<div class="product-img-preview"><i class="fas fa-coffee"></i></div>';
-return '<tr><td>' + imgTag + '</td><td><strong>' + (p.name || '-') + '</strong><br><small style="color:var(--text-light)">ID: ' + pId + '</small></td><td>' + (p.category || '-') + '</td><td>Rp ' + formatNumber(p.price) + '</td><td><span class="badge ' + (isAct ? 'badge-active' : 'badge-inactive') + '">' + (isAct ? 'Aktif' : 'Non-Aktif') + '</span></td><td><button class="btn btn-sm btn-outline" onclick="openProductModal(\'' + pId + '\')" title="Edit"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteProduct(\'' + pId + '\')" title="Hapus"><i class="fas fa-trash-alt"></i></button></td></tr>';
+const toggleTitle = isAct ? 'Nonaktifkan' : 'Aktifkan';
+const toggleIcon = isAct ? 'fa-toggle-on' : 'fa-toggle-off';
+const toggleClass = isAct ? 'btn-success' : 'btn-outline';
+return '<tr><td>' + imgTag + '</td><td><strong>' + (p.name || '-') + '</strong><br><small style="color:var(--text-light)">ID: ' + pId + '</small></td><td>' + (p.category || '-') + '</td><td>Rp ' + formatNumber(p.price) + '</td><td><span class="badge ' + (isAct ? 'badge-active' : 'badge-inactive') + '">' + (isAct ? 'Aktif' : 'Non-Aktif') + '</span></td><td><div style="display:flex;gap:4px;align-items:center"><button class="btn btn-sm ' + toggleClass + '" onclick="toggleProductStatus(\'' + pId + '\')" title="' + toggleTitle + '"><i class="fas ' + toggleIcon + '"></i></button><button class="btn btn-sm btn-outline" onclick="openProductModal(\'' + pId + '\')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger" onclick="deleteProduct(\'' + pId + '\')" title="Hapus"><i class="fas fa-trash-alt"></i></button></div></td></tr>';
 }).join('');
 }
 
@@ -625,6 +674,7 @@ const res = await callGASGet('saveProduct', params);
 if (res.success) {
 showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
 await syncAllData();
+refreshLandingPreview();
 } else {
 showToast(res.error || 'Gagal menyimpan produk', 'error');
 updateSyncStatus('synced');
@@ -643,6 +693,7 @@ const res = await callGASGet('deleteProduct', { id: id });
 if (res.success) {
 showToast('Produk berhasil dihapus!', 'success');
 await syncAllData();
+refreshLandingPreview();
 } else {
 showToast(res.error || 'Gagal menghapus produk', 'error');
 updateSyncStatus('synced');
@@ -650,6 +701,51 @@ updateSyncStatus('synced');
 } catch(err) {
 showToast('Koneksi bermasalah', 'error');
 updateSyncStatus('error');
+}
+}
+
+// Toggle status produk (Aktif <-> Non-Aktif) langsung dari tabel
+async function toggleProductStatus(id) {
+const p = DATA.products.find(prod => String(prod.id) === String(id));
+if (!p) return;
+const newActive = String(p.active).toLowerCase() !== 'true' ? 'true' : 'false';
+updateSyncStatus('syncing');
+try {
+const params = {
+action: 'saveProduct',
+id: id,
+name: p.name || '',
+category: p.category || '',
+price: p.price || 0,
+img: p.img || '',
+description: p.description || p.desc || '',
+active: newActive
+};
+const res = await callGASGet('saveProduct', params);
+if (res.success) {
+showToast('Status produk diubah ke: ' + (newActive === 'true' ? 'Aktif' : 'Non-Aktif'), 'success');
+await syncAllData();
+renderProducts();
+refreshLandingPreview();
+} else {
+showToast(res.error || 'Gagal mengubah status produk', 'error');
+updateSyncStatus('synced');
+}
+} catch(err) {
+showToast('Koneksi terputus saat mengubah status', 'error');
+updateSyncStatus('error');
+}
+}
+
+// Refresh iframe preview landing page
+function refreshLandingPreview() {
+const frame = document.getElementById('landingPreviewFrame');
+if (frame) {
+frame.src = 'landing.html?nocache=' + Date.now();
+document.getElementById('previewStatus').innerHTML = '<i class="fas fa-sync fa-spin" style="color:var(--info)"></i> Refreshing...';
+setTimeout(() => {
+document.getElementById('previewStatus').innerHTML = '<i class="fas fa-circle" style="color:var(--success)"></i> Live';
+}, 1500);
 }
 }
 
@@ -848,6 +944,21 @@ renderCurrentPage();
 function adminLogout() {
 SessionManager.clearSession();
 window.location.reload();
+}
+
+// ==================== REFERRAL LINK ====================
+function copyReferralLink() {
+const input = document.getElementById('refLinkInput');
+if (!input || !input.value) return;
+input.select();
+input.setSelectionRange(0, 99999);
+try {
+navigator.clipboard.writeText(input.value);
+showToast('Link referral disalin ke clipboard!', 'success');
+} catch(e) {
+document.execCommand('copy');
+showToast('Link referral disalin!', 'success');
+}
 }
 
 function refreshAllData() {
