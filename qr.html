@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Generator - Kopi Affiliate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #5D4037;
+            --primary-light: #8D6E63;
+            --primary-dark: #3E2723;
+            --accent: #A1887F;
+            --bg: #FAFAF8;
+            --card-bg: #FFFFFF;
+            --text: #2C2C2C;
+            --text-light: #6B6B6B;
+            --border: #E8E4E0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #E53935;
+            --info: #2196F3;
+            --shadow: 0 4px 20px rgba(93,64,55,0.08);
+            --shadow-lg: 0 10px 40px rgba(93,64,55,0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); min-height: 100vh; color: var(--text); }
+        .container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
+        .header { text-align: center; color: white; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .header p { opacity: 0.9; font-size: 0.95rem; }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow-lg); margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text); }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.95rem; transition: all 0.3s; }
+        .form-input:focus { outline: none; border-color: var(--primary-light); }
+        .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; justify-content: center; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .qr-result { text-align: center; padding: 2rem; display: none; }
+        .qr-result.active { display: block; animation: fadeIn 0.4s ease; }
+        #qrcode { display: inline-block; padding: 1.5rem; background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .referral-link-box { background: var(--bg); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center; }
+        .referral-link-box input { flex: 1; border: none; background: transparent; font-family: inherit; font-size: 0.85rem; color: var(--text); }
+        .referral-link-box button { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .action-buttons { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+        .affiliator-info { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem; display: none; }
+        .affiliator-info.active { display: block; }
+        .affiliator-info h3 { margin-bottom: 0.5rem; }
+        .affiliator-info p { opacity: 0.9; font-size: 0.9rem; }
+        .stats-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+        .stat-mini { text-align: center; }
+        .stat-mini-value { font-size: 1.3rem; font-weight: 700; }
+        .stat-mini-label { font-size: 0.75rem; opacity: 0.8; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+        .error-msg.active { display: block; }
+        .how-to-use { background: var(--bg); border-radius: var(--radius); padding: 1.5rem; margin-top: 1.5rem; }
+        .how-to-use h4 { color: var(--primary-dark); margin-bottom: 1rem; font-size: 1rem; }
+        .how-to-use ol { padding-left: 1.2rem; }
+        .how-to-use li { margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-light); }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; min-width: 300px; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) {
+            .container { padding: 1rem; }
+            .card { padding: 1.5rem; }
+            .stats-mini { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-qrcode"></i> QR Generator</h1>
+            <p>Buat QR Code untuk link referral Anda</p>
+        </div>
+
+        <!-- INPUT REFERRAL CODE -->
+        <div class="card" id="inputCard">
+            <div class="card-title"><i class="fas fa-key"></i> Masukkan Referral Code</div>
+            <div class="form-group">
+                <label class="form-label">Referral Code</label>
+                <input type="text" class="form-input" id="referralCodeInput" placeholder="Contoh: BUDI1234" onkeypress="if(event.key==='Enter')generateQR()">
+            </div>
+            <div class="error-msg" id="errorMsg"><i class="fas fa-exclamation-circle"></i> Referral code tidak ditemukan</div>
+            <button class="btn btn-primary" onclick="generateQR()">
+                <i class="fas fa-magic"></i> Generate QR Code
+            </button>
+        </div>
+
+        <!-- AFFILIATOR INFO -->
+        <div class="affiliator-info" id="affiliatorInfo">
+            <h3><i class="fas fa-user"></i> <span id="affName">-</span></h3>
+            <p id="affEmail">-</p>
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <div class="stat-mini-value" id="affTotalLeads">0</div>
+                    <div class="stat-mini-label">Leads</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value" id="affValidLeads">0</div>
+                    <div class="stat-mini-label">Valid</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value" id="affTotalComm">Rp 0</div>
+                    <div class="stat-mini-label">Komisi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR RESULT -->
+        <div class="qr-result" id="qrResult">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-qrcode"></i> QR Code Anda</div>
+                <div id="qrcode"></div>
+                <div class="referral-link-box">
+                    <input type="text" id="referralLinkDisplay" readonly>
+                    <button class="btn btn-outline btn-sm" onclick="copyLink()"><i class="fas fa-copy"></i> Salin</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="downloadQR()">
+                        <i class="fas fa-download"></i> Download QR
+                    </button>
+                    <button class="btn btn-outline" onclick="resetQR()">
+                        <i class="fas fa-redo"></i> Buat Baru
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW TO USE -->
+        <div class="how-to-use">
+            <h4><i class="fas fa-lightbulb"></i> Cara Penggunaan</h4>
+            <ol>
+                <li>Masukkan <strong>Referral Code</strong> Anda (contoh: BUDI1234)</li>
+                <li>Klik <strong>Generate QR Code</strong></li>
+                <li>QR Code akan muncul - bisa di-scan oleh calon lead</li>
+                <li><strong>Download</strong> QR untuk dicetak atau share</li>
+                <li>Setiap scan yang menghasilkan lead = komisi untuk Anda</li>
+            </ol>
+        </div>
+
+        <!-- BACK LINK -->
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" style="color: white; text-decoration: none; opacity: 0.8; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left"></i> Kembali ke Affiliator
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const CONFIG = {
+            BASE_URL: window.location.origin + '/landing.html',
+            DB_NAME: 'KopiAffiliateDB',
+            DB_VERSION: 2,
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec'
+        };
+
+        // ==================== GAS INTEGRATION ====================
+        async function fetchFromGAS(action) {
+            try {
+                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch(err) {
+                return { success: false, error: err.message };
+            }
+        }
+
+        async function syncUsersFromGAS() {
+            const result = await fetchFromGAS('getUsers');
+            if (result.success && Array.isArray(result.data)) {
+                for (const user of result.data) { if (user && user.id) await DBStore.put('users', user); }
+                return true;
+            }
+            return false;
+        }
+
+        // ==================== STORAGE ENGINE ====================
+        const DBStore = {
+            db: null, ready: false, mode: 'unknown',
+            memory: { users: [], leads: [], commissions: [], products: [], orders: [] },
+            initPromise: null,
+
+            init: function() {
+                if (this.initPromise) return this.initPromise;
+                this.initPromise = this._tryInit();
+                return this.initPromise;
+            },
+            _tryInit: async function() {
+                try { await this._initIndexedDB(3000); this.mode = 'indexeddb'; this.ready = true; return; }
+                catch(e) { console.log('IndexedDB gagal:', e.message || e); }
+                try { this._testLocalStorage(); this.mode = 'localstorage'; this.ready = true; return; }
+                catch(e) { console.log('localStorage gagal:', e.message || e); }
+                this.mode = 'memory'; this.ready = true;
+            },
+            _initIndexedDB: function(timeoutMs) {
+                return new Promise((resolve, reject) => {
+                    if (!window.indexedDB) { reject('not supported'); return; }
+                    const timer = setTimeout(() => reject('timeout'), timeoutMs);
+                    const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+                    request.onerror = () => { clearTimeout(timer); reject(request.error); };
+                    request.onblocked = () => { clearTimeout(timer); reject('blocked'); };
+                    request.onsuccess = () => { clearTimeout(timer); this.db = request.result; resolve(this.db); };
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('leads')) db.createObjectStore('leads', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('commissions')) db.createObjectStore('commissions', { keyPath: 'id' });
+                    };
+                });
+            },
+            _testLocalStorage: function() {
+                const k = '_aff_test_'; localStorage.setItem(k, '1');
+                if (localStorage.getItem(k) !== '1') throw new Error('fail');
+                localStorage.removeItem(k);
+            },
+            getAll: function(storeName) {
+                return new Promise((resolve) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readonly');
+                        const store = tx.objectStore(storeName);
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => resolve([]);
+                    } else if (this.mode === 'localstorage') {
+                        try { const r = localStorage.getItem('aff_' + storeName); resolve(r ? JSON.parse(r) : []); }
+                        catch(e) { resolve([]); }
+                    } else { resolve(this.memory[storeName] || []); }
+                });
+            },
+            put: function(storeName, data) {
+                return new Promise((resolve) => {
+                    if (this.mode === 'indexeddb' && this.db) {
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.put(data);
+                        req.onsuccess = () => resolve();
+                        req.onerror = () => resolve();
+                    } else if (this.mode === 'localstorage') {
+                        try { const items = JSON.parse(localStorage.getItem('aff_' + storeName) || '[]');
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        localStorage.setItem('aff_' + storeName, JSON.stringify(items)); } catch(e) {}
+                        resolve();
+                    } else {
+                        const items = this.memory[storeName] || [];
+                        const idx = items.findIndex(x => x.id === data.id);
+                        if (idx >= 0) items[idx] = data; else items.push(data);
+                        resolve();
+                    }
+                });
+            }
+        };
+
+        let currentAffiliator = null;
+        let qrCodeObj = null;
+
+        // ==================== QR GENERATOR ====================
+        async function generateQR() {
+            const code = document.getElementById('referralCodeInput').value.trim().toUpperCase();
+            if (!code) { showToast('Masukkan referral code', 'error'); return; }
+
+            let users = await DBStore.getAll('users');
+            let affiliator = users.find(u => u.referralCode === code);
+
+            if (!affiliator) {
+                showToast('Mencari di server...', 'info');
+                const synced = await syncUsersFromGAS();
+                if (synced) {
+                    users = await DBStore.getAll('users');
+                    affiliator = users.find(u => u.referralCode === code);
+                }
+            }
+
+            if (!affiliator) {
+                document.getElementById('errorMsg').classList.add('active');
+                showToast('Referral code tidak ditemukan', 'error');
+                return;
+            }
+
+            document.getElementById('errorMsg').classList.remove('active');
+            currentAffiliator = affiliator;
+            const refLink = CONFIG.BASE_URL + '?ref=' + code;
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            qrCodeObj = new QRCode(qrContainer, {
+                text: refLink, width: 200, height: 200,
+                colorDark: '#5D4037', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('referralLinkDisplay').value = refLink;
+            document.getElementById('qrResult').classList.add('active');
+            document.getElementById('inputCard').style.display = 'none';
+            document.getElementById('affName').textContent = affiliator.name;
+            document.getElementById('affEmail').textContent = affiliator.email;
+            document.getElementById('affiliatorInfo').classList.add('active');
+            await loadAffiliatorStats(affiliator);
+            showToast('QR Code berhasil dibuat!', 'success');
+        }
+
+        async function loadAffiliatorStats(aff) {
+            await syncLeadsFromGAS();
+            await syncCommissionsFromGAS();
+            const leads = await DBStore.getAll('leads');
+            const commissions = await DBStore.getAll('commissions');
+            const userLeads = leads.filter(l => l.referralCode === aff.referralCode);
+            const userComm = commissions.filter(c => c.affiliatorId === aff.id);
+            const totalComm = userComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+            document.getElementById('affTotalLeads').textContent = userLeads.length;
+            document.getElementById('affValidLeads').textContent = userLeads.filter(l => l.status === 'Valid').length;
+            document.getElementById('affTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
+        }
+
+        async function syncLeadsFromGAS() {
+            const result = await fetchFromGAS('getLeads');
+            if (result.success && Array.isArray(result.data)) {
+                for (const lead of result.data) { if (lead && lead.id) await DBStore.put('leads', lead); }
+            }
+        }
+        async function syncCommissionsFromGAS() {
+            const result = await fetchFromGAS('getCommissions');
+            if (result.success && Array.isArray(result.data)) {
+                for (const comm of result.data) { if (comm && comm.id) await DBStore.put('commissions', comm); }
+            }
+        }
+
+        function copyLink() {
+            const input = document.getElementById('referralLinkDisplay');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link disalin!', 'success');
+        }
+        function downloadQR() {
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            if (!qrCanvas) return;
+            const link = document.createElement('a');
+            link.download = 'QR-Referral-' + (currentAffiliator ? currentAffiliator.referralCode : 'code') + '.png';
+            link.href = qrCanvas.toDataURL('image/png');
+            link.click();
+            showToast('QR Code di-download!', 'success');
+        }
+        function resetQR() {
+            document.getElementById('qrResult').classList.remove('active');
+            document.getElementById('affiliatorInfo').classList.remove('active');
+            document.getElementById('inputCard').style.display = 'block';
+            document.getElementById('referralCodeInput').value = '';
+            document.getElementById('referralCodeInput').focus();
+            currentAffiliator = null;
+        }
+
+        // ==================== UTILITIES ====================
+        function formatNumber(num) {
+            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type || 'info');
+            const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
+            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await DBStore.init();
+                await syncUsersFromGAS();
+            } catch(e) { console.log('IndexedDB error:', e); }
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                document.getElementById('referralCodeInput').value = refCode;
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>
