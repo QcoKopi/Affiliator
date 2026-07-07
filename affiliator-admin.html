@@ -34,7 +34,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .card-title{font-size:1.1rem;font-weight:600;color:var(--primary-dark)}
 .table-container{overflow-x:auto}
 .data-table{width:100%;border-collapse:collapse;font-size:0.85rem}
-.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.7 layout-px;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
 .data-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
 .badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.7rem;font-weight:600;display:inline-block}
 .badge-pending{background:#FFF3E0;color:var(--warning)}
@@ -150,7 +150,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
         <th>Deskripsi</th>
         <th>Jumlah</th>
         <th>Status</th>
-        <th>Aksi</th> 
+        <th>Aksi</th>
     </tr>
 </thead>
 <tbody id="commissionsBody"></tbody>
@@ -174,7 +174,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <script>
 const CONFIG={GAS_URL:'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',ADMIN_PASSWORD:'admin123'};
 
-// GAS CALL (GET - Lebih Reliable)
 async function callGAS(action,paramsObj){
 const url=new URL(CONFIG.GAS_URL);
 url.searchParams.append('action',action);
@@ -226,7 +225,7 @@ function renderAffiliators(){
 document.getElementById('affiliatorCount').textContent=DATA.users.length+' affiliator';
 document.getElementById('affiliatorsBody').innerHTML=DATA.users.map(u=>{
 const affLeads=DATA.leads.filter(l=>l.referralCode===u.referralCode);
-const affComm=DATA.commissions.filter(c=>c.affiliatorId===u.id);
+const affComm=DATA.commissions.filter(c=>String(c.affiliatorid || c.affiliatorId)===String(u.id));
 const totalComm=affComm.reduce((a,c)=>a+(parseFloat(c.amount)||0),0);
 return`<tr><td><strong>${u.name}</strong></td><td>${u.email}</td><td>${u.phone||'-'}</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">${u.referralCode}</code></td><td>${u.bank||'-'}</td><td><span class="badge badge-${u.status==='Active'?'valid':'pending'}">${u.status||'Active'}</span></td><td>${affLeads.length}</td><td>Rp ${formatNumber(totalComm)}</td></tr>`
 }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
@@ -261,14 +260,15 @@ function renderCommissions(){
     if (!bodyEl) return;
     
     bodyEl.innerHTML = DATA.commissions.map(c => {
-        const affId = c.affiliatorid || c.affiliatorId;
-        const aff = DATA.users.find(u => u.id === affId);
+        const affId = c.affiliatorid !== undefined ? c.affiliatorid : (c.affiliatorId !== undefined ? c.affiliatorId : '');
+        const commId = c.id !== undefined ? c.id : (c.commid !== undefined ? c.commid : (c.commId !== undefined ? c.commId : ''));
+        
+        const aff = DATA.users.find(u => String(u.id) === String(affId));
         
         const isPaid = String(c.paid).toLowerCase() === 'true' || c.paid === true;
         const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
         
-        const commId = c.id || c.commId;
-        const actionBtn = !isPaid ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        const actionBtn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
         
         const amount = parseFloat(c.amount) || 0;
         const dateStr = c.date || '';
@@ -352,7 +352,7 @@ const AdminSession={save:function(){try{document.cookie='aff_admin='+encodeURICo
 
 function refreshAllData(){syncAllData();showToast('Data refreshed!','success')}
 function closeModal(id){document.getElementById(id).classList.remove('active')}
-function formatNumber(num){return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function formatNumber(num){return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(!\\d))/g,'.')}
 function formatDate(dateStr){if(!dateStr)return'-';const d=new Date(dateStr);return isNaN(d.getTime())?String(dateStr):d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
 function showToast(message,type){const container=document.getElementById('toastContainer');const toast=document.createElement('div');toast.className='toast '+(type||'info');const icons={success:'check-circle',error:'times-circle',warning:'exclamation-circle',info:'info-circle'};toast.innerHTML='<i class="fas fa-'+(icons[type]||'info-circle')+'"></i> <span>'+message+'</span>';container.appendChild(toast);setTimeout(()=>toast.remove(),4000)}
 function updateSyncStatus(status){const el=document.getElementById('syncStatus');if(!el)return;el.innerHTML=status==='syncing'?'<i class="fas fa-spinner fa-spin"></i> Sinkronasi...':status==='synced'?'<i class="fas fa-check-circle"></i> Data terbaru':'<i class="fas fa-exclamation-circle"></i> Error'}
