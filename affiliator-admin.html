@@ -250,10 +250,47 @@ return`<tr><td>${formatDate(o.date)}</td><td>${o.productName||'-'}${o.qty>1?' x'
 }
 
 function renderCommissions(){
-document.getElementById('commissionsBody').innerHTML=DATA.commissions.map(c=>{
-const aff=DATA.users.find(u=>u.id===c.affiliatorId);
-return`<tr><td>${formatDate(c.date)}</td><td>${aff?aff.name:c.affiliatorId}</td><td>${c.type||'-'}</td><td>${c.description||'-'}</td><td>Rp ${formatNumber(parseFloat(c.amount)||0)}</td><td>${c.paid==='true'||c.paid===true?'<span class="badge badge-valid">Dibayar</span>':'<span class="badge badge-pending">Pending</span>'}</td></tr>`
-}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
+    document.getElementById('commissionsBody').innerHTML=DATA.commissions.map(c=>{
+        const aff=DATA.users.find(u=>u.id===c.affiliatorId);
+        
+        // Membuat tombol aksi bayar jika statusnya masih pending
+        const isPaid = c.paid==='true' || c.paid===true;
+        const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
+        
+        // Jika belum dibayar, berikan tombol untuk mengubah status ke Google Sheet
+        const actionBtn = !isPaid ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${c.id}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        
+        return`<tr>
+            <td>${formatDate(c.date)}</td>
+            <td>${aff?aff.name:c.affiliatorId}</td>
+            <td>${c.type||'-'}</td>
+            <td>${c.description||'-'}</td>
+            <td>Rp ${formatNumber(parseFloat(c.amount)||0)}</td>
+            <td>${statusBadge}</td>
+            <td>${actionBtn}</td>
+        </tr>`
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
+}
+
+// Fungsi baru untuk menembak perubahan ke Google Apps Script
+async function markCommissionAsPaid(commId) {
+    if(!confirm('Apakah Anda yakin ingin menandai komisi ini sebagai "Dibayar"?')) return;
+    
+    showToast('Memperbarui status komisi...', 'info');
+    try {
+        const url = CONFIG.GAS_URL + '?action=updateCommission&id=' + encodeURIComponent(commId) + '&paid=true';
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if(result.success) {
+            showToast('Komisi berhasil diperbarui!', 'success');
+            syncAllData(); // Refresh tampilan data otomatis
+        } else {
+            showToast('Gagal memperbarui: ' + result.error, 'error');
+        }
+    } catch(err) {
+        showToast('Error koneksi server!', 'error');
+    }
 }
 
 function openUpdateLeadModal(leadId){
