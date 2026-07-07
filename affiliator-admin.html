@@ -3,629 +3,584 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Affiliator Admin Panel - Kopi Affiliate</title>
+<title>Affiliator Admin & Products - Kopi Affiliate</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root{--primary:#5D4037;--primary-light:#8D6E63;--primary-dark:#3E2723;--accent:#A1887F;--bg:#F5F3F0;--card-bg:#FFFFFF;--text:#2C2C2C;--text-light:#6B6B6B;--border:#E8E4E0;--success:#4CAF50;--warning:#FF9800;--danger:#E53935;--info:#2196F3;--shadow:0 4px 20px rgba(93,64,55,0.08);--shadow-lg:0 10px 40px rgba(93,64,55,0.12);--radius:12px;--radius-sm:8px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
-.sidebar{width:260px;background:var(--primary-dark);color:#fff;padding:24px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:100}
-.sidebar-brand{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;margin-bottom:32px;color:#fff}
-.sidebar-menu{list-style:none;display:flex;flex-direction:column;gap:8px;flex:1}
-.sidebar-menu li a{display:flex;align-items:center;gap:12px;padding:12px 16px;color:rgba(255,255,255,0.7);text-decoration:none;border-radius:var(--radius-sm);font-weight:500;transition:all .2s}
-.sidebar-menu li a:hover,.sidebar-menu li.active a{color:#fff;background:var(--primary)}
-.sidebar-footer{padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)}
-.btn-logout{width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;background:none;border:none;color:#ff8a80;cursor:pointer;font-weight:500;text-align:left;border-radius:var(--radius-sm)}
-.btn-logout:hover{background:rgba(255,138,128,0.1)}
-.main-content{flex:1;margin-left:260px;padding:40px;max-width:1400px;width:calc(100% - 260px)}
-.header{display:flex;justify-content:between;align-items:center;margin-bottom:32px;gap:20px}
-.header-title h1{font-size:28px;font-weight:700;color:var(--primary-dark);margin-bottom:4px}
-.header-title p{color:var(--text-light);font-size:14px}
-.sync-badge{display:flex;align-items:center;gap:8px;background:#fff;padding:8px 16px;border-radius:30px;font-size:13px;font-weight:500;box-shadow:var(--shadow);border:1px solid var(--border)}
-.sync-badge i{color:var(--primary)}
-.sync-badge.syncing i{animation:spin 1s linear infinite}
-@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-.login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
-.login-card{background:#fff;padding:40px;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:420px;border:1px solid var(--border)}
-.login-logo{text-align:center;margin-bottom:24px;font-size:24px;font-weight:700;color:var(--primary-dark)}
-.form-group{margin-bottom:20px}
-.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text)}
-.form-control{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;transition:all .2s;color:var(--text)}
-.form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(93,64,55,0.1)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-sm);font-weight:600;font-size:14px;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
-.btn-primary{background:var(--primary);color:#fff}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.sidebar{width:260px;background:var(--primary-dark);color:white;position:fixed;top:0;left:0;bottom:0;padding:1.5rem;overflow-y:auto;z-index:1000}
+.sidebar-brand{font-size:1.3rem;font-weight:700;margin-bottom:2rem;display:flex;align-items:center;gap:0.75rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-menu{list-style:none}
+.sidebar-menu li{margin-bottom:0.5rem}
+.sidebar-menu a{color:rgba(255,255,255,0.7);text-decoration:none;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);transition:all 0.3s;cursor:pointer}
+.sidebar-menu a:hover,.sidebar-menu a.active{color:white;background:rgba(255,255,255,0.1)}
+.main{margin-left:260px;min-height:100vh}
+.header{background:var(--card-bg);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.content{padding:2rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card-bg);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.1rem}
+.stat-icon.blue{background:#E3F2FD;color:var(--info)}
+.stat-icon.green{background:#E8F5E9;color:var(--success)}
+.stat-icon.orange{background:#FFF3E0;color:var(--warning)}
+.stat-icon.purple{background:#F3E5F5;color:#9C27B0}
+.stat-icon.red{background:#FFEBEE;color:var(--danger)}
+.stat-value{font-size:1.6rem;font-weight:700;color:var(--primary-dark)}
+.stat-label{font-size:0.8rem;color:var(--text-light)}
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:1.5rem}
+.card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem}
+.card-title{font-size:1.1rem;font-weight:600;color:var(--primary-dark)}
+.table-container{overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.75rem;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.7rem;font-weight:600;display:inline-block}
+.badge-pending{background:#FFF3E0;color:var(--warning)}
+.badge-valid{background:#E8F5E9;color:var(--success)}
+.badge-converted{background:#E3F2FD;color:var(--info)}
+.badge-rejected{background:#FFEBEE;color:var(--danger)}
+.badge-active{background:#E8F5E9;color:var(--success)}
+.badge-inactive{background:#FFEBEE;color:var(--danger)}
+.btn{padding:0.5rem 1rem;border-radius:var(--radius-sm);border:none;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem}
+.btn-sm{padding:0.35rem 0.75rem;font-size:0.8rem}
+.btn-primary{background:var(--primary);color:white}
 .btn-primary:hover{background:var(--primary-dark)}
-.btn-secondary{background:var(--card-bg);color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{background:var(--bg)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-danger:hover{background:#c62828}
-.btn-block{width:100%}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,min-max(240px,1fr));gap:24px;margin-bottom:32px}
-.stat-card{background:#fff;padding:24px;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;justify-content:between}
-.stat-info h3{font-size:13px;color:var(--text-light);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
-.stat-info p{font-size:28px;font-weight:700;color:var(--primary-dark)}
-.stat-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px}
-.stat-card:nth-child(1) .stat-icon{background:rgba(93,64,55,0.1);color:var(--primary)}
-.stat-card:nth-child(2) .stat-icon{background:rgba(76,175,80,0.1);color:var(--success)}
-.stat-card:nth-child(3) .stat-icon{background:rgba(33,150,243,0.1);color:var(--info)}
-.stat-card:nth-child(4) .stat-icon{background:rgba(255,152,0,0.1);color:var(--warning)}
-.view-section{display:none}
-.view-section.active{display:block}
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:32px}
-.card-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:between;align-items:center;background:#fff}
-.card-title{font-size:18px;font-weight:600;color:var(--primary-dark)}
-.table-responsive{width:100%;overflow-x:auto}
-.table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
-.table th{background:var(--bg);padding:14px 24px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
-.table td{padding:16px 24px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
-.table tr:last-child td{border-bottom:none}
-.table tr:hover td{background:rgba(245,243,240,0.5)}
-.badge{display:inline-flex;padding:4px 12px;border-radius:30px;font-size:12px;font-weight:600;text-transform:capitalize}
-.badge-success{background:rgba(76,175,80,0.1);color:var(--success)}
-.badge-warning{background:rgba(255,152,0,0.1);color:var(--warning)}
-.badge-danger{background:rgba(229,57,53,0.1);color:var(--danger)}
-.badge-info{background:rgba(33,150,243,0.1);color:var(--info)}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:all .3s}
-.modal-overlay.active{opacity:1;pointer-events:auto}
-.modal-wrapper{background:#fff;border-radius:var(--radius);width:100%;max-width:550px;box-shadow:var(--shadow-lg);border:1px solid var(--border);transform:translateY(20px);transition:all .3s;overflow:hidden}
-.modal-overlay.active .modal-wrapper{transform:translateY(0)}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:between;align-items:center}
-.modal-header h3{font-size:18px;font-weight:600;color:var(--primary-dark)}
-.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-light)}
-.modal-body{padding:24px;max-height:75vh;overflow-y:auto}
-.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:end;gap:12px;background:var(--bg)}
-.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px}
-.toast{background:#fff;padding:16px 24px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;border-left:4px solid var(--primary);font-size:14px;font-weight:500;min-width:280px;animation:slideIn .3s ease}
-.toast.success{border-left-color:var(--success)}.toast.error{border-left-color:var(--danger)}.toast.warning{border-left-color:var(--warning)}
+.btn-success{background:var(--success);color:white}
+.btn-danger{background:var(--danger);color:white}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
+.form-input,.form-select,.form-textarea{width:100%;padding:0.6rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--primary-light)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-textarea{resize:vertical;min-height:80px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card-bg);border-radius:var(--radius);max-width:550px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:1.5rem;color:var(--text-light);cursor:pointer}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.5rem}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
+.toast{background:var(--card-bg);border-radius:var(--radius-sm);padding:1rem 1.5rem;box-shadow:var(--shadow-lg);border-left:4px solid var(--primary);display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;min-width:300px}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.product-grid-admin{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;padding:4px}
-.product-card-admin{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s}
-.product-card-admin:hover{transform:translateY(-4px)}
-.product-img-holder{width:100%;height:180px;background:#E8E4E0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.product-img-holder img{width:100%;height:100%;object-fit:cover}
-.product-img-holder .no-img{color:var(--text-light);font-size:14px;display:flex;flex-direction:column;align-items:center;gap:8px}
-.product-body-admin{padding:20px;flex:1;display:flex;flex-direction:column;gap:12px}
-.product-meta-admin{display:flex;justify-content:between;align-items:center}
-.product-cat-tag{font-size:12px;font-weight:600;text-transform:uppercase;color:var(--primary);background:rgba(93,64,55,0.08);padding:2px 8px;border-radius:4px}
-.product-title-admin{font-size:16px;font-weight:600;color:var(--text);line-height:1.4}
-.product-price-admin{font-size:18px;font-weight:700;color:var(--primary-dark)}
-.product-desc-admin{font-size:13px;color:var(--text-light);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;height:58px}
-.product-foot-admin{padding:16px 20px;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:end;gap:8px}
+.product-img-preview{width:50px;height:50px;border-radius:var(--radius-sm);background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.product-img-preview img{width:100%;height:100%;object-fit:cover}
+.empty-state{text-align:center;padding:3rem;color:var(--text-light)}
+.filter-bar{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.page{display:none}
+.page.active{display:block}
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-box{background:var(--card-bg);border-radius:var(--radius);padding:2.5rem;max-width:400px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
+.toggle-switch{position:relative;display:inline-block;width:40px;height:20px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:20px;transition:0.3s}
+.toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--success)}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+@media(max-width:768px){.form-row{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
+<div class="toast-container" id="toastContainer"></div>
 
-    <div id="loginScreen" class="login-screen">
-        <div class="login-card">
-            <div class="login-logo"><i class="fas fa-coffee"></i> Kopi Affiliate Admin</div>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label>Email Admin</label>
-                    <input type="email" id="loginEmail" class="form-control" required placeholder="admin@kopiaffiliate.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" class="form-control" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Masuk Ke Dashboard</button>
-            </form>
-        </div>
-    </div>
+<div class="login-overlay" id="loginOverlay">
+<div class="login-box">
+<div style="font-size:3rem;color:var(--primary);margin-bottom:1rem"><i class="fas fa-shield-alt"></i></div>
+<h2>Affiliator & Product Admin</h2>
+<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Sistem Manajemen Terpadu Kopi Affiliate</p>
+<div class="form-group" style="text-align:left">
+<label class="form-label">Password Admin</label>
+<input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align:center;font-size:1rem" onkeypress="if(event.key==='Enter')adminLogin()">
+</div>
+<button class="btn btn-primary" style="width:100%;margin-top:0.5rem" onclick="adminLogin()"><i class="fas fa-unlock"></i> Masuk</button>
+<p id="loginError" style="color:var(--danger);font-size:0.85rem;margin-top:1rem;display:none"><i class="fas fa-exclamation-circle"></i> Password salah</p>
+<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+<a href="index.html" style="color:var(--primary);text-decoration:none;font-size:0.85rem"><i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama</a>
+</div>
+</div>
+</div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand"><i class="fas fa-mug-hot"></i> <span>Kopi Admin</span></div>
-        <ul class="sidebar-menu">
-            <li id="menu-dashboard" class="active"><a href="#" onclick="switchView('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
-            <li id="menu-affiliators"><a href="#" onclick="switchView('affiliators')"><i class="fas fa-users"></i> Affiliator</a></li>
-            <li id="menu-leads"><a href="#" onclick="switchView('leads')"><i class="fas fa-filter"></i> Leads Data</a></li>
-            <li id="menu-commissions"><a href="#" onclick="switchView('commissions')"><i class="fas fa-wallet"></i> Komisi</a></li>
-            <li id="menu-products"><a href="#" onclick="switchView('products')"><i class="fas fa-box-open"></i> Kelola Produk</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
-        </div>
-    </aside>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-brand"><i class="fas fa-user-shield"></i><span>Admin System</span></div>
+<ul class="sidebar-menu">
+<li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+<li><a onclick="showPage('products')" data-page="products"><i class="fas fa-box"></i> Manage Products</a></li>
+<li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
+<li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
+<li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+<li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
+<li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
+<li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
+</ul>
+</aside>
 
-    <main class="main-content">
-        <header class="header">
-            <div class="header-title">
-                <h1 id="viewTitle">Dashboard Utama</h1>
-                <p>Kopi Affiliate System Management</p>
-            </div>
-            <div id="syncStatus" class="sync-badge" onclick="refreshAllData()" style="cursor:pointer">
-                <i class="fas fa-check-circle"></i> <span>Data Terbaru</span>
-            </div>
-        </header>
+<div class="main" id="mainContent" style="display:none">
+<div class="header">
+<h1 id="pageTitle">Dashboard</h1>
+<div style="display:flex;gap:0.75rem;align-items:center">
+<span style="font-size:0.75rem;color:var(--text-light)" id="syncStatus"><i class="fas fa-circle"></i> Loading...</span>
+<button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+</div>
+</div>
 
-        <section id="view-dashboard" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-info"><h3>Total Affiliator</h3><p id="stat-affiliators">0</p></div>
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info"><h3>Total Leads</h3><p id="stat-leads">0</p></div>
-                    <div class="stat-icon"><i class="fas fa-filter"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info"><h3>Komisi Dibayar</h3><p id="stat-paid-comm">Rp 0</p></div>
-                    <div class="stat-icon"><i class="fas fa-check-double"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info"><h3>Komisi Pending</h3><p id="stat-pending-comm">Rp 0</p></div>
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Aktivitas Leads Terbaru</h2></div>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Tanggal</th><th>Nama</th><th>Kode Referral</th><th>Nilai Transaksi</th><th>Status</th></tr>
-                        </thead>
-                        <tbody id="table-dashboard-leads"><tr><td colspan="5" style="text-align:center">Memuat data...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+<div class="content">
+<div id="page-dashboard" class="page active">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="statAffiliators">0</div><div class="stat-label">Total Affiliator</div></div>
+<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="statLeads">0</div><div class="stat-label">Total Leads</div></div>
+<div class="stat-card"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="statOrders">0</div><div class="stat-label">Total Orders</div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="statCommissions">Rp 0</div><div class="stat-label">Komisi Pending</div></div>
+<div class="stat-card"><div class="stat-icon red"><i class="fas fa-box"></i></div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Total Produk</div></div>
+</div>
+</div>
 
-        <section id="view-affiliators" class="view-section">
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Daftar Affiliator Terdaftar</h2></div>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID</th><th>Nama</th><th>Email</th><th>Kode Referral</th><th>Status Akun</th></tr>
-                        </thead>
-                        <tbody id="table-affiliators"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+<div id="page-products" class="page">
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-box"></i> Manajemen Data Produk</div>
+<button class="btn btn-primary btn-sm" onclick="openProductModal()"><i class="fas fa-plus"></i> Tambah Produk Baru</button>
+</div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr><th>Gambar</th><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Status</th><th>Aksi</th></tr>
+</thead>
+<tbody id="productsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 
-        <section id="view-leads" class="view-section">
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Semua Data Leads & Prospek</h2></div>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID Lead</th><th>Tanggal</th><th>Nama Leads</th><th>Referral</th><th>Nilai Transaksi</th><th>Status</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody id="table-leads"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+<div id="page-affiliators" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title">Daftar Affiliator Terdaftar</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Kode Referral</th><th>Tanggal Daftar</th></tr></thead>
+<tbody id="affiliatorsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 
-        <section id="view-commissions" class="view-section">
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Data Komisi Pemasaran</h2></div>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>ID Komisi</th><th>Affiliator ID</th><th>Deskripsi</th><th>Jumlah Komisi</th><th>Tanggal</th><th>Status Pajak/Bayar</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody id="table-commissions"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+<div id="page-leads" class="page">
+<div class="card">
+<div class="card-header">
+<div class="card-title">Data Manajemen Leads</div>
+<div class="filter-bar">
+<select class="form-select" id="leadFilterStatus" onchange="renderLeads()" style="width:150px;padding:0.35rem 0.5rem;font-size:0.8rem">
+<option value="">Semua Status</option>
+<option value="pending">Pending</option>
+<option value="valid">Valid</option>
+<option value="converted">Converted</option>
+<option value="rejected">Rejected</option>
+</select>
+</div>
+</div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Kota</th><th>Referral</th><th>Nilai Transaksi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="leadsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 
-        <section id="view-products" class="view-section">
-            <div class="card" style="margin-bottom:24px">
-                <div class="card-header">
-                    <h2 class="card-title">Daftar Produk Aktif</h2>
-                    <button class="btn btn-primary" onclick="openProductModal()"><i class="fas fa-plus"></i> Tambah Produk Baru</button>
-                </div>
-            </div>
-            <div id="productGrid" class="product-grid-admin"></div>
-        </section>
-    </main>
+<div id="page-orders" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title">Riwayat Transaksi Penjualan (Orders)</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Produk</th><th>Pembeli</th><th>Kontak</th><th>Kota</th><th>Total Harga</th><th>Referral</th><th>Status</th></tr></thead>
+<tbody id="ordersBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 
-    <div id="leadModal" class="modal-overlay">
-        <div class="modal-wrapper">
-            <div class="modal-header"><h3>Update Status Leads</h3><button class="modal-close" onclick="closeModal('leadModal')">&times;</button></div>
-            <div class="modal-body">
-                <input type="hidden" id="modalLeadId">
-                <div class="form-group">
-                    <label>Pilih Status Baru</label>
-                    <select id="modalLeadStatus" class="form-control">
-                        <option value="Pending">Pending (Prospek Baru)</option>
-                        <option value="Valid">Valid (Lolos Verifikasi & Siap Hitung Komisi)</option>
-                        <option value="Rejected">Rejected (Batal / Data Palsu)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nilai Transaksi Tambahan (Opsional jika Order Kosong)</label>
-                    <input type="number" id="modalLeadTxValue" class="form-control" placeholder="0">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('leadModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveLeadStatus()">Simpan Status</button>
-            </div>
-        </div>
-    </div>
+<div id="page-commissions" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title">Daftar Pencairan Komisi Affiliator</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah Komisi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="commissionsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-    <div id="productModal" class="modal-overlay">
-        <div class="modal-wrapper">
-            <div class="modal-header"><h3 id="productModalTitle">Tambah Produk Baru</h3><button class="modal-close" onclick="closeModal('productModal')">&times;</button></div>
-            <form id="productForm" onsubmit="handleSaveProductForm(event)">
-                <div class="modal-body">
-                    <input type="hidden" id="prodId">
-                    <div class="form-group">
-                        <label>Nama Produk</label>
-                        <input type="text" id="prodName" class="form-control" required placeholder="Contoh: Gayo Specialty Coffee 250g">
-                    </div>
-                    <div class="form-group">
-                        <label>Kategori</label>
-                        <input type="text" id="prodCategory" class="form-control" required placeholder="Contoh: Beans, Powder, Espresso Blend">
-                    </div>
-                    <div class="form-group">
-                        <label>Harga Jual (Rp)</label>
-                        <input type="number" id="prodPrice" class="form-control" required placeholder="95000">
-                    </div>
-                    <div class="form-group">
-                        <label>URL Gambar Produk</label>
-                        <input type="url" id="prodImg" class="form-control" placeholder="https://example.com/gambar.jpg">
-                    </div>
-                    <div class="form-group">
-                        <label>Deskripsi Produk</label>
-                        <textarea id="prodDescription" class="form-control" rows="3" placeholder="Jelaskan detail origin, rasa, atau racikan produk..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Status Tampilkan</label>
-                        <select id="prodActive" class="form-control">
-                            <option value="true">Aktif (Tampilkan di Toko)</option>
-                            <option value="false">Nonaktif</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('productModal')">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Produk</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="modal-overlay" id="productModal">
+<div class="modal">
+<div class="modal-header"><h3 id="productModalTitle">Tambah Produk Baru</h3><button class="modal-close" onclick="closeModal('productModal')">&times;</button></div>
+<div class="modal-body">
+<form id="productForm" onsubmit="saveProduct(event)">
+<input type="hidden" id="productId">
+<div class="form-group"><label class="form-label">Nama Produk</label><input type="text" class="form-input" id="productName" required></div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Kategori</label><input type="text" class="form-input" id="productCategory" placeholder="Contoh: Roast Beans, Bubuk" required></div>
+<div class="form-group"><label class="form-label">Harga (Rp)</label><input type="number" class="form-input" id="productPrice" required></div>
+</div>
+<div class="form-group"><label class="form-label">URL Link Gambar</label><input type="url" class="form-input" id="productImg" placeholder="https://example.com/image.jpg"></div>
+<div class="form-group"><label class="form-label">Deskripsi Produk</label><textarea class="form-textarea" id="productDesc"></textarea></div>
+<div class="form-group">
+<label class="form-label">Status Produk Aktif</label>
+<label class="toggle-switch"><input type="checkbox" id="productActive" checked><span class="toggle-slider"></span></label>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Batal</button><button type="submit" class="btn btn-primary">Simpan Produk</button></div>
+</form>
+</div>
+</div>
+</div>
 
-    <div id="toastContainer" class="toast-container"></div>
+<script>
+const GAS_API = "https://script.google.com/macros/s/AKfycbz_9MogYV5fT_pS6q2WvCegG-vK3_ZtP-Bq6L3OQ-bCHfG48PWhOasw4Vq6iG3Sms4m/exec";
+const ADMIN_PASS_HASH = "admin123";
+let DATA = { users: [], leads: [], orders: [], commissions: [], products: [] };
 
-    <script>
-        // MASUKKAN URL WEB APP DEPLOYMENT (GAS) ANDA DI SINI
-        const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbz_Kqf7G4vXm8S9qWlSj_987asdfghjklzxcvbnm/exec';
+function checkAdminSession(){
+    if(sessionStorage.getItem('admin_logged')==='true'){
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('mainContent').style.display='block';
+        syncAllData();
+    }
+}
+function adminLogin(){
+    const pass = document.getElementById('adminPassword').value;
+    if(pass === ADMIN_PASS_HASH){
+        sessionStorage.setItem('admin_logged','true');
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('mainContent').style.display='block';
+        syncAllData();
+    }else{
+        const err = document.getElementById('loginError');
+        err.style.display='block';
+        setTimeout(()=>err.style.display='none',3000);
+    }
+}
+function adminLogout(){
+    sessionStorage.removeItem('admin_logged');
+    window.location.reload();
+}
 
-        let SYSTEM_DATA = { users: [], leads: [], orders: [], commissions: [], products: [] };
+function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
+    const targetPage = document.getElementById('page-'+pageId);
+    if(targetPage) targetPage.classList.add('active');
+    const menuLink = document.querySelector(`.sidebar-menu a[data-page="${pageId}"]`);
+    if(menuLink) menuLink.classList.add('active');
+    const titles = {dashboard:"Dashboard", products:"Manage Products", affiliators:"Affiliators", leads:"Leads Management", orders:"Orders History", commissions:"Komisi Admin"};
+    document.getElementById('pageTitle').innerText = titles[pageId] || "Admin";
+}
 
-        // ==================== SESSION & LOGIN ====================
-        function checkSession() {
-            if (localStorage.getItem('admin_logged') === 'true') {
-                document.getElementById('loginScreen').style.display = 'none';
-                syncAllData();
-            } else {
-                document.getElementById('loginScreen').style.display = 'flex';
-            }
+async function syncAllData(){
+    updateSyncStatus('syncing');
+    try{
+        const [uRes, lRes, oRes, cRes, pRes] = await Promise.all([
+            fetch(`${GAS_API}?action=getUsers`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getLeads`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getOrders`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getCommissions`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getProducts`).then(r=>r.json())
+        ]);
+        if(uRes.success) DATA.users = uRes.data;
+        if(lRes.success) DATA.leads = lRes.data;
+        if(oRes.success) DATA.orders = oRes.data;
+        if(cRes.success) DATA.commissions = cRes.data;
+        if(pRes.success) DATA.products = pRes.data;
+        
+        calculateStats();
+        renderProducts();
+        renderAffiliators();
+        renderLeads();
+        renderOrders();
+        renderCommissions();
+        updateSyncStatus('synced');
+    }catch(e){
+        updateSyncStatus('error');
+        showToast('Gagal memuat data dari database Google Sheet','error');
+    }
+}
+
+function calculateStats(){
+    document.getElementById('statAffiliators').innerText = DATA.users.length;
+    document.getElementById('statLeads').innerText = DATA.leads.length;
+    document.getElementById('statOrders').innerText = DATA.orders.length;
+    document.getElementById('statProducts').innerText = DATA.products.length;
+    const pendingComm = DATA.commissions.filter(c => String(c.paid).toLowerCase() !== 'true').reduce((sum,c)=>sum+(parseFloat(c.amount)||0),0);
+    document.getElementById('statCommissions').innerText = "Rp " + formatNumber(pendingComm);
+}
+
+/* ==================== PRODUCTS SECTION ==================== */
+function renderProducts(){
+    const body = document.getElementById('productsBody');
+    if(!body) return;
+    if(!DATA.products || DATA.products.length === 0){
+        body.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-box-open"></i><br>Belum ada data produk</td></tr>`;
+        return;
+    }
+    body.innerHTML = DATA.products.map(p => {
+        const pId = p.id || '';
+        const isAct = String(p.active).toLowerCase() === 'true';
+        const imgTag = p.img ? `<div class="product-img-preview"><img src="${p.img}" onerror="this.src='https://placehold.co/50?text=Kopi'"></div>` : `<div class="product-img-preview"><i class="fas fa-coffee"></i></div>`;
+        return `<tr>
+            <td>${imgTag}</td>
+            <td><strong>${p.name || '-'}</strong><br><small style="color:var(--text-light)">ID: ${pId}</small></td>
+            <td>${p.category || '-'}</td>
+            <td>Rp ${formatNumber(p.price)}</td>
+            <td><span class="badge ${isAct?'badge-active':'badge-inactive'}">${isAct?'Aktif':'Non-Aktif'}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="openProductModal('${pId}')" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${pId}')" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function openProductModal(id = ''){
+    document.getElementById('productForm').reset();
+    if(!id){
+        document.getElementById('productModalTitle').innerText = "Tambah Produk Baru";
+        document.getElementById('productId').value = "";
+        document.getElementById('productActive').checked = true;
+    }else{
+        document.getElementById('productModalTitle').innerText = "Edit Produk";
+        const p = DATA.products.find(prod => String(prod.id) === String(id));
+        if(p){
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name || '';
+            document.getElementById('productCategory').value = p.category || '';
+            document.getElementById('productPrice').value = p.price || 0;
+            document.getElementById('productImg').value = p.img || '';
+            document.getElementById('productDesc').value = p.description || p.desc || '';
+            document.getElementById('productActive').checked = String(p.active).toLowerCase() === 'true';
+        }
+    }
+    document.getElementById('productModal').classList.add('active');
+}
+
+async function saveProduct(e){
+    e.preventDefault();
+    const id = document.getElementById('productId').value;
+    const name = document.getElementById('productName').value;
+    const category = document.getElementById('productCategory').value;
+    const price = document.getElementById('productPrice').value;
+    const img = document.getElementById('productImg').value;
+    const desc = document.getElementById('productDesc').value;
+    const active = document.getElementById('productActive').checked ? 'true' : 'false';
+
+    closeModal('productModal');
+    updateSyncStatus('syncing');
+
+    let url = `${GAS_API}?action=saveProduct&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}&price=${price}&img=${encodeURIComponent(img)}&description=${encodeURIComponent(desc)}&active=${active}`;
+    if(id) url += `&id=${id}`;
+
+    try{
+        const res = await fetch(url).then(r=>r.json());
+        if(res.success){
+            showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal menyimpan produk','error');
+            updateSyncStatus('synced');
+        }
+    }catch(err){
+        showToast('Koneksi terputus saat menyimpan produk','error');
+        updateSyncStatus('error');
+    }
+}
+
+async function deleteProduct(id){
+    if(!confirm('Apakah Anda yakin ingin menghapus produk ini secara permanen dari database?')) return;
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=deleteProduct&id=${id}`).then(r=>r.json());
+        if(res.success){
+            showToast('Produk berhasil dihapus!','success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal menghapus produk','error');
+            updateSyncStatus('synced');
+        }
+    }catch(err){
+        showToast('Koneksi bermasalah','error');
+    }
+}
+
+/* ==================== CORE AFFILIATOR ADMIN SECTIONS ==================== */
+function renderAffiliators(){
+    const body = document.getElementById('affiliatorsBody');
+    if(!body) return;
+    body.innerHTML = DATA.users.map(u => `<tr>
+        <td><strong>${u.name||'-'}</strong></td>
+        <td>${u.email||'-'}</td>
+        <td>${u.whatsapp||'-'}</td>
+        <td><code style="background:#E8E4E0;padding:2px 6px;border-radius:4px">${u.referralcode||u.referralCode||'-'}</code></td>
+        <td>${formatDate(u.registereddate||u.date||'')}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty-state">Tidak ada data affiliator</td></tr>';
+}
+
+function renderLeads(){
+    const body = document.getElementById('leadsBody');
+    if(!body) return;
+    const filter = document.getElementById('leadFilterStatus').value;
+    const filtered = filter ? DATA.leads.filter(l => String(l.status).toLowerCase() === filter.toLowerCase()) : DATA.leads;
+    
+    body.innerHTML = filtered.map(l => {
+        const leadId = l.id || '';
+        const stat = String(l.status).toLowerCase() || 'pending';
+        const val = parseFloat(l.transactionvalue || l.transactionValue) || 0;
+        
+        let actionBtn = '';
+        if(stat === 'pending'){
+            actionBtn = `<button class="btn btn-sm btn-success" onclick="updateLeadStatus('${leadId}','valid')">Valid</button>
+                         <button class="btn btn-sm btn-danger" onclick="updateLeadStatus('${leadId}','rejected')">Reject</button>`;
+        } else if(stat === 'valid'){
+            actionBtn = `<button class="btn btn-sm btn-primary" onclick="updateLeadStatus('${leadId}','converted')">Convert</button>`;
+        } else {
+            actionBtn = '-';
         }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            updateSyncStatus('syncing');
+        return `<tr>
+            <td>${formatDate(l.date)}</td>
+            <td><strong>${l.name||'-'}</strong></td>
+            <td>${l.whatsapp||'-'}</td>
+            <td>${l.city||'-'}</td>
+            <td><code>${l.referralcode||'-'}</code></td>
+            <td>Rp ${formatNumber(val)}</td>
+            <td><span class="badge badge-${stat}">${l.status||'PENDING'}</span></td>
+            <td><div style="display:flex;gap:4px">${actionBtn}</div></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty-state">Data leads kosong</td></tr>';
+}
 
-            try {
-                const url = `${GAS_DEPLOY_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-                const response = await fetch(url);
-                const result = await response.json();
+function renderOrders(){
+    const body = document.getElementById('ordersBody');
+    if(!body) return;
+    body.innerHTML = DATA.orders.map(o => `<tr>
+        <td>${formatDate(o.date)}</td>
+        <td>${o.productname||o.productName||'-'}</td>
+        <td><strong>${o.buyername||o.buyerName||'-'}</strong></td>
+        <td>${o.buyerwhatsapp||'-'}</td>
+        <td>${o.buyercity||'-'}</td>
+        <td>Rp ${formatNumber(o.totalprice||o.totalPrice)}</td>
+        <td><code>${o.referralcode||'-'}</code></td>
+        <td><span class="badge badge-valid">${o.status||'SUCCESS'}</span></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="empty-state">Belum ada riwayat transaksi masuk</td></tr>';
+}
 
-                if (result.success && result.user && result.user.isAdmin) {
-                    localStorage.setItem('admin_logged', 'true');
-                    showToast('Selamat datang Admin!', 'success');
-                    document.getElementById('loginScreen').style.display = 'none';
-                    syncAllData();
-                } else {
-                    showToast(result.error || 'Akses ditolak! Anda bukan admin.', 'error');
-                }
-            } catch(err) {
-                showToast('Gagal koneksi ke server GAS.', 'error');
-            } finally {
-                updateSyncStatus('synced');
-            }
+function renderCommissions(){
+    const body = document.getElementById('commissionsBody');
+    if(!body) return;
+    body.innerHTML = DATA.commissions.map(c => {
+        const commId = c.id ? String(c.id).trim() : '';
+        const affId = c.affiliatorid ? String(c.affiliatorid).trim() : '';
+        const aff = DATA.users.find(u => String(u.id).trim() === affId);
+        const isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
+        
+        const badge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
+        // FIX BUG 2 & VALIDASI DATA: Tombol diproteksi ketat menggunakan parameter ID unik komisi asli
+        const btn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        
+        return `<tr>
+            <td>${formatDate(c.date)}</td>
+            <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
+            <td>${c.type || '-'}</td>
+            <td>${c.description || '-'}</td>
+            <td>Rp ${formatNumber(c.amount)}</td>
+            <td>${badge}</td>
+            <td>${btn}</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty-state">Belum ada data pencairan komisi</td></tr>';
+}
+
+async function updateLeadStatus(id, status){
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=updateLead&id=${id}&status=${status}`).then(r=>r.json());
+        if(res.success){
+            showToast(`Status Lead berhasil diubah menjadi ${status.toUpperCase()}!`,'success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal merubah status lead','error');
+            updateSyncStatus('synced');
         }
+    }catch(e){
+        showToast('Koneksi bermasalah','error');
+    }
+}
 
-        function handleLogout() {
-            localStorage.removeItem('admin_logged');
-            showToast('Berhasil keluar.', 'info');
-            document.getElementById('loginScreen').style.display = 'flex';
+async function markCommissionAsPaid(id){
+    if(!id || id === ''){
+        showToast('ID Komisi rusak atau tidak terbaca','error');
+        return;
+    }
+    if(!confirm('Nyatakan komisi ini telah lunas dibayar transfer ke affiliator?')) return;
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=updateCommission&id=${id}`).then(r=>r.json());
+        if(res.success){
+            showToast('Pembayaran komisi berhasil diverifikasi lunas!','success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal memperbarui status bayar','error');
+            updateSyncStatus('synced');
         }
+    }catch(e){
+        showToast('Koneksi bermasalah ke server GAS','error');
+    }
+}
 
-        // ==================== CORE DATA SYNCHRONIZATION ====================
-        async function syncAllData() {
-            updateSyncStatus('syncing');
-            try {
-                const endpoints = ['getUsers', 'getLeads', 'getCommissions', 'getProducts', 'getOrders'];
-                const fetchPromises = endpoints.map(act => 
-                    fetch(`${GAS_DEPLOY_URL}?action=${act}`).then(r => r.json())
-                );
-                
-                const results = await Promise.all(fetchPromises);
-                
-                SYSTEM_DATA.users = results[0].success ? results[0].data : [];
-                SYSTEM_DATA.leads = results[1].success ? results[1].data : [];
-                SYSTEM_DATA.commissions = results[2].success ? results[2].data : [];
-                SYSTEM_DATA.products = results[3].success ? results[3].data : [];
-                SYSTEM_DATA.orders = results[4].success ? results[4].data : [];
+/* ==================== HELPER UTILITAS UTAMA ==================== */
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function refreshAllData(){ syncAllData(); showToast('Data sistem diperbarui!','success'); }
 
-                renderDashboardStats();
-                renderAllTables();
-                updateSyncStatus('synced');
-            } catch (err) {
-                showToast('Gagal sinkronisasi data: ' + err.message, 'error');
-                updateSyncStatus('error');
-            }
-        }
+// FIX BUG 1 (REGEX): Negative lookahead (?!\d) bekerja sempurna menyaring pemisah titik ribuan nominal uang Rp
+function formatNumber(num){
+    return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
 
-        // ==================== VIEW ROTATOR ====================
-        function switchView(viewName) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
-            
-            document.getElementById(`view-${viewName}`).classList.add('active');
-            document.getElementById(`menu-${viewName}`).classList.add('active');
+function formatDate(dateStr){
+    if(!dateStr) return '-';
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
 
-            const titles = { dashboard: 'Dashboard Utama', affiliators: 'Manajemen Affiliator', leads: 'Data Leads Pemasaran', commissions: 'Pembayaran Komisi', products: 'Kelola Varian Produk' };
-            document.getElementById('viewTitle').innerText = titles[viewName] || 'Admin Panel';
-        }
+function showToast(message,type){
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    const icons = {success:'check-circle',error:'times-circle'};
+    toast.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(()=>toast.remove(),4000);
+}
 
-        // ==================== STATS & RENDER DATA ====================
-        function renderDashboardStats() {
-            const affs = SYSTEM_DATA.users.filter(u => String(u.isadmin) !== 'true');
-            document.getElementById('stat-affiliators').innerText = affs.length;
-            document.getElementById('stat-leads').innerText = SYSTEM_DATA.leads.length;
+function updateSyncStatus(status){
+    const el = document.getElementById('syncStatus');
+    if(!el)return;
+    el.innerHTML = status==='syncing'?'<i class="fas fa-spinner fa-spin" style="color:var(--info)"></i> Sinkron...':status==='synced'?'<i class="fas fa-check-circle" style="color:var(--success)"></i> Data Sinkron':'<i class="fas fa-exclamation-circle" style="color:var(--danger)"></i> Error Hubungan';
+}
 
-            let paid = 0, pending = 0;
-            SYSTEM_DATA.commissions.forEach(c => {
-                const amt = parseFloat(c.amount) || 0;
-                if (String(c.paid).toLowerCase() === 'true') paid += amt;
-                else pending += amt;
-            });
-
-            document.getElementById('stat-paid-comm').innerText = 'Rp ' + formatNumber(paid);
-            document.getElementById('stat-pending-comm').innerText = 'Rp ' + formatNumber(pending);
-        }
-
-        function renderAllTables() {
-            // 1. Dashboard Leads (Top 5)
-            const sortedLeads = [...SYSTEM_DATA.leads].reverse().slice(0, 5);
-            let dHtml = '';
-            if(sortedLeads.length === 0) dHtml = '<tr><td colspan="5" style="text-align:center">Belum ada leads masuk.</td></tr>';
-            sortedLeads.forEach(l => {
-                dHtml += `<tr>
-                    <td>${formatDate(l.date || l.timestamp)}</td>
-                    <td><strong>${l.name || '-'}</strong></td>
-                    <td><span class="badge badge-info">${l.referralcode || '-'}</span></td>
-                    <td>Rp ${formatNumber(l.transactionvalue || 0)}</td>
-                    <td><span class="badge badge-${getStyle(l.status)}">${l.status || 'Pending'}</span></td>
-                </tr>`;
-            });
-            document.getElementById('table-dashboard-leads').innerHTML = dHtml;
-
-            // 2. Affiliator Sheet Table
-            let aHtml = '';
-            const affs = SYSTEM_DATA.users.filter(u => String(u.isadmin) !== 'true');
-            affs.forEach(u => {
-                aHtml += `<tr>
-                    <td>${u.id || '-'}</td>
-                    <td><strong>${u.name || '-'}</strong></td>
-                    <td>${u.email || '-'}</td>
-                    <td><span class="badge badge-info">${u.referralcode || '-'}</span></td>
-                    <td><span class="badge badge-success">${u.status || 'Active'}</span></td>
-                </tr>`;
-            });
-            document.getElementById('table-affiliators').innerHTML = aHtml || '<tr><td colspan="5">Kosong</td></tr>';
-
-            // 3. Leads Master Table
-            let lHtml = '';
-            SYSTEM_DATA.leads.forEach(l => {
-                lHtml += `<tr>
-                    <td>${l.id || '-'}</td>
-                    <td>${formatDate(l.date || l.timestamp)}</td>
-                    <td><strong>${l.name || '-'}</strong><br><small>${l.email || ''}</small></td>
-                    <td><span class="badge badge-info">${l.referralcode || '-'}</span></td>
-                    <td>Rp ${formatNumber(l.transactionvalue || 0)}</td>
-                    <td><span class="badge badge-${getStyle(l.status)}">${l.status || 'Pending'}</span></td>
-                    <td><button class="btn btn-secondary" style="padding:6px 12px; font-size:12px" onclick="openLeadModal('${l.id}', '${l.status}', '${l.transactionvalue || 0}')"><i class="fas fa-edit"></i> Ubah</button></td>
-                </tr>`;
-            });
-            document.getElementById('table-leads').innerHTML = lHtml || '<tr><td colspan="7">Kosong</td></tr>';
-
-            // 4. Commissions Table
-            let cHtml = '';
-            SYSTEM_DATA.commissions.forEach(c => {
-                const isPaid = String(c.paid).toLowerCase() === 'true';
-                cHtml += `<tr>
-                    <td>${c.id || '-'}</td>
-                    <td><small>${c.affiliatorid || '-'}</small></td>
-                    <td>${c.description || '-'}</td>
-                    <td><strong>Rp ${formatNumber(c.amount || 0)}</strong></td>
-                    <td>${formatDate(c.date)}</td>
-                    <td><span class="badge badge-${isPaid ? 'success' : 'warning'}">${isPaid ? 'Paid' : 'Unpaid'}</span></td>
-                    <td>
-                        ${isPaid ? '-' : `<button class="btn btn-primary" style="padding:6px 12px; font-size:12px" onclick="payCommission('${c.id}')"><i class="fas fa-check"></i> Cairkan</button>`}
-                    </td>
-                </tr>`;
-            });
-            document.getElementById('table-commissions').innerHTML = cHtml || '<tr><td colspan="7">Kosong</td></tr>';
-
-            // 5. Products Grid (Pindahan Sempurna Tanpa Bug)
-            let pHtml = '';
-            SYSTEM_DATA.products.forEach(p => {
-                const imgTag = p.img ? `<img src="${p.img}" alt="${p.name}">` : `<div class="no-img"><i class="fas fa-image fa-2x"></i><span>No Image</span></div>`;
-                pHtml += `<div class="product-card-admin">
-                    <div class="product-img-holder">${imgTag}</div>
-                    <div class="product-body-admin">
-                        <div class="product-meta-admin">
-                            <span class="product-cat-tag">${p.category || 'Umum'}</span>
-                            <span class="badge badge-${String(p.active) === 'false' ? 'danger' : 'success'}">${String(p.active) === 'false' ? 'Draft' : 'Live'}</span>
-                        </div>
-                        <h4 class="product-title-admin">${p.name}</h4>
-                        <div class="product-price-admin">Rp ${formatNumber(p.price)}</div>
-                        <p class="product-desc-admin">${p.description || 'Tidak ada deskripsi.'}</p>
-                    </div>
-                    <div class="product-foot-admin">
-                        <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px" onclick="editProductClick('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-danger" style="padding:6px 12px; font-size:12px" onclick="deleteProductClick('${p.id}')"><i class="fas fa-trash"></i> Hapus</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('productGrid').innerHTML = pHtml || '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-light)">Belum ada data produk di sheet.</div>';
-        }
-
-        // ==================== OPERATIONS MANAGEMENT ====================
-        function openLeadModal(id, currentStatus, currentVal) {
-            document.getElementById('modalLeadId').value = id;
-            document.getElementById('modalLeadStatus').value = currentStatus || 'Pending';
-            document.getElementById('modalLeadTxValue').value = currentVal || 0;
-            document.getElementById('leadModal').classList.add('active');
-        }
-
-        async function saveLeadStatus() {
-            const id = document.getElementById('modalLeadId').value;
-            const status = document.getElementById('modalLeadStatus').value;
-            const txVal = document.getElementById('modalLeadTxValue').value;
-            closeModal('leadModal');
-            updateSyncStatus('syncing');
-
-            try {
-                const url = `${GAS_DEPLOY_URL}?action=updateLead&id=${id}&status=${status}&transactionValue=${txVal}`;
-                const response = await fetch(url);
-                const res = await response.json();
-                if(res.success) {
-                    showToast('Status lead sukses diupdate!', 'success');
-                    syncAllData();
-                } else {
-                    showToast(res.error || 'Gagal mengubah status.', 'error');
-                }
-            } catch(e) {
-                showToast('Error koneksi server.', 'error');
-            }
-        }
-
-        async function payCommission(id) {
-            if(!confirm('Konfirmasi pencairan komisi ini? Status akan diubah menjadi PAID.')) return;
-            updateSyncStatus('syncing');
-            try {
-                const response = await fetch(`${GAS_DEPLOY_URL}?action=updateCommission&id=${id}`);
-                const res = await response.json();
-                if(res.success) {
-                    showToast('Komisi berhasil dicairkan!', 'success');
-                    syncAllData();
-                } else {
-                    showToast(res.error || 'Gagal mencairkan komisi.', 'error');
-                }
-            } catch(e) {
-                showToast('Gagal memproses pencairan.', 'error');
-            }
-        }
-
-        // ==================== PRODUCT UTILITY OPERATIONS (SINKRON PARALEL) ====================
-        function openProductModal() {
-            document.getElementById('productForm').reset();
-            document.getElementById('prodId').value = '';
-            document.getElementById('productModalTitle').innerText = 'Tambah Produk Baru';
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        function editProductClick(id) {
-            const prod = SYSTEM_DATA.products.find(p => String(p.id) === String(id));
-            if(!prod) return;
-            document.getElementById('prodId').value = prod.id;
-            document.getElementById('prodName').value = prod.name || '';
-            document.getElementById('prodCategory').value = prod.category || '';
-            document.getElementById('prodPrice').value = prod.price || 0;
-            document.getElementById('prodImg').value = prod.img || '';
-            document.getElementById('prodDescription').value = prod.description || '';
-            document.getElementById('prodActive').value = String(prod.active) === 'false' ? 'false' : 'true';
-            
-            document.getElementById('productModalTitle').innerText = 'Edit Detail Produk';
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        async function handleSaveProductForm(e) {
-            e.preventDefault();
-            const id = document.getElementById('prodId').value;
-            const name = document.getElementById('prodName').value;
-            const category = document.getElementById('prodCategory').value;
-            const price = document.getElementById('prodPrice').value;
-            const img = document.getElementById('prodImg').value;
-            const description = document.getElementById('prodDescription').value;
-            const active = document.getElementById('prodActive').value;
-
-            closeModal('productModal');
-            updateSyncStatus('syncing');
-
-            // PEMERIKSAAN UTAMA: Pengiriman data dikonversi via GET Query Parameter agar 100% klop dengan fungsi asli saveToSheet di Code.gs Anda
-            try {
-                const url = `${GAS_DEPLOY_URL}?action=saveProduct` +
-                            `&id=${encodeURIComponent(id)}` +
-                            `&name=${encodeURIComponent(name)}` +
-                            `&category=${encodeURIComponent(category)}` +
-                            `&price=${encodeURIComponent(price)}` +
-                            `&img=${encodeURIComponent(img)}` +
-                            `&description=${encodeURIComponent(description)}` +
-                            `&active=${encodeURIComponent(active)}`;
-
-                const response = await fetch(url);
-                const res = await response.json();
-
-                if(res.success) {
-                    showToast('Produk berhasil disinkronisasi ke Google Sheet!', 'success');
-                    syncAllData();
-                } else {
-                    showToast(res.error || 'Gagal menyimpan data produk.', 'error');
-                }
-            } catch(err) {
-                showToast('Terjadi kesalahan sinkronisasi jaringan.', 'error');
-            }
-        }
-
-        async function deleteProductClick(id) {
-            if(!confirm('Apakah Anda yakin 100% ingin menghapus permanen produk ini dari Google Sheets?')) return;
-            updateSyncStatus('syncing');
-            try {
-                const response = await fetch(`${GAS_DEPLOY_URL}?action=deleteProduct&id=${id}`);
-                const res = await response.json();
-                if(res.success) {
-                    showToast('Produk terhapus dari sistem!', 'success');
-                    syncAllData();
-                } else {
-                    showToast(res.error || 'Gagal menghapus varian produk.', 'error');
-                }
-            } catch(e) {
-                showToast('Jaringan error.', 'error');
-            }
-        }
-
-        // ==================== GLOBAL MINI HELPERS ====================
-        function refreshAllData() { syncAllData(); showToast('Data direfresh manual!', 'success'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function formatNumber(num) { return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-        function formatDate(dStr) { if(!dStr) return '-'; const d = new Date(dStr); return isNaN(d.getTime()) ? String(dStr) : d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}); }
-        function getStyle(s) { const st = String(s).toLowerCase(); return st==='valid'||st==='converted'?'success':(st==='rejected'?'danger':'warning'); }
-        function updateSyncStatus(st) {
-            const el = document.getElementById('syncStatus'); if(!el) return;
-            if(st==='syncing') el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synchronizing...';
-            else if(st==='synced') el.innerHTML = '<i class="fas fa-check-circle"></i> Data Terbaru';
-            else el.innerHTML = '<i class="fas fa-exclamation-circle"></i> Hubungan Error';
-        }
-        function showToast(msg, type) {
-            const con = document.getElementById('toastContainer'); const t = document.createElement('div');
-            t.className = `toast ${type||'info'}`; const ics = {success:'check-circle', error:'times-circle', warning:'exclamation-circle', info:'info-circle'};
-            t.innerHTML = `<i class="fas fa-${ics[type]||'info-circle'}"></i> <span>${msg}</span>`; con.appendChild(t); setTimeout(() => t.remove(), 4000);
-        }
-
-        document.addEventListener('DOMContentLoaded', checkSession);
-    </script>
+document.addEventListener('DOMContentLoaded', checkAdminSession);
+</script>
 </body>
 </html>
