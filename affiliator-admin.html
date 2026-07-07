@@ -260,31 +260,31 @@ function renderCommissions(){
     if (!bodyEl) return;
     
     bodyEl.innerHTML = DATA.commissions.map(c => {
-        // 1. AMANKAN PEMBACAAN ID KOMISI (Membaca segala kemungkinan variasi huruf dari GAS)
-        const commId = c.id || c.commid || c.commId || '';
+        // 1. Sesuaikan dengan header asli Google Sheets Anda (dikonversi ke huruf kecil oleh GAS)
+        const commId = c.id || ''; 
+        const affId = c.affiliatorid || '';
+        const cType = c.type || '';
+        const cDesc = c.description || '';
+        const cAmount = parseFloat(c.amount) || 0;
+        const cDate = c.date || '';
+        const cPaid = c.paid || 'false';
         
-        // 2. AMANKAN PEMBACAAN ID AFFILIATOR
-        const affId = c.affiliatorid || c.affiliatorId || '';
-        
-        // 3. SINKRONISASI USER (Dipaksa menjadi String agar tipe data angka/teks tidak tabrakan)
+        // 2. Cari data nama affiliator berdasarkan ID
         const aff = DATA.users.find(u => String(u.id) === String(affId));
         
-        // 4. CEK STATUS PEMBAYARAN
-        const isPaid = String(c.paid).toLowerCase() === 'true' || c.paid === true;
+        // 3. Cek status pembayaran
+        const isPaid = String(cPaid).toLowerCase() === 'true' || cPaid === true;
         const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
         
-        // 5. KONDISI TOMBOL (Selama belum dibayar dan commId aman ditemukan, tombol WAJIB muncul)
+        // 4. Kondisi tombol aksi (Wajib muncul jika belum dibayar dan ID komisi ada)
         const actionBtn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
         
-        const amount = parseFloat(c.amount) || 0;
-        const dateStr = c.date || '';
-        
         return `<tr>
-            <td>${formatDate(dateStr)}</td>
+            <td>${formatDate(cDate)}</td>
             <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
-            <td>${c.type || '-'}</td>
-            <td>${c.description || '-'}</td>
-            <td>Rp ${formatNumber(amount)}</td>
+            <td>${cType || '-'}</td>
+            <td>${cDesc || '-'}</td>
+            <td>Rp ${formatNumber(cAmount)}</td>
             <td>${statusBadge}</td>
             <td>${actionBtn}</td>
         </tr>`;
