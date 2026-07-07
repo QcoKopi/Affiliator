@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliator Admin - Kopi Affiliate</title>
+    <title>Affiliator Portal - Kopi Affiliate</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -121,48 +121,49 @@
 </head>
 <body>
     <div class="toast-container" id="toastContainer"></div>
-    <!-- HIDDEN IFRAME FOR GAS SUBMISSION -->
     <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
-    <!-- DEBUG LOG -->
     <div class="debug-log" id="debugLog"></div>
     <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
 
-    <!-- LOGIN OVERLAY -->
+    <!-- REVISED LOGIN OVERLAY (WITH EMAIL & PASSWORD) -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
-            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i></div>
-            <h2>Affiliator Admin</h2>
-            <p>Kelola seluruh data affiliator, leads, dan komisi</p>
+            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-coffee"></i></div>
+            <h2>Kopi Affiliate</h2>
+            <p>Silakan masuk ke dalam dashboard Anda</p>
+            
             <div class="form-group" style="text-align: left;">
-                <label class="form-label">Password Admin</label>
-                <input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align: center; font-size: 1rem;" onkeypress="if(event.key==='Enter')adminLogin()">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="userEmail" placeholder="nama@email.com">
             </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="adminLogin()">
-                <i class="fas fa-unlock"></i> Masuk
+            <div class="form-group" style="text-align: left;">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" id="userPassword" placeholder="Masukkan password" onkeypress="if(event.key==='Enter')handleLogin()">
+            </div>
+            
+            <button class="btn btn-primary" id="btnLogin" style="width: 100%; margin-top: 0.5rem;" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> Masuk
             </button>
-            <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                <a href="index.html" class="btn btn-outline" style="width: 100%; font-size: 0.8rem; text-decoration: none; justify-content: center;">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
-                </a>
-            </div>
+            
+            <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;">
+                <i class="fas fa-exclamation-circle"></i> Email atau Password salah!
+            </p>
         </div>
     </div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <i class="fas fa-user-shield"></i>
-            <span>Affiliator Admin</span>
+            <i class="fas fa-user-shield" id="roleIcon"></i>
+            <span id="roleText">Portal Portal</span>
         </div>
         <ul class="sidebar-menu">
             <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
+            <li class="admin-only"><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
             <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
-            <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+            <li class="admin-only"><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
             <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
-            <li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
+            <li class="admin-only"><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
             <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
         </ul>
     </aside>
@@ -181,7 +182,7 @@
             <!-- DASHBOARD -->
             <div id="page-dashboard" class="page active">
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card admin-only">
                         <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                         <div class="stat-value" id="dashTotalAff">0</div>
                         <div class="stat-label">Total Affiliators</div>
@@ -196,7 +197,7 @@
                         <div class="stat-value" id="dashValidLeads">0</div>
                         <div class="stat-label">Leads Valid</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card admin-only">
                         <div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div>
                         <div class="stat-value" id="dashTotalOrders">0</div>
                         <div class="stat-label">Total Orders</div>
@@ -215,7 +216,7 @@
                     <div class="card-body">
                         <div class="table-container">
                             <table class="data-table">
-                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Aksi</th></tr></thead>
+                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th class="admin-only">Aksi</th></tr></thead>
                                 <tbody id="recentLeadsBody"></tbody>
                             </table>
                         </div>
@@ -248,7 +249,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title"><i class="fas fa-address-book"></i> Semua Leads</div>
-                        <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button>
+                        <button class="btn btn-primary btn-sm admin-only" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button>
                     </div>
                     <div class="card-body">
                         <div class="filter-bar">
@@ -264,7 +265,7 @@
                         <div class="table-container">
                             <table class="data-table">
                                 <thead>
-                                    <tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th>Aksi</th></tr>
+                                    <tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th class="admin-only">Aksi</th></tr>
                                 </thead>
                                 <tbody id="leadsBody"></tbody>
                             </table>
@@ -347,54 +348,67 @@
     </div>
 
     <script>
-        // ==================== ACCESS CONTROL ====================
-        (function checkAccess() {
-            try {
-                const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) { window.location.href = 'index.html'; return; }
-                const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { window.location.href = 'index.html'; return; }
-            } catch(e) { window.location.href = 'index.html'; }
-        })();
-
         // ==================== CONFIG ====================
         const CONFIG = {
             GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
+            ADMIN_EMAIL: 'admin@kopiaffiliate.com',
             ADMIN_PASSWORD: 'admin123'
         };
+
+        // ==================== STATE ====================
+        let DATA = { users: [], leads: [], orders: [], commissions: [] };
+        let currentUser = null; // Menyimpan data user yang sedang login
+
+        // ==================== ACCESS CONTROL ====================
+        function checkAccess() {
+            const session = SessionManager.loadSession();
+            if (session) {
+                currentUser = session;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                // Atur visibilitas UI berdasarkan Role
+                applyRoleVisibility();
+                syncAllData();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainContent').style.display = 'none';
+            }
+        }
+
+        function applyRoleVisibility() {
+            if (currentUser.isAdmin) {
+                document.getElementById('roleText').textContent = "Admin Portal";
+                document.getElementById('roleIcon').className = "fas fa-user-shield";
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            } else {
+                document.getElementById('roleText').textContent = currentUser.name;
+                document.getElementById('roleIcon').className = "fas fa-user";
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            }
+        }
 
         // ==================== DEBUG LOGGER ====================
         const Debug = {
             enabled: true,
             log: function(msg, data) {
-                console.log('[AffAdmin]', msg, data || '');
+                console.log('[AffPortal]', msg, data || '');
                 const panel = document.getElementById('debugLog');
                 const time = new Date().toLocaleTimeString();
                 const line = document.createElement('div');
                 line.textContent = `[${time}] ${msg}`;
                 panel.appendChild(line);
-                if (data) {
-                    const detail = document.createElement('div');
-                    detail.style.cssText = 'color:#aaa;padding-left:12px;margin-bottom:4px;';
-                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 300);
-                    panel.appendChild(detail);
-                }
                 panel.scrollTop = panel.scrollHeight;
             }
         };
 
-        // ==================== STATE ====================
-        let DATA = { users: [], leads: [], orders: [], commissions: [] };
-
-        // ==================== GAS: FETCH GET (TERBUKTI BEKERJA) ====================
+        // ==================== GAS: FETCH GET ====================
         async function fetchFromGAS(action) {
             try {
                 const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-                Debug.log('GAS GET:', action);
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
                 const result = await response.json();
-                Debug.log('GAS GET OK:', action + ' count=' + (result.data ? result.data.length : 0));
                 return result;
             } catch(err) {
                 Debug.log('GAS GET ERROR:', action + ': ' + err.message);
@@ -402,16 +416,8 @@
             }
         }
 
-        // ==================== GAS: SYNC WRITE (iframe form POST - PRIMARY) ====================
-        // Iframe form POST = paling reliable untuk kirim data ke GAS
-        // Tidak ada batasan URL length (masalah utama fetch GET untuk addCommission)
         async function syncToGAS(action, data) {
-            Debug.log('GAS SYNC:', action);
             const iframe = document.getElementById('gasFrame');
-            if (!iframe) {
-                Debug.log('ERROR: gasFrame tidak ditemukan');
-                return false;
-            }
             return new Promise((resolve) => {
                 const form = document.createElement('form');
                 form.method = 'POST';
@@ -431,29 +437,87 @@
                     form.appendChild(f);
                 }
 
-                let resolved = false;
-                const cleanup = () => {
-                    if (resolved) return;
-                    resolved = true;
-                    try { document.body.removeChild(form); } catch(e) {}
-                    iframe.onload = null;
-                    Debug.log('GAS SYNC OK:', action);
-                    resolve(true);
-                };
-
-                iframe.onload = cleanup;
-                setTimeout(cleanup, 5000); // Safety timeout
+                iframe.onload = () => resolve(true);
+                setTimeout(() => resolve(true), 4000);
 
                 document.body.appendChild(form);
                 form.submit();
             });
         }
 
-        // ==================== SYNC ALL ====================
-        async function syncAllData() {
-            updateSyncStatus('syncing', 'Sinkronasi...');
-            showToast('Memuat data dari server...', 'info');
+        // ==================== AUTHENTICATION HANDLING ====================
+        async function handleLogin() {
+            const emailInput = document.getElementById('userEmail').value.trim();
+            const passwordInput = document.getElementById('userPassword').value;
+            const btn = document.getElementById('btnLogin');
+            const errorEl = document.getElementById('loginError');
 
+            if (!emailInput || !passwordInput) {
+                showToast('Email dan Password harus diisi!', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+            errorEl.style.display = 'none';
+
+            // 1. Cek jika Hardcoded Admin
+            if (emailInput === CONFIG.ADMIN_EMAIL && passwordInput === CONFIG.ADMIN_PASSWORD) {
+                const sessionData = { isAdmin: true, name: 'Admin Kopi', email: emailInput, ts: Date.now() };
+                SessionManager.saveSession(sessionData);
+                checkAccess();
+                showToast('Selamat datang, Admin!', 'success');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                return;
+            }
+
+            // 2. Jika bukan admin, fetch data Users dari Google Sheet via GAS
+            Debug.log('Memverifikasi akun user ke server GAS...');
+            const result = await fetchFromGAS('getUsers');
+            
+            if (result.success && Array.isArray(result.data)) {
+                // Cari user yang email & password-nya cocok (case-insensitive email)
+                const userMatch = result.data.find(u => 
+                    String(u.email).toLowerCase() === emailInput.toLowerCase() && 
+                    String(u.password) === passwordInput
+                );
+
+                if (userMatch) {
+                    if (userMatch.status === 'Pending' || userMatch.status === 'Inactive') {
+                        showToast('Akun Anda belum aktif atau dinonaktifkan!', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                        return;
+                    }
+
+                    const sessionData = {
+                        isAdmin: false,
+                        id: userMatch.id,
+                        name: userMatch.name,
+                        email: userMatch.email,
+                        referralCode: userMatch.referralcode || userMatch.referralCode,
+                        ts: Date.now()
+                    };
+                    
+                    SessionManager.saveSession(sessionData);
+                    checkAccess();
+                    showToast(`Selamat datang, ${userMatch.name}!`, 'success');
+                } else {
+                    errorEl.style.display = 'block';
+                }
+            } else {
+                showToast('Gagal terhubung ke database server!', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+        }
+
+        // ==================== SYNC ALL DATA ====================
+        async function syncAllData() {
+            updateSyncStatus('syncing', 'Sinkronisasi...');
+            
             const actions = [
                 { action: 'getUsers', key: 'users' },
                 { action: 'getLeads', key: 'leads' },
@@ -469,46 +533,55 @@
             }
 
             updateSyncStatus('synced', 'Data terbaru');
-            showToast('Data berhasil dimuat!', 'success');
             renderCurrentPage();
         }
 
-        // ==================== RENDER PAGES ====================
+        // ==================== RENDER PAGES WITH SCOPE FILTERING ====================
         function renderDashboard() {
-            const validLeads = DATA.leads.filter(l => l.status === 'Valid');
-            const convertedLeads = DATA.leads.filter(l => l.status === 'Converted');
-            const totalComm = DATA.commissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+            // Filter data jika yang masuk adalah Affiliator (hanya melihat miliknya sendiri)
+            const filteredLeads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => l.referralcode === currentUser.referralCode || l.referralCode === currentUser.referralCode);
+            const filteredCommissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => c.affiliatorid === currentUser.id || c.affiliatorId === currentUser.id);
 
-            document.getElementById('dashTotalAff').textContent = DATA.users.length;
-            document.getElementById('dashTotalLeads').textContent = DATA.leads.length;
+            const validLeads = filteredLeads.filter(l => l.status === 'Valid');
+            const totalComm = filteredCommissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+
+            if (currentUser.isAdmin) {
+                document.getElementById('dashTotalAff').textContent = DATA.users.length;
+                document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
+            }
+            
+            document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
             document.getElementById('dashValidLeads').textContent = validLeads.length;
-            document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
             document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-            const recent = DATA.leads.slice(-5).reverse();
+            const recent = filteredLeads.slice(-5).reverse();
             document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
+                const aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
                 return `<tr>
                     <td>${formatDate(l.date)}</td>
                     <td>${l.name}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
+                    <td>${aff ? aff.name : (l.referralcode || l.referralCode || '-')}</td>
                     <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
+                    <td class="admin-only"><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="5" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
+            
+            applyRoleVisibility();
         }
 
         function renderAffiliators() {
+            if (!currentUser.isAdmin) return;
             document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
             document.getElementById('affiliatorsBody').innerHTML = DATA.users.map(u => {
-                const affLeads = DATA.leads.filter(l => l.referralCode === u.referralCode);
-                const affComm = DATA.commissions.filter(c => c.affiliatorId === u.id);
+                const ref = u.referralcode || u.referralCode;
+                const affLeads = DATA.leads.filter(l => (l.referralcode || l.referralCode) === ref);
+                const affComm = DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === u.id);
                 const totalComm = affComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
                 return `<tr>
                     <td><strong>${u.name}</strong></td>
                     <td>${u.email}</td>
                     <td>${u.phone || '-'}</td>
-                    <td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${u.referralCode}</code></td>
+                    <td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${ref}</code></td>
                     <td>${u.bank || '-'}</td>
                     <td><span class="badge badge-${(u.status === 'Active') ? 'active' : 'pending'}">${u.status || 'Active'}</span></td>
                     <td>${affLeads.length}</td>
@@ -521,47 +594,51 @@
             const statusFilter = document.getElementById('filterLeadStatus').value;
             const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
 
-            let leads = DATA.leads;
+            let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
             if (statusFilter) leads = leads.filter(l => l.status === statusFilter);
             if (searchFilter) leads = leads.filter(l => (l.name || '').toLowerCase().includes(searchFilter));
 
             document.getElementById('leadsBody').innerHTML = leads.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
+                const aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
                 return `<tr>
                     <td>${formatDate(l.date)}</td>
                     <td><strong>${l.name}</strong></td>
                     <td>${l.contact || '-'}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
+                    <td>${aff ? aff.name : (l.referralcode || l.referralCode || '-')}</td>
                     <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td>${l.transactionValue ? 'Rp ' + formatNumber(l.transactionValue) : '-'}</td>
+                    <td>${l.transactionvalue || l.transactionValue ? 'Rp ' + formatNumber(l.transactionvalue || l.transactionValue) : '-'}</td>
                     <td>${l.source || '-'}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
+                    <td class="admin-only"><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
+            
+            applyRoleVisibility();
         }
 
         function renderOrders() {
+            if (!currentUser.isAdmin) return;
             document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
-                const alamat = [o.namaJalanGedung, o.kecamatan, o.kotaKabupaten, o.provinsi, o.kodePos].filter(Boolean).join(', ');
+                const alamat = [o.namajalangedung || o.namaJalanGedung, o.kecamatan, o.kotakabupaten || o.kotaKabupaten, o.provinsi, o.kodepos || o.kodePos].filter(Boolean).join(', ');
                 return `<tr>
                     <td>${formatDate(o.date)}</td>
-                    <td>${o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
-                    <td>${o.buyerName || '-'}</td>
-                    <td>${o.buyerPhone || '-'}<br><small>${o.buyerEmail || ''}</small></td>
+                    <td>${o.productname || o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
+                    <td>${o.buyername || o.buyerName || '-'}</td>
+                    <td>${o.buyerphone || o.buyerPhone || '-'}<br><small>${o.buyeremail || o.buyerEmail || ''}</small></td>
                     <td>${alamat || '-'}</td>
-                    <td>${o.price ? 'Rp ' + formatNumber(o.price) : '-'}${o.ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(o.ongkir) + '</small>' : ''}</td>
-                    <td>${o.referralCode || '-'}</td>
+                    <td>Rp ${formatNumber(o.price || 0)}</td>
+                    <td>${o.referralcode || o.referralCode || '-'}</td>
                     <td><span class="badge badge-${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada orders</td></tr>';
         }
 
         function renderCommissions() {
-            document.getElementById('commissionsBody').innerHTML = DATA.commissions.map(c => {
-                const aff = DATA.users.find(u => u.id === c.affiliatorId);
+            let commissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === currentUser.id);
+            document.getElementById('commissionsBody').innerHTML = commissions.map(c => {
+                const aff = DATA.users.find(u => u.id === (c.affiliatorid || c.affiliatorId));
                 return `<tr>
                     <td>${formatDate(c.date)}</td>
-                    <td>${aff ? aff.name : c.affiliatorId}</td>
+                    <td>${aff ? aff.name : (c.affiliatorid || c.affiliatorId)}</td>
                     <td>${c.type || '-'}</td>
                     <td>${c.description || '-'}</td>
                     <td>Rp ${formatNumber(parseFloat(c.amount) || 0)}</td>
@@ -570,8 +647,9 @@
             }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada komisi</td></tr>';
         }
 
-        // ==================== UPDATE LEAD (FIXED) ====================
+        // ==================== UPDATE LEAD ====================
         function openUpdateLeadModal(leadId) {
+            if (!currentUser.isAdmin) return;
             const select = document.getElementById('updateLeadSelect');
             select.innerHTML = DATA.leads.map(l => `<option value="${l.id}">${l.name} (${l.status || 'Pending'})</option>`).join('');
             if (leadId) select.value = leadId;
@@ -589,79 +667,28 @@
             const btn = document.getElementById('btnUpdateLead');
 
             const lead = DATA.leads.find(l => l.id === leadId);
-            if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
+            if (!lead) return;
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
-            Debug.log('=== UPDATE LEAD ===');
-            Debug.log('Lead ID:', leadId);
-            Debug.log('Status:', newStatus);
-
-            // PERBAIKAN: Gunakan fetch GET (terbukti bekerja) + await
-            // PERBAIKAN: Kirim 'id' (bukan 'leadId') supaya GAS updateSheetRow bisa match
             const ok = await syncToGAS('updateLead', {
-                id: leadId,        // ← GAS updateSheetRow cari data[i][0] == id
+                id: leadId,
                 status: newStatus,
                 transactionValue: transValue
             });
 
-            Debug.log('GAS updateLead:', ok ? 'SUKSES' : 'GAGAL');
-
             if (!ok) {
-                showToast('Gagal update ke server. Coba lagi.', 'error');
+                showToast('Gagal simpan ke server', 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Update';
                 return;
             }
 
-            // Update local state
-            lead.status = newStatus;
-            if (newStatus === 'Converted') lead.transactionValue = transValue;
-
-            // Jika status jadi Valid, tambah komisi
-            if (newStatus === 'Valid' && lead.status !== 'Valid') {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
-                    const commission = {
-                        id: 'comm_' + Date.now(),
-                        affiliatorId: aff.id,
-                        type: 'Lead',
-                        description: 'Lead: ' + lead.name,
-                        amount: 10000,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission:', commOk ? 'SUKSES' : 'GAGAL');
-                }
-            }
-
-            // Jika status jadi Converted, tambah komisi transaksi
-            if (newStatus === 'Converted' && transValue > 0) {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
-                    const commission = {
-                        id: 'comm_' + (Date.now() + 1),
-                        affiliatorId: aff.id,
-                        type: 'Transaksi',
-                        description: 'Transaksi ' + lead.name,
-                        amount: transValue * 0.05,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    const commOk = await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission (trx):', commOk ? 'SUKSES' : 'GAGAL');
-                }
-            }
-
             closeModal('updateLeadModal');
-            showToast('Lead updated & tersimpan di server!', 'success');
+            showToast('Status lead berhasil diperbarui!', 'success');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save"></i> Update';
-
-            // Refresh data dari server setelah 2 detik
-            setTimeout(() => syncAllData(), 2000);
+            setTimeout(() => syncAllData(), 1500);
         }
 
         // ==================== NAVIGATION ====================
@@ -671,11 +698,7 @@
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
             const clicked = document.querySelector('.sidebar-menu a[data-page="' + page + '"]');
             if (clicked) clicked.classList.add('active');
-            document.getElementById('pageTitle').textContent =
-                page === 'dashboard' ? 'Dashboard' :
-                page === 'affiliators' ? 'Affiliators' :
-                page === 'leads' ? 'Leads' :
-                page === 'orders' ? 'Orders' : 'Komisi';
+            document.getElementById('pageTitle').textContent = page.toUpperCase();
             renderCurrentPage();
         }
 
@@ -690,75 +713,37 @@
             if (pageId === 'commissions') renderCommissions();
         }
 
-        // ==================== AUTH ====================
-        function adminLogin() {
-            const input = document.getElementById('adminPassword').value;
-            if (input === CONFIG.ADMIN_PASSWORD) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                SessionManager.saveSession();
-                showToast('Selamat datang, Admin!', 'success');
-                syncAllData();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-            }
-        }
-
         function adminLogout() {
             SessionManager.clearSession();
-            location.reload();
+            checkAccess();
         }
 
-        function checkSession() {
-            const session = SessionManager.loadSession();
-            if (session && session.isAdmin) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                syncAllData();
-            }
-        }
-
-        // ==================== SESSION ====================
+        // ==================== SESSION MANAGER ====================
         const SessionManager = {
-            saveSession: function() {
-                try {
-                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
-                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                } catch(e) {}
+            saveSession: function(data) {
+                const json = encodeURIComponent(JSON.stringify(data));
+                document.cookie = 'aff_portal_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
             },
             loadSession: function() {
-                try {
-                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                    if (match) return JSON.parse(decodeURIComponent(match[1]));
-                } catch(e) {}
+                const match = document.cookie.match(/aff_portal_session=([^;]+)/);
+                if (match) return JSON.parse(decodeURIComponent(match[1]));
                 return null;
             },
             clearSession: function() {
-                document.cookie = 'aff_admin_session=; path=/; max-age=0';
+                document.cookie = 'aff_portal_session=; path=/; max-age=0; path=/';
             }
         };
 
         // ==================== UTILITIES ====================
-        function refreshAllData() {
-            syncAllData();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        function formatNumber(num) {
-            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
+        function refreshAllData() { syncAllData(); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function formatNumber(num) { return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr);
             if (isNaN(d.getTime())) return String(dateStr);
             return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
         }
-
         function showToast(message, type) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -768,23 +753,15 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
-
         function updateSyncStatus(status, text) {
             const el = document.getElementById('syncStatus');
             if (!el) return;
-            el.className = 'sync-status ' + status;
-            const icons = { syncing: '<i class="fas fa-spinner fa-spin"></i>', synced: '<i class="fas fa-check-circle"></i>', error: '<i class="fas fa-exclamation-circle"></i>' };
+            const icons = { syncing: '<i class="fas fa-spinner fa-spin"></i>', synced: '<i class="fas fa-check-circle"></i>' };
             el.innerHTML = (icons[status] || '') + ' ' + text;
         }
 
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
-        });
-
-        // Init
         document.addEventListener('DOMContentLoaded', function() {
-            checkSession();
+            checkAccess();
         });
     </script>
 </body>
