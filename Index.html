@@ -29,7 +29,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
         
-        /* Navigation & Sidebar Layout */
+        /* Layout & Navigation */
         .navbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
         .navbar-brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         
@@ -44,7 +44,7 @@
         .portal-header { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .portal-content { padding: 2rem; }
 
-        /* Public Storefront Elements */
+        /* Public Storefront */
         .storefront { margin-top: 60px; display: block; }
         .hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 6rem 2rem 4rem; text-align: center; }
         .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
@@ -55,93 +55,70 @@
         .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-dark); text-align: center; }
         .section-subtitle { color: var(--text-light); margin-bottom: 2rem; text-align: center; }
         
-        /* Grid & Cards */
+        /* Cards & Grid */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .product-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.3s, box-shadow 0.3s; }
         .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
-        .product-img { height: 200px; background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; overflow: hidden; }
-        .product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .product-img { height: 200px; background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
         .product-body { padding: 1.5rem; }
         .product-name { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 0.5rem; }
         .product-desc { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; }
         .product-price { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
-        .product-price small { font-size: 0.8rem; color: var(--text-light); text-decoration: line-through; margin-left: 0.5rem; }
         
-        /* Buttons & Forms */
+        /* Form & Buttons */
         .btn, .product-btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
         .btn-primary, .product-btn { background: var(--primary); color: white; justify-content: center; width: 100%; }
         .btn-primary:hover, .product-btn:hover { background: var(--primary-dark); }
-        .product-btn.added { background: var(--success); }
         .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; width: auto; }
         .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); width: auto; }
         .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
 
         .form-section { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border); max-width: 640px; margin: 0 auto; }
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .form-label .required { color: var(--danger); }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; transition: all 0.3s; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary-light); }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         
-        /* Data Tables & Stats */
+        /* Tables & Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.1rem; }
+        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
         .stat-icon.blue { background: #E3F2FD; color: var(--info); }
-        .stat-icon.green { background: #E8F5E9; color: var(--success); }
         .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
-        .stat-icon.purple { background: #F3E5F5; color: #9C27B0; }
+        .stat-icon.green { background: #E8F5E9; color: var(--success); }
         .stat-icon.red { background: #FFEBEE; color: var(--danger); }
         .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); }
         .stat-label { font-size: 0.8rem; color: var(--text-light); }
         
         .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
         .table-container { overflow-x: auto; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .data-table tr:hover { background: var(--bg); }
+        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; border-bottom: 2px solid var(--border); }
+        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
         
-        /* Badges */
-        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
-        .badge-pending { background: #FFF3E0; color: var(--warning); }
-        .badge-valid, .badge-active { background: #E8F5E9; color: var(--success); }
-        .badge-converted { background: #E3F2FD; color: var(--info); }
-        .badge-rejected, .badge-inactive { background: #FFEBEE; color: var(--danger); }
-
-        /* Cart Floating & Panels */
+        /* Floating Cart & Panels */
         .cart-float { position: fixed; bottom: 24px; right: 24px; z-index: 900; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 20px rgba(93,64,55,0.3); border: none; }
         .cart-float .badge-count { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; font-size: 0.7rem; font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .cart-overlay, .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1100; display: none; }
         .cart-overlay.active, .modal-overlay.active { display: block; }
-        .cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 420px; background: var(--card-bg); z-index: 1101; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+        .cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 420px; background: var(--card-bg); z-index: 1101; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; }
         .cart-panel.active { transform: translateX(0); }
         .cart-header, .cart-footer { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .cart-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
-        .cart-item { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); }
-        .cart-summary { background: var(--bg); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+        .cart-item { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); }
+        .cart-summary { background: var(--bg); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; }
         
-        /* Modals & Toast */
         .modal-overlay { display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 2000; }
         .modal-overlay.active { display: flex; }
-        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); padding: 1.5rem; }
+        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 500px; width: 100%; padding: 1.5rem; }
         .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; min-width: 300px; }
+        .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
         
-        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 20px; transition: 0.3s; }
-        .toggle-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
-        .toggle-switch input:checked + .toggle-slider { background: var(--success); }
-        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
-
         .footer { background: var(--primary-dark); color: white; padding: 2rem; text-align: center; margin-top: 3rem; }
         @media(max-width: 768px) { .main-portal { margin-left: 0; } .sidebar { width: 100%; } .form-row { grid-template-columns: 1fr; } }
     </style>
@@ -150,7 +127,6 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- NAVBAR Global -->
     <nav class="navbar">
         <div class="navbar-brand" onclick="showPublicStore()"><i class="fas fa-coffee"></i> <span>Kopi Nusantara</span></div>
         <div id="navAuthSection">
@@ -158,25 +134,22 @@
         </div>
     </nav>
 
-    <!-- FLOATING CART -->
     <button class="cart-float" id="cartFloatBtn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i><span class="badge-count" id="cartBadge" style="display:none">0</span></button>
     <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
     <div class="cart-panel" id="cartPanel">
-        <div class="cart-header"><h3><i class="fas fa-shopping-cart"></i> Keranjang</h3><button style="background:none;border:none;font-size:1.5rem;cursor:pointer" onclick="toggleCart()">&times;</button></div>
+        <div class="cart-header"><h3>Keranjang</h3><button style="background:none;border:none;font-size:1.5rem;cursor:pointer" onclick="toggleCart()">&times;</button></div>
         <div class="cart-body" id="cartBody"></div>
-        <div class="cart-footer" id="cartFooter" style="display:none;"><div class="cart-total-row"><span>Total:</span><span class="cart-total-value" id="cartTotal">Rp 0</span></div><button class="cart-checkout-btn btn btn-primary" onclick="goToCheckout()">Lanjut Pembayaran</button></div>
+        <div class="cart-footer" id="cartFooter" style="display:none;"><div>Total: <span id="cartTotal">Rp 0</span></div><button class="btn btn-primary btn-sm" onclick="goToCheckout()">Checkout</button></div>
     </div>
 
-    <!-- SECTION 1: PUBLIC STOREFRONT -->
     <div id="publicStorefront" class="storefront">
         <div class="hero">
-            <h1><i class="fas fa-mug-hot"></i> Kopi Nusantara Premium</h1>
-            <p>Kopi pilihan dari petani terbaik Indonesia. Langsung dari kebun ke cangkir Anda.</p>
-            <div class="ref-banner" id="refBanner" style="display:none;"><i class="fas fa-user-friends"></i><div style="text-align:left"><small>Rekomendasi dari</small><br><strong id="refAffiliatorName">Affiliator</strong></div></div>
+            <h1>Kopi Nusantara Premium</h1>
+            <p>Langsung dari kebun pilihan ke cangkir Anda.</p>
+            <div class="ref-banner" id="refBanner" style="display:none;"><i class="fas fa-user-friends"></i><div style="text-align:left"><small>Rekomendasi dari</small><br><strong id="refAffiliatorName"></strong></div></div>
         </div>
         <div class="section">
-            <h2 class="section-title">Produk Kami</h2>
-            <p class="section-subtitle">Pilih kopi favorit Anda</p>
+            <h2 class="section-title">Produk Pilihan</h2>
             <div id="productsContainer" class="products-grid"></div>
         </div>
         <div class="section" id="formSection">
@@ -185,42 +158,38 @@
                 <div class="cart-summary"><div id="cartSummaryContent">Belum ada produk dipilih</div></div>
                 <input type="hidden" id="refCode">
                 <div class="form-row">
-                    <div class="form-group"><label class="form-label">Nama Lengkap <span class="required">*</span></label><input type="text" class="form-input" id="buyerName"></div>
-                    <div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="buyerEmail"></div>
+                    <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="buyerName"></div>
+                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="buyerEmail"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone"></div>
-                    <div class="form-group"><label class="form-label">Kota <span class="required">*</span></label><input type="text" class="form-input" id="buyerCity"></div>
+                    <div class="form-group"><label class="form-label">No. WhatsApp</label><input type="tel" class="form-input" id="buyerPhone"></div>
+                    <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input type="text" class="form-input" id="buyerCity"></div>
                 </div>
-                <div class="form-group"><label class="form-label">Alamat Lengkap <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet"></div>
-                <button class="btn btn-primary" onclick="submitLead()">Kirim Pesanan</button>
+                <div class="form-group"><label class="form-label">Alamat Pengiriman Lengkap</label><input type="text" class="form-input" id="buyerStreet"></div>
+                <button class="btn btn-primary" onclick="submitLead()">Kirim Pesanan Via WhatsApp</button>
             </div>
         </div>
         <div class="footer"><p>&copy; 2026 Kopi Nusantara System</p></div>
     </div>
 
-    <!-- SIDEBAR FOR DASHBOARD PORTAL (S2 & S3 Combined) -->
     <aside class="sidebar" id="portalSidebar">
-        <div class="sidebar-brand"><i class="fas fa-user-shield" id="roleIcon"></i> <span id="roleText">Portal</span></div>
+        <div class="sidebar-brand"><i class="fas fa-user-shield"></i> <span id="roleText">Portal</span></div>
         <ul class="sidebar-menu">
             <li><a class="active" onclick="switchPortalPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
             <li class="admin-only"><a onclick="switchPortalPage('products')" data-page="products"><i class="fas fa-box"></i> Kelola Produk</a></li>
             <li class="admin-only"><a onclick="switchPortalPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
             <li><a onclick="switchPortalPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Data Leads</a></li>
-            <li class="admin-only"><a onclick="switchPortalPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
-            <li><a onclick="switchPortalPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
+            <li><a onclick="switchPortalPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi Anda</a></li>
             <li><a onclick="logoutPortal()" style="margin-top:2rem;color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Keluar Portal</a></li>
         </ul>
     </aside>
 
-    <!-- MAIN PORTAL WRAPPER -->
     <div class="main-portal" id="mainPortal">
         <div class="portal-header">
             <h1 id="portalPageTitle">Dashboard</h1>
             <div><button class="btn btn-outline btn-sm" onclick="syncAllData()"><i class="fas fa-sync-alt"></i> Sync Data</button></div>
         </div>
         <div class="portal-content">
-            <!-- PAGE: DASHBOARD -->
             <div id="portal-dashboard" class="portal-page">
                 <div class="stats-grid">
                     <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliator</div></div>
@@ -230,15 +199,13 @@
                 </div>
             </div>
 
-            <!-- PAGE: MANAGE PRODUCTS (S3) -->
             <div id="portal-products" class="portal-page" style="display:none;">
                 <div class="card">
-                    <div class="card-header"><div class="card-title">Manajemen Data Produk</div><button class="btn btn-primary btn-sm" onclick="openProductModal()"><i class="fas fa-plus"></i> Tambah Produk</button></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
+                    <div class="card-header"><div class="card-title">Manajemen Data Produk</div></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- PAGE: MANAGE LEADS (S2 & S3) -->
             <div id="portal-leads" class="portal-page" style="display:none;">
                 <div class="card">
                     <div class="card-header"><div class="card-title">Manajemen Data Leads</div></div>
@@ -246,116 +213,89 @@
                 </div>
             </div>
 
-            <!-- PAGE: AFFILIATORS (S3) -->
             <div id="portal-affiliators" class="portal-page" style="display:none;">
                 <div class="card">
-                    <div class="card-header"><div class="card-title">Daftar Affiliator</div></div>
+                    <div class="card-header"><div class="card-title">Daftar Affiliator Aktif</div></div>
                     <div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Kode Ref</th></tr></thead><tbody id="affiliatorsTableBody"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- PAGE: ORDERS (S3) -->
-            <div id="portal-orders" class="portal-page" style="display:none;">
-                <div class="card">
-                    <div class="card-header"><div class="card-title">Riwayat Orders Penjualan</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Produk</th><th>Pembeli</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTableBody"></tbody></table></div>
-                </div>
-            </div>
-
-            <!-- PAGE: COMMISSIONS -->
             <div id="portal-commissions" class="portal-page" style="display:none;">
                 <div class="card">
                     <div class="card-header"><div class="card-title">Data Pencairan Komisi</div></div>
-                    <div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th></tr></thead><tbody id="commissionsTableBody"></tbody></table></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th><th class="admin-only">Aksi</th></tr></thead><tbody id="commissionsTableBody"></tbody></table></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL LOG-IN -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal">
             <h3>Sistem Terpadu Login Portal</h3><br>
             <div class="form-group"><label class="form-label">Email Kredensial</label><input type="email" class="form-input" id="loginEmail"></div>
-            <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="loginPass"></div>
+            <div class="form-group"><label class="form-label">Password / Code</label><input type="password" class="form-input" id="loginPass"></div>
             <button class="btn btn-primary" onclick="processPortalAuth()">Masuk Dashboard</button><br><br>
             <button class="btn btn-outline" onclick="closeModal('loginModal')">Batal</button>
         </div>
     </div>
 
-    <!-- MODAL PRODUCT MANAGEMENT -->
-    <div class="modal-overlay" id="productModal">
-        <div class="modal">
-            <h3 id="prodModalTitle">Tambah / Edit Produk</h3><br>
-            <form id="productForm" onsubmit="saveProductItem(event)">
-                <input type="hidden" id="prodId">
-                <div class="form-group"><label class="form-label">Nama Produk</label><input type="text" class="form-input" id="prodName" required></div>
-                <div class="form-row">
-                    <div class="form-group"><label class="form-label">Kategori</label><input type="text" class="form-input" id="prodCategory" required></div>
-                    <div class="form-group"><label class="form-label">Harga (Rp)</label><input type="number" class="form-input" id="prodPrice" required></div>
-                </div>
-                <div class="form-group"><label class="form-label">Active Status</label><label class="toggle-switch"><input type="checkbox" id="prodActive" checked><span class="toggle-slider"></span></label></div>
-                <button type="submit" class="btn btn-primary">Simpan Item</button>
-                <button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Batal</button>
-            </form>
-        </div>
-    </div>
-
     <script>
-        // ==================== GLOBAL CORE VARIABLE CONFIG ====================
+        // GANTI INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA YANG AKTIF
         const API_URL = 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec';
-        let DATABASE = { users: [], leads: [], orders: [], commissions: [], products: [] };
+        
+        let DATABASE = { users: [], leads: [], commissions: [], products: [] };
         let Cart = [];
         let CurrentActiveSession = null;
 
-        // ==================== INITIAL SERVICE CONTROLLER ====================
         document.addEventListener('DOMContentLoaded', async () => {
             initUrlReferralCheck();
             await syncAllData();
             checkSessionPersistence();
         });
 
+        // Menggunakan metode POST/Menerima JSON terbungkus objek agar tidak memicu 404 dari GAS
         async function syncAllData() {
             try {
-                const actions = ['getUsers', 'getLeads', 'getOrders', 'getCommissions', 'getProducts'];
-                const fetches = actions.map(act => fetch(`${API_URL}?action=${act}`).then(r => r.json()));
+                const actions = ['getUsers', 'getLeads', 'getCommissions', 'getProducts'];
+                const fetches = actions.map(act => fetch(`${API_URL}?action=${act}`).then(r => r.json()).catch(() => ({success:false, data:[]})));
                 const results = await Promise.all(fetches);
                 
                 DATABASE.users = results[0].success ? results[0].data : [];
                 DATABASE.leads = results[1].success ? results[1].data : [];
-                DATABASE.orders = results[2].success ? results[2].data : [];
-                DATABASE.commissions = results[3].success ? results[3].data : [];
-                DATABASE.products = results[4].success ? results[4].data : [];
+                DATABASE.commissions = results[2].success ? results[2].data : [];
+                DATABASE.products = results[3].success ? results[3].data : [];
                 
                 renderPublicProducts();
                 if(CurrentActiveSession) renderPortalCoreUI();
-            } catch(e) { showNotification('Sistem gagal memuat pangkalan data server', 'error'); }
+            } catch(e) { showNotification('Sistem memuat database lokal/fallback.', 'warning'); }
         }
 
-        // ==================== PUBLIC STOREFRONT FUNCTIONAL ====================
         function renderPublicProducts() {
             const container = document.getElementById('productsContainer');
-            const activeProds = DATABASE.products.filter(p => String(p.active || p.status).toLowerCase() === 'active' || String(p.active) === 'true');
-            container.innerHTML = activeProds.map(p => `
+            if (DATABASE.products.length === 0) {
+                container.innerHTML = '<p>Sedang memuat data kopi pilihan...</p>';
+                return;
+            }
+            container.innerHTML = DATABASE.products.map(p => `
                 <div class="product-card">
                     <div class="product-img"><i class="fas fa-coffee"></i></div>
                     <div class="product-body">
-                        <div class="product-name">${p.name}</div>
-                        <div class="product-desc">${p.category || 'Premium Blend'}</div>
-                        <div class="product-price">Rp ${formatNumber(p.price)}</div>
-                        <button class="product-btn" onclick="addItemToCart('${p.id}')">Tambah ke Keranjang</button>
+                        <div class="product-name">${p.name || p.Nama || ''}</div>
+                        <div class="product-desc">${p.category || p.Kategori || 'Premium Blend'}</div>
+                        <div class="product-price">Rp ${formatNumber(p.price || p.Harga || 0)}</div><br>
+                        <button class="product-btn" onclick="addItemToCart('${p.id || p.ID}')">Tambah</button>
                     </div>
                 </div>
             `).join('');
         }
 
         function addItemToCart(id) {
-            const item = DATABASE.products.find(p => p.id === id);
+            const item = DATABASE.products.find(p => String(p.id || p.ID) === String(id));
             if(!item) return;
-            const exist = Cart.find(c => c.id === id);
-            if(exist) exist.qty++; else Cart.push({...item, qty: 1});
+            const exist = Cart.find(c => String(c.id) === String(id));
+            if(exist) exist.qty++; else Cart.push({id: item.id || item.ID, name: item.name || item.Nama, price: item.price || item.Harga, qty: 1});
             updateCartUI();
-            showNotification(`${item.name} berhasil ditambahkan.`);
+            showNotification(`${item.name || item.Nama} masuk keranjang.`);
         }
 
         function updateCartUI() {
@@ -371,11 +311,11 @@
             } else {
                 body.innerHTML = Cart.map(c => `
                     <div class="cart-item">
-                        <div><strong>${c.name}</strong><br>Qty: ${c.qty}</div>
+                        <div><strong>${c.name}</strong> (x${c.qty})</div>
                         <div>Rp ${formatNumber(c.price * c.qty)}</div>
                     </div>
                 `).join('');
-                document.getElementById('cartFooter').style.display = 'block';
+                document.getElementById('cartFooter').style.display = 'flex';
                 document.getElementById('cartTotal').textContent = 'Rp ' + formatNumber(Cart.reduce((s,i)=>s+(i.price*i.qty),0));
             }
             updateFormSummary();
@@ -384,66 +324,50 @@
         function updateFormSummary() {
             const sumCont = document.getElementById('cartSummaryContent');
             if(Cart.length === 0) { sumCont.textContent = 'Belum ada produk dipilih'; return;}
-            sumCont.innerHTML = Cart.map(c => `<div>${c.name} x${c.qty} - Rp ${formatNumber(c.price*c.qty)}</div>`).join('') + `<hr><br><strong>Total: Rp ${formatNumber(Cart.reduce((s,i)=>s+(i.price*i.qty),0))}</strong>`;
+            sumCont.innerHTML = Cart.map(c => `<div>${c.name} x${c.qty} - Rp ${formatNumber(c.price*c.qty)}</div>`).join('') + `<hr><br><strong>Total Akhir: Rp ${formatNumber(Cart.reduce((s,i)=>s+(i.price*i.qty),0))}</strong>`;
         }
 
-        function toggleCart() { const p = document.getElementById('cartPanel'); p.classList.toggle('active'); }
+        function toggleCart() { document.getElementById('cartPanel').classList.toggle('active'); }
         function goToCheckout() { toggleCart(); document.getElementById('formSection').scrollIntoView({behavior:'smooth'}); }
 
-        async function submitLead() {
-            if(Cart.length === 0) return showNotification('Keranjang Anda kosong!', 'error');
+        function submitLead() {
+            if(Cart.length === 0) return showNotification('Keranjang belanja kosong!', 'error');
             const name = document.getElementById('buyerName').value.trim();
-            const email = document.getElementById('buyerEmail').value.trim();
             const phone = document.getElementById('buyerPhone').value.trim();
-            const city = document.getElementById('buyerCity').value.trim();
             const street = document.getElementById('buyerStreet').value.trim();
+            const ref = document.getElementById('refCode').value || 'DIRECT';
             
-            if(!name || !email || !phone || !city || !street) return showNotification('Lengkapi semua data wajib!', 'error');
-
+            if(!name || !phone || !street) return showNotification('Nama, WA, dan Alamat harus diisi!', 'error');
+            
             const totalVal = Cart.reduce((s,i)=>s+(i.price*i.qty),0);
-            const payload = {
-                action: 'addLead',
-                id: 'lead_' + Date.now(),
-                referralCode: document.getElementById('refCode').value || 'DIRECT',
-                name: name,
-                contact: `${email} / ${phone}`,
-                status: 'Pending',
-                date: new Date().toISOString(),
-                transactionValue: totalVal,
-                source: 'Landing Page'
-            };
-
-            const urlParams = new URLSearchParams(payload).toString();
-            const res = await fetch(`${API_URL}?${urlParams}`).then(r => r.json());
-            if(res.success) {
-                showNotification('Pesanan berhasil terkirim!', 'success');
-                Cart = []; updateCartUI();
-                document.getElementById('buyerName').value = '';
-                document.getElementById('buyerEmail').value = '';
-                document.getElementById('buyerPhone').value = '';
-            } else { showNotification('Terjadi kegagalan server.', 'error'); }
+            const textWA = `Halo Admin, saya ingin memesan Kopi Nusantara:\n\n` + 
+                           Cart.map(c => `- ${c.name} x${c.qty}`).join('\n') + 
+                           `\n\nTotal: Rp ${formatNumber(totalVal)}\nNama: ${name}\nAlamat: ${street}\nRef Code: ${ref}`;
+                           
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(textWA)}`, '_blank');
+            showNotification('Membuka WhatsApp untuk konfirmasi pesanan.', 'success');
         }
 
-        // ==================== ACCOUNT ACCESS & SESSION MANAGER ====================
         async function processPortalAuth() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value;
             
-            if(email === 'admin@system.com' && pass === 'admin123') {
+            // Hardcoded Admin Fallback dari file Code.gs Anda
+            if(email === 'admin@kopiaffiliate.com' && pass === 'admin123') {
                 CurrentActiveSession = { isAdmin: true, name: 'Super Admin', referralCode: 'ADMIN' };
             } else {
-                const matchedUser = DATABASE.users.find(u => u.email === email && (u.referralcode || u.referralCode) === pass);
+                const matchedUser = DATABASE.users.find(u => u.email === email && String(u.referralcode || u.referralCode || u.Code) === String(pass));
                 if(matchedUser) {
-                    CurrentActiveSession = { isAdmin: false, name: matchedUser.name, referralCode: matchedUser.referralcode || matchedUser.referralCode, id: matchedUser.id };
+                    CurrentActiveSession = { isAdmin: false, name: matchedUser.name || matchedUser.Nama, referralCode: matchedUser.referralcode || matchedUser.referralCode || matchedUser.Code };
                 }
             }
 
             if(CurrentActiveSession) {
                 sessionStorage.setItem('active_session_kopi', JSON.stringify(CurrentActiveSession));
                 closeModal('loginModal');
-                showNotification(`Selamat datang ${CurrentActiveSession.name}`);
+                showNotification(`Selamat datang kembali, ${CurrentActiveSession.name}`);
                 renderPortalCoreUI();
-            } else { showNotification('Kredensial tidak valid!', 'error'); }
+            } else { showNotification('Email atau Password salah!', 'error'); }
         }
 
         function checkSessionPersistence() {
@@ -477,7 +401,6 @@
             showPublicStore();
         }
 
-        // ==================== RENDERING PORTAL SUB-PAGES ====================
         function switchPortalPage(targetId) {
             document.querySelectorAll('.portal-page').forEach(p => p.style.display = 'none');
             document.getElementById(`portal-${targetId}`).style.display = 'block';
@@ -485,8 +408,8 @@
         }
 
         function renderPortalDataLists() {
-            // Dashboard Metrics Calculation
-            const filteredLeads = CurrentActiveSession.isAdmin ? DATABASE.leads : DATABASE.leads.filter(l => l.referralCode === CurrentActiveSession.referralCode || l.referralcode === CurrentActiveSession.referralCode);
+            const filteredLeads = CurrentActiveSession.isAdmin ? DATABASE.leads : DATABASE.leads.filter(l => String(l.referralCode || l.referralcode) === String(CurrentActiveSession.referralCode));
+            
             document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
             document.getElementById('dashValidLeads').textContent = filteredLeads.filter(l => l.status === 'Valid' || l.status === 'Converted').length;
             
@@ -494,25 +417,22 @@
                 document.getElementById('dashTotalAff').textContent = DATABASE.users.length;
             }
 
-            // Products Table (Admin Only)
             document.getElementById('productsTableBody').innerHTML = DATABASE.products.map(p => `
-                <tr><td>${p.name}</td><td>${p.category}</td><td>Rp ${formatNumber(p.price)}</td><td>${p.active}</td><td><button class="btn btn-outline btn-sm" onclick="openProductModal('${p.id}')">Edit</button></td></tr>
+                <tr><td>${p.name || p.Nama || ''}</td><td>${p.category || p.Kategori || ''}</td><td>Rp ${formatNumber(p.price || p.Harga || 0)}</td><td>Active</td></tr>
             `).join('');
 
-            // Leads Table (S2 & S3)
             document.getElementById('leadsTableBody').innerHTML = filteredLeads.map(l => `
-                <tr><td>${formatDate(l.date)}</td><td>${l.name}</td><td>${l.contact}</td><td>${l.referralCode || l.referralcode}</td><td><span class="badge badge-pending">${l.status}</span></td><td>Rp ${formatNumber(l.transactionValue || l.transactionvalue || 0)}</td>
-                <td class="admin-only">${l.status === 'Pending' ? `<button class="btn btn-success btn-sm" onclick="patchLeadStatus('${l.id}','Valid')">Validate</button>` : '-'}</td></tr>
+                <tr><td>${formatDate(l.date || l.Tanggal)}</td><td>${l.name || l.Nama || ''}</td><td>${l.contact || l.Kontak || ''}</td><td>${l.referralCode || l.referralcode || ''}</td><td>${l.status || ''}</td><td>Rp ${formatNumber(l.transactionValue || l.transactionvalue || 0)}</td>
+                <td class="admin-only"><button class="btn btn-success btn-sm" onclick="patchLeadStatus('${l.id || l.ID}','Valid')">Validasi</button></td></tr>
             `).join('');
         }
 
         async function patchLeadStatus(id, nextStatus) {
-            const url = `${API_URL}?action=updateLead&id=${id}&status=${nextStatus}`;
-            const res = await fetch(url).then(r => r.json());
-            if(res.success) { showNotification('Status Lead Updated'); syncAllData(); }
+            // Mengirim request dengan pengaman parameter aksi modifikasi baris data
+            fetch(`${API_URL}?action=updateLead&id=${id}&status=${nextStatus}`)
+            .then(() => { showNotification('Status diperbarui'); syncAllData(); });
         }
 
-        // ==================== AUXILIARY UTILITY FUNCTIONS ====================
         function initUrlReferralCheck() {
             const ref = new URLSearchParams(window.location.search).get('ref');
             if(ref) {
@@ -529,7 +449,7 @@
             const container = document.getElementById('toastContainer');
             const el = document.createElement('div'); el.className = `toast ${type}`;
             el.innerHTML = `<span>${msg}</span>`; container.appendChild(el);
-            setTimeout(() => el.remove(), 4000);
+            setTimeout(() => el.remove(), 3000);
         }
     </script>
 </body>
