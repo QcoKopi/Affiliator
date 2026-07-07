@@ -139,10 +139,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <script>
 // ==================== CONFIG ====================
 const CONFIG={
-GAS_URL:'https://script.google.com/macros/s/AKfycbzfqIHj2RIi3YDayjA5jbVC-xYydW9QahJbzDAGUzm6r8y6bYFlCUL2RJRA-y7e3vQ/exec',
+GAS_URL:'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
 DB_NAME:'KopiAffiliateDB',DB_VERSION:2
 };
-
 
 // ==================== HELPERS ====================
 function escapeHtml(t){if(!t)return'';return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -168,7 +167,6 @@ item.qty+=delta;
 if(item.qty<=0)removeFromCart(productId);else updateCartUI();
 }
 
-// PERBAIKAN: Pastikan price selalu number
 function getCartTotal(){
 return Cart.reduce((sum,item)=>{
 const price=parseFloat(item.price)||0;
@@ -214,36 +212,14 @@ return`<div class="cart-summary-item"><span>${item.name} x${item.qty}</span><spa
 function toggleCart(){document.getElementById('cartOverlay').classList.toggle('active');document.getElementById('cartPanel').classList.toggle('active')}
 function goToCheckout(){toggleCart();document.getElementById('formSection').scrollIntoView({behavior:'smooth'})}
 
-// ==================== GAS (GET - Lebih Reliable) ====================
-// PERBAIKAN: Pakai GET request dengan URL parameters. GAS web app lebih reliable menerima GET.
-async function callGAS(action,paramsObj){
-const url=new URL(CONFIG.GAS_URL);
-url.searchParams.append('action',action);
-for(let key in paramsObj){
-if(paramsObj[key]!==undefined&&paramsObj[key]!==null){
-url.searchParams.append(key,typeof paramsObj[key]==='object'?JSON.stringify(paramsObj[key]):String(paramsObj[key]));
-}
-}
-try{
-const response=await fetch(url.toString());
-if(!response.ok)throw new Error('HTTP '+response.status);
-return await response.json();
-}catch(err){
-return{success:false,error:err.message};
-}
-}
-
-// FIX REVISI: Menggunakan Fetch POST Modern dengan URLSearchParams & mode no-cors
 async function syncToGAS(action,data){
 const bodyParams = new URLSearchParams();
 bodyParams.append('action', action);
-
 for (var key in data) {
 if (data[key] !== undefined && data[key] !== null) {
 bodyParams.append(key, typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key]));
 }
 }
-
 try {
 await fetch(CONFIG.GAS_URL, {
 method: 'POST',
@@ -295,16 +271,16 @@ const cached=await DBStore.getAll('products');
 allProducts=cached.map(p=>({...p,price:parseFloat(p.price)||0}));
 }
 AllProducts=allProducts;
+
 const activeProducts=allProducts.filter(p=>{
-const hasActiveCol=p.active!==undefined&&p.active!==''&&p.active!==null;
-const hasStatusCol=p.status!==undefined&&p.status!==''&&p.status!==null;
-const isActive=String(p.active).toLowerCase()==='true'||String(p.active).toLowerCase()==='yes'||String(p.status).toLowerCase()==='active';
-const isInactive=String(p.active).toLowerCase()==='false'||String(p.active).toLowerCase()==='no'||String(p.status).toLowerCase()==='inactive';
+if(!p.status&&!p.active)return true;
+const isActive=String(p.active).toLowerCase()==='true'||String(p.active).toLowerCase()==='yes'||String(p.status).toLowerCase()==='active'||String(p.status).toLowerCase()==='aktif';
+const isInactive=String(p.active).toLowerCase()==='false'||String(p.active).toLowerCase()==='no'||String(p.status).toLowerCase()==='inactive'||String(p.status).toLowerCase()==='nonaktif';
 if(isInactive)return false;
 if(isActive)return true;
-if(!hasActiveCol&&!hasStatusCol)return true;
-return false;
+return true;
 });
+
 if(activeProducts.length===0){
 container.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text-light)"><i class="fas fa-box-open" style="font-size:3rem;margin-bottom:1rem;opacity:0.5;display:block"></i><h3>Belum Ada Produk</h3></div>';
 return;
@@ -349,7 +325,7 @@ aff=users.find(u=>u.referralCode===refCode);
 document.getElementById('refAffiliatorName').textContent=aff?aff.name:refCode;
 }
 
-// ==================== SUBMIT LEAD (FIXED) ====================
+// ==================== SUBMIT LEAD ====================
 async function submitLead(){
 const btn=document.querySelector('button[onclick="submitLead()"]');
 const btnOriginal=btn.innerHTML;
