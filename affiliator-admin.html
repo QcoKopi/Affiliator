@@ -141,7 +141,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <div id="page-commissions" class="page">
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="commissionsBody"></tbody></table></div></div></div>
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div></div><div class="card-body"><div class="table-container"><table class="data-table">
+<thead>
+    <tr>
+        <th>Tanggal</th>
+        <th>Affiliator</th>
+        <th>Tipe</th>
+        <th>Deskripsi</th>
+        <th>Jumlah</th>
+        <th>Status</th>
+        <th>Aksi</th> </tr>
+</thead>
+<tbody id="commissionsBody"></tbody>
+</table></div></div></div>
 </div>
 </div>
 </div>
@@ -250,34 +262,36 @@ return`<tr><td>${formatDate(o.date)}</td><td>${o.productName||'-'}${o.qty>1?' x'
 }
 
 function renderCommissions(){
-    document.getElementById('commissionsBody').innerHTML=DATA.commissions.map(c=>{
-        // Ambil ID affiliator dengan toleransi huruf kapital properti dari GAS
+    const bodyEl = document.getElementById('commissionsBody');
+    if (!bodyEl) return;
+    
+    bodyEl.innerHTML = DATA.commissions.map(c => {
+        // Toleransi pembacaan properti dari GAS (kapital / huruf kecil)
         const affId = c.affiliatorid || c.affiliatorId;
-        const aff=DATA.users.find(u=>u.id===affId);
+        const aff = DATA.users.find(u => u.id === affId);
         
-        // Membaca status pembayaran (mendukung string 'true' / boolean true)
+        // Cek status pembayaran secara akurat
         const isPaid = String(c.paid).toLowerCase() === 'true' || c.paid === true;
         const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
         
-        // Buat tombol aksi bayar
+        // Buat tombol aksi bayar jika masih pending
         const commId = c.id || c.commId;
         const actionBtn = !isPaid ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
         
-        // Ambil nominal komisi
         const amount = parseFloat(c.amount) || 0;
+        const dateStr = c.date || '';
         
-        return`<tr>
-            <td>${formatDate(c.date)}</td>
+        return `<tr>
+            <td>${formatDate(dateStr)}</td>
             <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
-            <td>${c.type||'-'}</td>
-            <td>${c.description||'-'}</td>
+            <td>${c.type || '-'}</td>
+            <td>${c.description || '-'}</td>
             <td>Rp ${formatNumber(amount)}</td>
             <td>${statusBadge}</td>
             <td>${actionBtn}</td>
-        </tr>`
-    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada data komisi</td></tr>';
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada data komisi</td></tr>';
 }
-
 // Fungsi baru untuk menembak perubahan ke Google Apps Script
 async function markCommissionAsPaid(commId) {
     if(!confirm('Apakah Anda yakin ingin menandai komisi ini sebagai "Dibayar"?')) return;
