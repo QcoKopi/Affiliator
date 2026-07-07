@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Affiliator Admin - Kopi Affiliate</title>
+<title>Affiliator Admin & Products - Kopi Affiliate</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -34,13 +34,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .card-title{font-size:1.1rem;font-weight:600;color:var(--primary-dark)}
 .table-container{overflow-x:auto}
 .data-table{width:100%;border-collapse:collapse;font-size:0.85rem}
-.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.7 layout-px;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.75rem;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
 .data-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
 .badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.7rem;font-weight:600;display:inline-block}
 .badge-pending{background:#FFF3E0;color:var(--warning)}
 .badge-valid{background:#E8F5E9;color:var(--success)}
 .badge-converted{background:#E3F2FD;color:var(--info)}
 .badge-rejected{background:#FFEBEE;color:var(--danger)}
+.badge-active{background:#E8F5E9;color:var(--success)}
+.badge-inactive{background:#FFEBEE;color:var(--danger)}
 .btn{padding:0.5rem 1rem;border-radius:var(--radius-sm);border:none;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem}
 .btn-sm{padding:0.35rem 0.75rem;font-size:0.8rem}
 .btn-primary{background:var(--primary);color:white}
@@ -50,12 +52,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
 .form-group{margin-bottom:1rem}
 .form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
-.form-input,.form-select{width:100%;padding:0.6rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem}
-.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary-light)}
+.form-input,.form-select,.form-textarea{width:100%;padding:0.6rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--primary-light)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-textarea{resize:vertical;min-height:80px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.active{display:flex}
-.modal{background:var(--card-bg);border-radius:var(--radius);max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal{background:var(--card-bg);border-radius:var(--radius);max-width:550px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
 .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .modal-close{background:none;border:none;font-size:1.5rem;color:var(--text-light);cursor:pointer}
 .modal-body{padding:1.5rem}
@@ -65,12 +68,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .toast.success{border-left-color:var(--success)}
 .toast.error{border-left-color:var(--danger)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.product-img-preview{width:50px;height:50px;border-radius:var(--radius-sm);background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.product-img-preview img{width:100%;height:100%;object-fit:cover}
 .empty-state{text-align:center;padding:3rem;color:var(--text-light)}
 .filter-bar{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
 .page{display:none}
 .page.active{display:block}
 .login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
 .login-box{background:var(--card-bg);border-radius:var(--radius);padding:2.5rem;max-width:400px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
+.toggle-switch{position:relative;display:inline-block;width:40px;height:20px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:20px;transition:0.3s}
+.toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--success)}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
 @media(max-width:768px){.form-row{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -80,8 +91,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
 <div style="font-size:3rem;color:var(--primary);margin-bottom:1rem"><i class="fas fa-shield-alt"></i></div>
-<h2>Affiliator Admin</h2>
-<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Kelola seluruh data affiliator, leads, dan komisi</p>
+<h2>Affiliator & Product Admin</h2>
+<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Sistem Manajemen Terpadu Kopi Affiliate</p>
 <div class="form-group" style="text-align:left">
 <label class="form-label">Password Admin</label>
 <input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align:center;font-size:1rem" onkeypress="if(event.key==='Enter')adminLogin()">
@@ -95,14 +106,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <aside class="sidebar" id="sidebar">
-<div class="sidebar-brand"><i class="fas fa-user-shield"></i><span>Affiliator Admin</span></div>
+<div class="sidebar-brand"><i class="fas fa-user-shield"></i><span>Admin System</span></div>
 <ul class="sidebar-menu">
 <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+<li><a onclick="showPage('products')" data-page="products"><i class="fas fa-box"></i> Manage Products</a></li>
 <li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
 <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
 <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
 <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
-<li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
 <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
 <li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
 </ul>
@@ -113,260 +124,463 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <h1 id="pageTitle">Dashboard</h1>
 <div style="display:flex;gap:0.75rem;align-items:center">
 <span style="font-size:0.75rem;color:var(--text-light)" id="syncStatus"><i class="fas fa-circle"></i> Loading...</span>
-<button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+<button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
 </div>
 </div>
+
 <div class="content">
 <div id="page-dashboard" class="page active">
 <div class="stats-grid">
-<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
-<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Leads</div></div>
-<div class="stat-card"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Leads Valid</div></div>
-<div class="stat-card"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
-<div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
+<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="statAffiliators">0</div><div class="stat-label">Total Affiliator</div></div>
+<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="statLeads">0</div><div class="stat-label">Total Leads</div></div>
+<div class="stat-card"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="statOrders">0</div><div class="stat-label">Total Orders</div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="statCommissions">Rp 0</div><div class="stat-label">Komisi Pending</div></div>
+<div class="stat-card"><div class="stat-icon red"><i class="fas fa-box"></i></div><div class="stat-value" id="statProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Leads Terbaru</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Aksi</th></tr></thead><tbody id="recentLeadsBody"></tbody></table></div></div></div>
+</div>
+
+<div id="page-products" class="page">
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-box"></i> Manajemen Data Produk</div>
+<button class="btn btn-primary btn-sm" onclick="openProductModal()"><i class="fas fa-plus"></i> Tambah Produk Baru</button>
+</div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead>
+<tr><th>Gambar</th><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Status</th><th>Aksi</th></tr>
+</thead>
+<tbody id="productsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 
 <div id="page-affiliators" class="page">
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div><span style="font-size:0.85rem;color:var(--text-light)" id="affiliatorCount">0 affiliator</span></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th></tr></thead><tbody id="affiliatorsBody"></tbody></table></div></div></div>
+<div class="card">
+<div class="card-header"><div class="card-title">Daftar Affiliator Terdaftar</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Kode Referral</th><th>Tanggal Daftar</th></tr></thead>
+<tbody id="affiliatorsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 
 <div id="page-leads" class="page">
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-address-book"></i> Semua Leads</div><button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button></div><div class="card-body"><div class="filter-bar"><select class="form-select" id="filterLeadStatus" onchange="renderLeads()" style="width:auto;min-width:150px"><option value="">Semua Status</option><option value="Pending">Pending</option><option value="Valid">Valid</option><option value="Converted">Converted</option><option value="Rejected">Rejected</option></select><input type="text" class="form-input" id="filterLeadSearch" placeholder="Cari nama..." oninput="renderLeads()" style="max-width:200px"></div><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th>Aksi</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div></div>
+<div class="card">
+<div class="card-header">
+<div class="card-title">Data Manajemen Leads</div>
+<div class="filter-bar">
+<select class="form-select" id="leadFilterStatus" onchange="renderLeads()" style="width:150px;padding:0.35rem 0.5rem;font-size:0.8rem">
+<option value="">Semua Status</option>
+<option value="pending">Pending</option>
+<option value="valid">Valid</option>
+<option value="converted">Converted</option>
+<option value="rejected">Rejected</option>
+</select>
+</div>
+</div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Kota</th><th>Referral</th><th>Nilai Transaksi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="leadsBody"></tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 
 <div id="page-orders" class="page">
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-shopping-cart"></i> Semua Orders</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Produk</th><th>Buyer</th><th>Kontak</th><th>Kota</th><th>Harga</th><th>Referral</th><th>Status</th></tr></thead><tbody id="ordersBody"></tbody></table></div></div></div>
+<div class="card">
+<div class="card-header"><div class="card-title">Riwayat Transaksi Penjualan (Orders)</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Produk</th><th>Pembeli</th><th>Kontak</th><th>Kota</th><th>Total Harga</th><th>Referral</th><th>Status</th></tr></thead>
+<tbody id="ordersBody"></tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 
 <div id="page-commissions" class="page">
-<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div></div><div class="card-body"><div class="table-container"><table class="data-table">
-<thead>
-    <tr>
-        <th>Tanggal</th>
-        <th>Affiliator</th>
-        <th>Tipe</th>
-        <th>Deskripsi</th>
-        <th>Jumlah</th>
-        <th>Status</th>
-        <th>Aksi</th>
-    </tr>
-</thead>
+<div class="card">
+<div class="card-header"><div class="card-title">Daftar Pencairan Komisi Affiliator</div></div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah Komisi</th><th>Status</th><th>Aksi</th></tr></thead>
 <tbody id="commissionsBody"></tbody>
-</table></div></div></div>
+</table>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 
-<div class="modal-overlay" id="updateLeadModal">
+<div class="modal-overlay" id="productModal">
 <div class="modal">
-<div class="modal-header"><h3><i class="fas fa-edit"></i> Update Status Lead</h3><button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button></div>
+<div class="modal-header"><h3 id="productModalTitle">Tambah Produk Baru</h3><button class="modal-close" onclick="closeModal('productModal')">&times;</button></div>
 <div class="modal-body">
-<div class="form-group"><label class="form-label">Pilih Lead</label><select class="form-select" id="updateLeadSelect"></select></div>
-<div class="form-group"><label class="form-label">Status Baru</label><select class="form-select" id="updateLeadStatus"><option value="Pending">Pending</option><option value="Valid">Valid</option><option value="Converted">Converted</option><option value="Rejected">Rejected</option></select></div>
-<div class="form-group" id="transValueGroup" style="display:none"><label class="form-label">Nilai Transaksi (Rp)</label><input type="number" class="form-input" id="updateTransValue" placeholder="0"></div>
+<form id="productForm" onsubmit="saveProduct(event)">
+<input type="hidden" id="productId">
+<div class="form-group"><label class="form-label">Nama Produk</label><input type="text" class="form-input" id="productName" required></div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Kategori</label><input type="text" class="form-input" id="productCategory" placeholder="Contoh: Roast Beans, Bubuk" required></div>
+<div class="form-group"><label class="form-label">Harga (Rp)</label><input type="number" class="form-input" id="productPrice" required></div>
 </div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button><button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button></div>
+<div class="form-group"><label class="form-label">URL Link Gambar</label><input type="url" class="form-input" id="productImg" placeholder="https://example.com/image.jpg"></div>
+<div class="form-group"><label class="form-label">Deskripsi Produk</label><textarea class="form-textarea" id="productDesc"></textarea></div>
+<div class="form-group">
+<label class="form-label">Status Produk Aktif</label>
+<label class="toggle-switch"><input type="checkbox" id="productActive" checked><span class="toggle-slider"></span></label>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Batal</button><button type="submit" class="btn btn-primary">Simpan Produk</button></div>
+</form>
+</div>
 </div>
 </div>
 
 <script>
-const CONFIG={GAS_URL:'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',ADMIN_PASSWORD:'admin123'};
+const GAS_API = "https://script.google.com/macros/s/AKfycbz_9MogYV5fT_pS6q2WvCegG-vK3_ZtP-Bq6L3OQ-bCHfG48PWhOasw4Vq6iG3Sms4m/exec";
+const ADMIN_PASS_HASH = "admin123";
+let DATA = { users: [], leads: [], orders: [], commissions: [], products: [] };
 
-async function callGAS(action,paramsObj){
-const url=new URL(CONFIG.GAS_URL);
-url.searchParams.append('action',action);
-for(let key in paramsObj){
-if(paramsObj[key]!==undefined&&paramsObj[key]!==null){
-url.searchParams.append(key,typeof paramsObj[key]==='object'?JSON.stringify(paramsObj[key]):String(paramsObj[key]));
+function checkAdminSession(){
+    if(sessionStorage.getItem('admin_logged')==='true'){
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('mainContent').style.display='block';
+        syncAllData();
+    }
 }
+function adminLogin(){
+    const pass = document.getElementById('adminPassword').value;
+    if(pass === ADMIN_PASS_HASH){
+        sessionStorage.setItem('admin_logged','true');
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('mainContent').style.display='block';
+        syncAllData();
+    }else{
+        const err = document.getElementById('loginError');
+        err.style.display='block';
+        setTimeout(()=>err.style.display='none',3000);
+    }
 }
-try{const response=await fetch(url.toString());if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
-catch(err){return{success:false,error:err.message};}
+function adminLogout(){
+    sessionStorage.removeItem('admin_logged');
+    window.location.reload();
 }
 
-async function fetchFromGAS(action){
-try{const response=await fetch(CONFIG.GAS_URL+'?action='+encodeURIComponent(action));if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
-catch(err){return{success:false,error:err.message}}
+function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
+    const targetPage = document.getElementById('page-'+pageId);
+    if(targetPage) targetPage.classList.add('active');
+    const menuLink = document.querySelector(`.sidebar-menu a[data-page="${pageId}"]`);
+    if(menuLink) menuLink.classList.add('active');
+    const titles = {dashboard:"Dashboard", products:"Manage Products", affiliators:"Affiliators", leads:"Leads Management", orders:"Orders History", commissions:"Komisi Admin"};
+    document.getElementById('pageTitle').innerText = titles[pageId] || "Admin";
 }
-
-let DATA={users:[],leads:[],orders:[],commissions:[]};
 
 async function syncAllData(){
-updateSyncStatus('syncing');
-const actions=[{action:'getUsers',key:'users'},{action:'getLeads',key:'leads'},{action:'getOrders',key:'orders'},{action:'getCommissions',key:'commissions'}];
-for(const item of actions){const result=await fetchFromGAS(item.action);if(result.success&&Array.isArray(result.data))DATA[item.key]=result.data}
-updateSyncStatus('synced');
-renderCurrentPage();
-}
-
-function renderDashboard(){
-const validLeads=DATA.leads.filter(l=>l.status==='Valid');
-const totalComm=DATA.commissions.reduce((a,c)=>a+(parseFloat(c.amount)||0),0);
-document.getElementById('dashTotalAff').textContent=DATA.users.length;
-document.getElementById('dashTotalLeads').textContent=DATA.leads.length;
-document.getElementById('dashValidLeads').textContent=validLeads.length;
-document.getElementById('dashTotalOrders').textContent=DATA.orders.length;
-document.getElementById('dashTotalComm').textContent='Rp '+formatNumber(totalComm);
-const recent=DATA.leads.slice(-5).reverse();
-document.getElementById('recentLeadsBody').innerHTML=recent.map(l=>{
-const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
-const leadOrders = DATA.orders.filter(o => String(o.leadId) === String(l.id));
-const totalOrderValue = leadOrders.reduce((sum, o) => sum + ((parseFloat(o.price) || 0) * (parseInt(o.qty) || 1)), 0);
-const tv = totalOrderValue > 0 ? totalOrderValue : (parseFloat(l.transactionvalue || l.transactionValue) || 0);
-const transVal = tv > 0 ? 'Rp ' + formatNumber(tv) : '-';
-
-return`<tr><td>${formatDate(l.date)}</td><td>${l.name}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
-}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
-}
-
-function renderAffiliators(){
-document.getElementById('affiliatorCount').textContent=DATA.users.length+' affiliator';
-document.getElementById('affiliatorsBody').innerHTML=DATA.users.map(u=>{
-const affLeads=DATA.leads.filter(l=>l.referralCode===u.referralCode);
-const affComm=DATA.commissions.filter(c=>String(c.affiliatorid || c.affiliatorId)===String(u.id));
-const totalComm=affComm.reduce((a,c)=>a+(parseFloat(c.amount)||0),0);
-return`<tr><td><strong>${u.name}</strong></td><td>${u.email}</td><td>${u.phone||'-'}</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">${u.referralCode}</code></td><td>${u.bank||'-'}</td><td><span class="badge badge-${u.status==='Active'?'valid':'pending'}">${u.status||'Active'}</span></td><td>${affLeads.length}</td><td>Rp ${formatNumber(totalComm)}</td></tr>`
-}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
-}
-
-function renderLeads(){
-const statusFilter=document.getElementById('filterLeadStatus').value;
-const searchFilter=document.getElementById('filterLeadSearch').value.toLowerCase();
-let leads=DATA.leads;
-if(statusFilter)leads=leads.filter(l=>l.status===statusFilter);
-if(searchFilter)leads=leads.filter(l=>(l.name||'').toLowerCase().includes(searchFilter));
-document.getElementById('leadsBody').innerHTML=leads.map(l=>{
-const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
-const leadOrders = DATA.orders.filter(o => String(o.leadId) === String(l.id));
-const totalOrderValue = leadOrders.reduce((sum, o) => sum + ((parseFloat(o.price) || 0) * (parseInt(o.qty) || 1)), 0);
-const tv = totalOrderValue > 0 ? totalOrderValue : (parseFloat(l.transactionvalue || l.transactionValue) || 0);
-const transVal = tv > 0 ? 'Rp ' + formatNumber(tv) : '-';
-return`<tr><td>${formatDate(l.date)}</td><td><strong>${l.name}</strong></td><td>${l.contact||'-'}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td>${l.source||'-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
-}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
-}
-
-function renderOrders(){
-document.getElementById('ordersBody').innerHTML=DATA.orders.map(o=>{
-const alamat=[o.namaJalanGedung,o.kecamatan,o.kotaKabupaten,o.provinsi,o.kodePos].filter(Boolean).join(', ');
-const price=parseFloat(o.price)||0;
-return`<tr><td>${formatDate(o.date)}</td><td>${o.productName||'-'}${o.qty>1?' x'+o.qty:''}</td><td>${o.buyerName||'-'}</td><td>${o.buyerPhone||'-'}<br><small>${o.buyerEmail||''}</small></td><td>${alamat||'-'}</td><td>${price>0?'Rp '+formatNumber(price):'-'}</td><td>${o.referralCode||'-'}</td><td><span class="badge badge-${(o.status||'pending').toLowerCase()}">${o.status||'Pending'}</span></td></tr>`
-}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada orders</td></tr>';
-}
-
-function renderCommissions(){
-    const bodyEl = document.getElementById('commissionsBody');
-    if (!bodyEl) return;
-    
-    bodyEl.innerHTML = DATA.commissions.map(c => {
-        // 1. FAKTA DATA: Ambil ID langsung dari properti 'id' (bukan commid atau commId)
-        const commId = c.id ? String(c.id).trim() : ''; 
+    updateSyncStatus('syncing');
+    try{
+        const [uRes, lRes, oRes, cRes, pRes] = await Promise.all([
+            fetch(`${GAS_API}?action=getUsers`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getLeads`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getOrders`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getCommissions`).then(r=>r.json()),
+            fetch(`${GAS_API}?action=getProducts`).then(r=>r.json())
+        ]);
+        if(uRes.success) DATA.users = uRes.data;
+        if(lRes.success) DATA.leads = lRes.data;
+        if(oRes.success) DATA.orders = oRes.data;
+        if(cRes.success) DATA.commissions = cRes.data;
+        if(pRes.success) DATA.products = pRes.data;
         
-        // 2. Ambil ID affiliator dari properti 'affiliatorid'
-        const affId = c.affiliatorid ? String(c.affiliatorid).trim() : ''; 
-        
-        // 3. Cari data nama affiliator ke dalam database Users
-        const aff = DATA.users.find(u => String(u.id).trim() === affId);
-        
-        // 4. FAKTA DATA: Cek status 'paid' (Antisipasi teks 'FALSE' atau 'TRUE' huruf besar dari CSV)
-        const isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
-        const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
-        
-        // 5. VALIDASI TOMBOL: Jika BELUM dibayar (isPaid = false) DAN id komisi ada, tombol WAJIB KELUAR
-        const actionBtn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
-        
-        const amount = parseFloat(c.amount) || 0;
-        const dateStr = c.date || '';
-        
-        return `<tr>
-            <td>${formatDate(dateStr)}</td>
-            <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
-            <td>${c.type || '-'}</td>
-            <td>${c.description || '-'}</td>
-            <td>Rp ${formatNumber(amount)}</td>
-            <td>${statusBadge}</td>
-            <td>${actionBtn}</td>
-        </tr>`;
-    }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada data komisi</td></tr>';
-}
-
-async function markCommissionAsPaid(commId) {
-    if(!confirm('Apakah Anda yakin ingin menandai komisi ini sebagai "Dibayar"?')) return;
-    
-    showToast('Memperbarui status komisi...', 'info');
-    try {
-        const url = CONFIG.GAS_URL + '?action=updateCommission&id=' + encodeURIComponent(commId) + '&paid=true';
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if(result.success) {
-            showToast('Komisi berhasil diperbarui!', 'success');
-            syncAllData();
-        } else {
-            showToast('Gagal memperbarui: ' + result.error, 'error');
-        }
-    } catch(err) {
-        showToast('Error koneksi server!', 'error');
+        calculateStats();
+        renderProducts();
+        renderAffiliators();
+        renderLeads();
+        renderOrders();
+        renderCommissions();
+        updateSyncStatus('synced');
+    }catch(e){
+        updateSyncStatus('error');
+        showToast('Gagal memuat data dari database Google Sheet','error');
     }
 }
 
-function openUpdateLeadModal(leadId){
-const select=document.getElementById('updateLeadSelect');
-select.innerHTML=DATA.leads.map(l=>`<option value="${l.id}">${l.name} (${l.status||'Pending'})</option>`).join('');
-if(leadId)select.value=leadId;
-document.getElementById('updateLeadModal').classList.add('active');
+function calculateStats(){
+    document.getElementById('statAffiliators').innerText = DATA.users.length;
+    document.getElementById('statLeads').innerText = DATA.leads.length;
+    document.getElementById('statOrders').innerText = DATA.orders.length;
+    document.getElementById('statProducts').innerText = DATA.products.length;
+    const pendingComm = DATA.commissions.filter(c => String(c.paid).toLowerCase() !== 'true').reduce((sum,c)=>sum+(parseFloat(c.amount)||0),0);
+    document.getElementById('statCommissions').innerText = "Rp " + formatNumber(pendingComm);
 }
 
-document.getElementById('updateLeadStatus').addEventListener('change',function(){
-document.getElementById('transValueGroup').style.display=this.value==='Converted'?'block':'none';
-});
-
-async function saveLeadUpdate(){
-const leadId=document.getElementById('updateLeadSelect').value;
-const newStatus=document.getElementById('updateLeadStatus').value;
-const transValue=document.getElementById('updateTransValue').value;
-const lead=DATA.leads.find(l=>l.id===leadId);
-if(!lead){showToast('Lead tidak ditemukan','error');return}
-const result=await callGAS('updateLead',{id:leadId,status:newStatus,transactionValue:transValue});
-if(result.success){
-lead.status=newStatus;
-if(transValue)lead.transactionValue=transValue;
-closeModal('updateLeadModal');
-showToast('Lead updated!','success');
-renderCurrentPage();
-}else{showToast('Gagal update: '+(result.error||'unknown error'),'error')}
+/* ==================== PRODUCTS SECTION ==================== */
+function renderProducts(){
+    const body = document.getElementById('productsBody');
+    if(!body) return;
+    if(!DATA.products || DATA.products.length === 0){
+        body.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-box-open"></i><br>Belum ada data produk</td></tr>`;
+        return;
+    }
+    body.innerHTML = DATA.products.map(p => {
+        const pId = p.id || '';
+        const isAct = String(p.active).toLowerCase() === 'true';
+        const imgTag = p.img ? `<div class="product-img-preview"><img src="${p.img}" onerror="this.src='https://placehold.co/50?text=Kopi'"></div>` : `<div class="product-img-preview"><i class="fas fa-coffee"></i></div>`;
+        return `<tr>
+            <td>${imgTag}</td>
+            <td><strong>${p.name || '-'}</strong><br><small style="color:var(--text-light)">ID: ${pId}</small></td>
+            <td>${p.category || '-'}</td>
+            <td>Rp ${formatNumber(p.price)}</td>
+            <td><span class="badge ${isAct?'badge-active':'badge-inactive'}">${isAct?'Aktif':'Non-Aktif'}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="openProductModal('${pId}')" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${pId}')" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
 }
 
-function showPage(page){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById('page-'+page).classList.add('active');
-document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
-const clicked=document.querySelector('.sidebar-menu a[data-page="'+page+'"]');
-if(clicked)clicked.classList.add('active');
-document.getElementById('pageTitle').textContent=page==='dashboard'?'Dashboard':page==='affiliators'?'Affiliators':page==='leads'?'Leads':page==='orders'?'Orders':'Komisi';
-renderCurrentPage();
+function openProductModal(id = ''){
+    document.getElementById('productForm').reset();
+    if(!id){
+        document.getElementById('productModalTitle').innerText = "Tambah Produk Baru";
+        document.getElementById('productId').value = "";
+        document.getElementById('productActive').checked = true;
+    }else{
+        document.getElementById('productModalTitle').innerText = "Edit Produk";
+        const p = DATA.products.find(prod => String(prod.id) === String(id));
+        if(p){
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name || '';
+            document.getElementById('productCategory').value = p.category || '';
+            document.getElementById('productPrice').value = p.price || 0;
+            document.getElementById('productImg').value = p.img || '';
+            document.getElementById('productDesc').value = p.description || p.desc || '';
+            document.getElementById('productActive').checked = String(p.active).toLowerCase() === 'true';
+        }
+    }
+    document.getElementById('productModal').classList.add('active');
 }
 
-function renderCurrentPage(){const activePage=document.querySelector('.page.active');if(!activePage)return;const pageId=activePage.id.replace('page-','');if(pageId==='dashboard')renderDashboard();if(pageId==='affiliators')renderAffiliators();if(pageId==='leads')renderLeads();if(pageId==='orders')renderOrders();if(pageId==='commissions')renderCommissions();}
+async function saveProduct(e){
+    e.preventDefault();
+    const id = document.getElementById('productId').value;
+    const name = document.getElementById('productName').value;
+    const category = document.getElementById('productCategory').value;
+    const price = document.getElementById('productPrice').value;
+    const img = document.getElementById('productImg').value;
+    const desc = document.getElementById('productDesc').value;
+    const active = document.getElementById('productActive').checked ? 'true' : 'false';
 
-function adminLogin(){const input=document.getElementById('adminPassword').value;if(input===CONFIG.ADMIN_PASSWORD){document.getElementById('loginOverlay').style.display='none';document.getElementById('mainContent').style.display='block';AdminSession.save();showToast('Selamat datang, Admin!','success');syncAllData()}else{document.getElementById('loginError').style.display='block';document.getElementById('adminPassword').value=''}}
-function adminLogout(){AdminSession.clear();location.href='index.html'}
-function checkSession(){const session=AdminSession.load();if(session&&session.isAdmin){document.getElementById('loginOverlay').style.display='none';document.getElementById('mainContent').style.display='block';syncAllData()}}
+    closeModal('productModal');
+    updateSyncStatus('syncing');
 
-const AdminSession={save:function(){try{document.cookie='aff_admin='+encodeURIComponent(JSON.stringify({isAdmin:true,ts:Date.now()}))+';path=/;max-age=86400;SameSite=Lax'}catch(e){}},load:function(){try{const match=document.cookie.match(/aff_admin=([^;]+)/);if(match)return JSON.parse(decodeURIComponent(match[1]))}catch(e){}return null}}
+    let url = `${GAS_API}?action=saveProduct&name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}&price=${price}&img=${encodeURIComponent(img)}&description=${encodeURIComponent(desc)}&active=${active}`;
+    if(id) url += `&id=${id}`;
 
-function refreshAllData(){syncAllData();showToast('Data refreshed!','success')}
-function closeModal(id){document.getElementById(id).classList.remove('active')}
+    try{
+        const res = await fetch(url).then(r=>r.json());
+        if(res.success){
+            showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal menyimpan produk','error');
+            updateSyncStatus('synced');
+        }
+    }catch(err){
+        showToast('Koneksi terputus saat menyimpan produk','error');
+        updateSyncStatus('error');
+    }
+}
+
+async function deleteProduct(id){
+    if(!confirm('Apakah Anda yakin ingin menghapus produk ini secara permanen dari database?')) return;
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=deleteProduct&id=${id}`).then(r=>r.json());
+        if(res.success){
+            showToast('Produk berhasil dihapus!','success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal menghapus produk','error');
+            updateSyncStatus('synced');
+        }
+    }catch(err){
+        showToast('Koneksi bermasalah','error');
+    }
+}
+
+/* ==================== CORE AFFILIATOR ADMIN SECTIONS ==================== */
+function renderAffiliators(){
+    const body = document.getElementById('affiliatorsBody');
+    if(!body) return;
+    body.innerHTML = DATA.users.map(u => `<tr>
+        <td><strong>${u.name||'-'}</strong></td>
+        <td>${u.email||'-'}</td>
+        <td>${u.whatsapp||'-'}</td>
+        <td><code style="background:#E8E4E0;padding:2px 6px;border-radius:4px">${u.referralcode||u.referralCode||'-'}</code></td>
+        <td>${formatDate(u.registereddate||u.date||'')}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty-state">Tidak ada data affiliator</td></tr>';
+}
+
+function renderLeads(){
+    const body = document.getElementById('leadsBody');
+    if(!body) return;
+    const filter = document.getElementById('leadFilterStatus').value;
+    const filtered = filter ? DATA.leads.filter(l => String(l.status).toLowerCase() === filter.toLowerCase()) : DATA.leads;
+    
+    body.innerHTML = filtered.map(l => {
+        const leadId = l.id || '';
+        const stat = String(l.status).toLowerCase() || 'pending';
+        const val = parseFloat(l.transactionvalue || l.transactionValue) || 0;
+        
+        let actionBtn = '';
+        if(stat === 'pending'){
+            actionBtn = `<button class="btn btn-sm btn-success" onclick="updateLeadStatus('${leadId}','valid')">Valid</button>
+                         <button class="btn btn-sm btn-danger" onclick="updateLeadStatus('${leadId}','rejected')">Reject</button>`;
+        } else if(stat === 'valid'){
+            actionBtn = `<button class="btn btn-sm btn-primary" onclick="updateLeadStatus('${leadId}','converted')">Convert</button>`;
+        } else {
+            actionBtn = '-';
+        }
+
+        return `<tr>
+            <td>${formatDate(l.date)}</td>
+            <td><strong>${l.name||'-'}</strong></td>
+            <td>${l.whatsapp||'-'}</td>
+            <td>${l.city||'-'}</td>
+            <td><code>${l.referralcode||'-'}</code></td>
+            <td>Rp ${formatNumber(val)}</td>
+            <td><span class="badge badge-${stat}">${l.status||'PENDING'}</span></td>
+            <td><div style="display:flex;gap:4px">${actionBtn}</div></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty-state">Data leads kosong</td></tr>';
+}
+
+function renderOrders(){
+    const body = document.getElementById('ordersBody');
+    if(!body) return;
+    body.innerHTML = DATA.orders.map(o => `<tr>
+        <td>${formatDate(o.date)}</td>
+        <td>${o.productname||o.productName||'-'}</td>
+        <td><strong>${o.buyername||o.buyerName||'-'}</strong></td>
+        <td>${o.buyerwhatsapp||'-'}</td>
+        <td>${o.buyercity||'-'}</td>
+        <td>Rp ${formatNumber(o.totalprice||o.totalPrice)}</td>
+        <td><code>${o.referralcode||'-'}</code></td>
+        <td><span class="badge badge-valid">${o.status||'SUCCESS'}</span></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="empty-state">Belum ada riwayat transaksi masuk</td></tr>';
+}
+
+function renderCommissions(){
+    const body = document.getElementById('commissionsBody');
+    if(!body) return;
+    body.innerHTML = DATA.commissions.map(c => {
+        const commId = c.id ? String(c.id).trim() : '';
+        const affId = c.affiliatorid ? String(c.affiliatorid).trim() : '';
+        const aff = DATA.users.find(u => String(u.id).trim() === affId);
+        const isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
+        
+        const badge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
+        // FIX BUG 2 & VALIDASI DATA: Tombol diproteksi ketat menggunakan parameter ID unik komisi asli
+        const btn = (!isPaid && commId) ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        
+        return `<tr>
+            <td>${formatDate(c.date)}</td>
+            <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
+            <td>${c.type || '-'}</td>
+            <td>${c.description || '-'}</td>
+            <td>Rp ${formatNumber(c.amount)}</td>
+            <td>${badge}</td>
+            <td>${btn}</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty-state">Belum ada data pencairan komisi</td></tr>';
+}
+
+async function updateLeadStatus(id, status){
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=updateLead&id=${id}&status=${status}`).then(r=>r.json());
+        if(res.success){
+            showToast(`Status Lead berhasil diubah menjadi ${status.toUpperCase()}!`,'success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal merubah status lead','error');
+            updateSyncStatus('synced');
+        }
+    }catch(e){
+        showToast('Koneksi bermasalah','error');
+    }
+}
+
+async function markCommissionAsPaid(id){
+    if(!id || id === ''){
+        showToast('ID Komisi rusak atau tidak terbaca','error');
+        return;
+    }
+    if(!confirm('Nyatakan komisi ini telah lunas dibayar transfer ke affiliator?')) return;
+    updateSyncStatus('syncing');
+    try{
+        const res = await fetch(`${GAS_API}?action=updateCommission&id=${id}`).then(r=>r.json());
+        if(res.success){
+            showToast('Pembayaran komisi berhasil diverifikasi lunas!','success');
+            syncAllData();
+        }else{
+            showToast(res.error || 'Gagal memperbarui status bayar','error');
+            updateSyncStatus('synced');
+        }
+    }catch(e){
+        showToast('Koneksi bermasalah ke server GAS','error');
+    }
+}
+
+/* ==================== HELPER UTILITAS UTAMA ==================== */
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function refreshAllData(){ syncAllData(); showToast('Data sistem diperbarui!','success'); }
+
+// FIX BUG 1 (REGEX): Negative lookahead (?!\d) bekerja sempurna menyaring pemisah titik ribuan nominal uang Rp
 function formatNumber(num){
     return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 }
-function formatDate(dateStr){if(!dateStr)return'-';const d=new Date(dateStr);return isNaN(d.getTime())?String(dateStr):d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
-function showToast(message,type){const container=document.getElementById('toastContainer');const toast=document.createElement('div');toast.className='toast '+(type||'info');const icons={success:'check-circle',error:'times-circle',warning:'exclamation-circle',info:'info-circle'};toast.innerHTML='<i class="fas fa-'+(icons[type]||'info-circle')+'"></i> <span>'+message+'</span>';container.appendChild(toast);setTimeout(()=>toast.remove(),4000)}
-function updateSyncStatus(status){const el=document.getElementById('syncStatus');if(!el)return;el.innerHTML=status==='syncing'?'<i class="fas fa-spinner fa-spin"></i> Sinkronasi...':status==='synced'?'<i class="fas fa-check-circle"></i> Data terbaru':'<i class="fas fa-exclamation-circle"></i> Error'}
 
-document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')}));
-document.addEventListener('DOMContentLoaded',function(){checkSession()});
+function formatDate(dateStr){
+    if(!dateStr) return '-';
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function showToast(message,type){
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    const icons = {success:'check-circle',error:'times-circle'};
+    toast.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(()=>toast.remove(),4000);
+}
+
+function updateSyncStatus(status){
+    const el = document.getElementById('syncStatus');
+    if(!el)return;
+    el.innerHTML = status==='syncing'?'<i class="fas fa-spinner fa-spin" style="color:var(--info)"></i> Sinkron...':status==='synced'?'<i class="fas fa-check-circle" style="color:var(--success)"></i> Data Sinkron':'<i class="fas fa-exclamation-circle" style="color:var(--danger)"></i> Error Hubungan';
+}
+
+document.addEventListener('DOMContentLoaded', checkAdminSession);
 </script>
 </body>
 </html>
