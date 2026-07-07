@@ -1,789 +1,303 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affiliator Admin - Kopi Affiliate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #5D4037;
-            --primary-light: #8D6E63;
-            --primary-dark: #3E2723;
-            --accent: #A1887F;
-            --bg: #F5F3F0;
-            --card-bg: #FFFFFF;
-            --text: #2C2C2C;
-            --text-light: #6B6B6B;
-            --border: #E8E4E0;
-            --success: #4CAF50;
-            --warning: #FF9800;
-            --danger: #E53935;
-            --info: #2196F3;
-            --shadow: 0 4px 20px rgba(93,64,55,0.08);
-            --shadow-lg: 0 10px 40px rgba(93,64,55,0.12);
-            --radius: 12px;
-            --radius-sm: 8px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .sidebar { width: 260px; background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; bottom: 0; padding: 1.5rem; overflow-y: auto; z-index: 1000; }
-        .sidebar-brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-menu { list-style: none; }
-        .sidebar-menu li { margin-bottom: 0.5rem; }
-        .sidebar-menu a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: all 0.3s; cursor: pointer; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { color: white; background: rgba(255,255,255,0.1); }
-        .sidebar-menu i { width: 20px; text-align: center; }
-        .main { margin-left: 260px; min-height: 100vh; }
-        .header { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .header h1 { font-size: 1.25rem; color: var(--primary-dark); }
-        .content { padding: 2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.1rem; }
-        .stat-icon.blue { background: #E3F2FD; color: var(--info); }
-        .stat-icon.green { background: #E8F5E9; color: var(--success); }
-        .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
-        .stat-icon.purple { background: #F3E5F5; color: #9C27B0; }
-        .stat-icon.red { background: #FFEBEE; color: var(--danger); }
-        .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); }
-        .stat-label { font-size: 0.8rem; color: var(--text-light); }
-        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); }
-        .table-container { overflow-x: auto; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th { background: var(--bg); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .data-table tr:hover { background: var(--bg); }
-        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
-        .badge-pending { background: #FFF3E0; color: var(--warning); }
-        .badge-valid { background: #E8F5E9; color: var(--success); }
-        .badge-converted { background: #E3F2FD; color: var(--info); }
-        .badge-rejected { background: #FFEBEE; color: var(--danger); }
-        .badge-active { background: #E8F5E9; color: var(--success); }
-        .btn { padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: none; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: inherit; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.4rem; }
-        .form-input, .form-select { width: 100%; padding: 0.6rem 0.875rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.9rem; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary-light); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 1rem; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: var(--card-bg); border-radius: var(--radius); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { color: var(--primary-dark); font-size: 1.1rem; }
-        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; }
-        .modal-body { padding: 1.5rem; }
-        .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: var(--card-bg); border-radius: var(--radius-sm); padding: 1rem 1.5rem; box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; min-width: 300px; }
-        .toast.success { border-left-color: var(--success); }
-        .toast.error { border-left-color: var(--danger); }
-        .toast.info { border-left-color: var(--info); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-light); }
-        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
-        .sync-status { font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .sync-status.synced { color: var(--success); }
-        .sync-status.syncing { color: var(--info); }
-        .sync-status.error { color: var(--danger); }
-        .filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
-        .filter-bar input, .filter-bar select { padding: 0.5rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.85rem; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .login-overlay { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .login-box { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); text-align: center; }
-        .login-box h2 { color: var(--primary-dark); margin-bottom: 0.5rem; }
-        .login-box p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 1.5rem; }
-        .debug-log { position: fixed; bottom: 10px; left: 10px; background: #1a1a1a; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 500px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
-        .debug-log.show { display: block; }
-        .debug-toggle-btn { position: fixed; bottom: 10px; right: 10px; background: #333; color: #0f0; border: 1px solid #0f0; border-radius: 6px; padding: 4px 10px; font-family: monospace; font-size: 10px; cursor: pointer; z-index: 10000; opacity: 0.6; transition: opacity 0.3s; }
-        .debug-toggle-btn:hover { opacity: 1; }
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
-            .sidebar.open { transform: translateX(0); width: 260px; }
-            .main { margin-left: 0; }
-            .form-row { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affiliator Admin - Kopi Affiliate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--primary:#5D4037;--primary-light:#8D6E63;--primary-dark:#3E2723;--accent:#A1887F;--bg:#F5F3F0;--card-bg:#FFFFFF;--text:#2C2C2C;--text-light:#6B6B6B;--border:#E8E4E0;--success:#4CAF50;--warning:#FF9800;--danger:#E53935;--info:#2196F3;--shadow:0 4px 20px rgba(93,64,55,0.08);--shadow-lg:0 10px 40px rgba(93,64,55,0.12);--radius:12px;--radius-sm:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.sidebar{width:260px;background:var(--primary-dark);color:white;position:fixed;top:0;left:0;bottom:0;padding:1.5rem;overflow-y:auto;z-index:1000}
+.sidebar-brand{font-size:1.3rem;font-weight:700;margin-bottom:2rem;display:flex;align-items:center;gap:0.75rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-menu{list-style:none}
+.sidebar-menu li{margin-bottom:0.5rem}
+.sidebar-menu a{color:rgba(255,255,255,0.7);text-decoration:none;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);transition:all 0.3s;cursor:pointer}
+.sidebar-menu a:hover,.sidebar-menu a.active{color:white;background:rgba(255,255,255,0.1)}
+.main{margin-left:260px;min-height:100vh}
+.header{background:var(--card-bg);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.content{padding:2rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card-bg);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.1rem}
+.stat-icon.blue{background:#E3F2FD;color:var(--info)}
+.stat-icon.green{background:#E8F5E9;color:var(--success)}
+.stat-icon.orange{background:#FFF3E0;color:var(--warning)}
+.stat-icon.purple{background:#F3E5F5;color:#9C27B0}
+.stat-icon.red{background:#FFEBEE;color:var(--danger)}
+.stat-value{font-size:1.6rem;font-weight:700;color:var(--primary-dark)}
+.stat-label{font-size:0.8rem;color:var(--text-light)}
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:1.5rem}
+.card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem}
+.card-title{font-size:1.1rem;font-weight:600;color:var(--primary-dark)}
+.table-container{overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+.data-table th{background:var(--bg);padding:0.75rem 1rem;text-align:left;font-weight:600;color:var(--text-light);text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.7rem;font-weight:600;display:inline-block}
+.badge-pending{background:#FFF3E0;color:var(--warning)}
+.badge-valid{background:#E8F5E9;color:var(--success)}
+.badge-converted{background:#E3F2FD;color:var(--info)}
+.badge-rejected{background:#FFEBEE;color:var(--danger)}
+.btn{padding:0.5rem 1rem;border-radius:var(--radius-sm);border:none;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem}
+.btn-sm{padding:0.35rem 0.75rem;font-size:0.8rem}
+.btn-primary{background:var(--primary);color:white}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:white}
+.btn-danger{background:var(--danger);color:white}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
+.form-input,.form-select{width:100%;padding:0.6rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary-light)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card-bg);border-radius:var(--radius);max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:1.5rem;color:var(--text-light);cursor:pointer}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.5rem}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
+.toast{background:var(--card-bg);border-radius:var(--radius-sm);padding:1rem 1.5rem;box-shadow:var(--shadow-lg);border-left:4px solid var(--primary);display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;min-width:300px}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-state{text-align:center;padding:3rem;color:var(--text-light)}
+.filter-bar{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.page{display:none}
+.page.active{display:block}
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-box{background:var(--card-bg);border-radius:var(--radius);padding:2.5rem;max-width:400px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
+@media(max-width:768px){.form-row{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
-    <div class="toast-container" id="toastContainer"></div>
-    <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
-    <div class="debug-log" id="debugLog"></div>
-    <button class="debug-toggle-btn" id="debugToggleBtn" onclick="document.getElementById('debugLog').classList.toggle('show')" title="Toggle Debug Log">Log</button>
+<div class="toast-container" id="toastContainer"></div>
 
-    <!-- LOGIN OVERLAY -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-box">
-            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i></div>
-            <h2>Affiliator Admin</h2>
-            <p>Kelola seluruh data affiliator, leads, dan komisi</p>
-            <div class="form-group" style="text-align: left;">
-                <label class="form-label">Password Admin</label>
-                <input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align: center; font-size: 1rem;" onkeypress="if(event.key==='Enter')adminLogin()">
-            </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="adminLogin()">
-                <i class="fas fa-unlock"></i> Masuk
-            </button>
-            <p id="loginError" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"><i class="fas fa-exclamation-circle"></i> Password salah</p>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                <a href="index.html" class="btn btn-outline" style="width: 100%; font-size: 0.8rem; text-decoration: none; justify-content: center;">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
-                </a>
-            </div>
-        </div>
-    </div>
+<div class="login-overlay" id="loginOverlay">
+<div class="login-box">
+<div style="font-size:3rem;color:var(--primary);margin-bottom:1rem"><i class="fas fa-shield-alt"></i></div>
+<h2>Affiliator Admin</h2>
+<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Kelola seluruh data affiliator, leads, dan komisi</p>
+<div class="form-group" style="text-align:left">
+<label class="form-label">Password Admin</label>
+<input type="password" class="form-input" id="adminPassword" placeholder="Masukkan password" style="text-align:center;font-size:1rem" onkeypress="if(event.key==='Enter')adminLogin()">
+</div>
+<button class="btn btn-primary" style="width:100%;margin-top:0.5rem" onclick="adminLogin()"><i class="fas fa-unlock"></i> Masuk</button>
+<p id="loginError" style="color:var(--danger);font-size:0.85rem;margin-top:1rem;display:none"><i class="fas fa-exclamation-circle"></i> Password salah</p>
+<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+<a href="index.html" style="color:var(--primary);text-decoration:none;font-size:0.85rem"><i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama</a>
+</div>
+</div>
+</div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <i class="fas fa-user-shield"></i>
-            <span>Affiliator Admin</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
-            <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
-            <li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
-            <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
-            <li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
-            <li><a onclick="adminLogout()" style="margin-top: 2rem;"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
-        </ul>
-    </aside>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-brand"><i class="fas fa-user-shield"></i><span>Affiliator Admin</span></div>
+<ul class="sidebar-menu">
+<li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+<li><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
+<li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
+<li><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+<li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
+<li><a href="products-admin.html"><i class="fas fa-box"></i> Products</a></li>
+<li><a href="index.html"><i class="fas fa-arrow-left"></i> Kembali</a></li>
+<li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
+</ul>
+</aside>
 
-    <!-- MAIN CONTENT -->
-    <div class="main" id="mainContent" style="display:none;">
-        <div class="header">
-            <h1 id="pageTitle">Dashboard</h1>
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <span class="sync-status" id="syncStatus"><i class="fas fa-circle"></i> Loading...</span>
-                <button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
-        </div>
+<div class="main" id="mainContent" style="display:none">
+<div class="header">
+<h1 id="pageTitle">Dashboard</h1>
+<div style="display:flex;gap:0.75rem;align-items:center">
+<span style="font-size:0.75rem;color:var(--text-light)" id="syncStatus"><i class="fas fa-circle"></i> Loading...</span>
+<button class="btn btn-outline btn-sm" onclick="refreshAllData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+</div>
+</div>
+<div class="content">
+<div id="page-dashboard" class="page active">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
+<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Leads</div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Leads Valid</div></div>
+<div class="stat-card"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
+<div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Leads Terbaru</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Aksi</th></tr></thead><tbody id="recentLeadsBody"></tbody></table></div></div></div>
+</div>
 
-        <div class="content">
-            <!-- DASHBOARD -->
-            <div id="page-dashboard" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" id="dashTotalAff">0</div>
-                        <div class="stat-label">Total Affiliators</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon orange"><i class="fas fa-address-book"></i></div>
-                        <div class="stat-value" id="dashTotalLeads">0</div>
-                        <div class="stat-label">Total Leads</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
-                        <div class="stat-value" id="dashValidLeads">0</div>
-                        <div class="stat-label">Leads Valid</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div>
-                        <div class="stat-value" id="dashTotalOrders">0</div>
-                        <div class="stat-label">Total Orders</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div>
-                        <div class="stat-value" id="dashTotalComm">Rp 0</div>
-                        <div class="stat-label">Total Komisi</div>
-                    </div>
-                </div>
+<div id="page-affiliators" class="page">
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div><span style="font-size:0.85rem;color:var(--text-light)" id="affiliatorCount">0 affiliator</span></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th></tr></thead><tbody id="affiliatorsBody"></tbody></table></div></div></div>
+</div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-clock"></i> Leads Terbaru</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead><tr><th>Tanggal</th><th>Nama</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Aksi</th></tr></thead>
-                                <tbody id="recentLeadsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div id="page-leads" class="page">
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-address-book"></i> Semua Leads</div><button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button></div><div class="card-body"><div class="filter-bar"><select class="form-select" id="filterLeadStatus" onchange="renderLeads()" style="width:auto;min-width:150px"><option value="">Semua Status</option><option value="Pending">Pending</option><option value="Valid">Valid</option><option value="Converted">Converted</option><option value="Rejected">Rejected</option></select><input type="text" class="form-input" id="filterLeadSearch" placeholder="Cari nama..." oninput="renderLeads()" style="max-width:200px"></div><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th>Aksi</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div></div>
+</div>
 
-            <!-- AFFILIATORS -->
-            <div id="page-affiliators" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div>
-                        <span style="font-size: 0.85rem; color: var(--text-light);" id="affiliatorCount">0 affiliator</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th></tr>
-                                </thead>
-                                <tbody id="affiliatorsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div id="page-orders" class="page">
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-shopping-cart"></i> Semua Orders</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Produk</th><th>Buyer</th><th>Kontak</th><th>Kota</th><th>Harga</th><th>Referral</th><th>Status</th></tr></thead><tbody id="ordersBody"></tbody></table></div></div></div>
+</div>
 
-            <!-- LEADS -->
-            <div id="page-leads" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-address-book"></i> Semua Leads</div>
-                        <button class="btn btn-primary btn-sm" onclick="openUpdateLeadModal()"><i class="fas fa-edit"></i> Update Status</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="filter-bar">
-                            <select id="filterLeadStatus" onchange="renderLeads()">
-                                <option value="">Semua Status</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Valid">Valid</option>
-                                <option value="Converted">Converted</option>
-                                <option value="Rejected">Rejected</option>
-                            </select>
-                            <input type="text" id="filterLeadSearch" placeholder="Cari nama..." oninput="renderLeads()">
-                        </div>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Status</th><th>Nilai Transaksi</th><th>Source</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody id="leadsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div id="page-commissions" class="page">
+<div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div></div><div class="card-body"><div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th></tr></thead><tbody id="commissionsBody"></tbody></table></div></div></div>
+</div>
+</div>
+</div>
 
-            <!-- ORDERS -->
-            <div id="page-orders" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-shopping-cart"></i> Semua Orders</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Produk</th><th>Buyer</th><th>Kontak</th><th>Kota</th><th>Harga</th><th>Referral</th><th>Status</th></tr>
-                                </thead>
-                                <tbody id="ordersBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="modal-overlay" id="updateLeadModal">
+<div class="modal">
+<div class="modal-header"><h3><i class="fas fa-edit"></i> Update Status Lead</h3><button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button></div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">Pilih Lead</label><select class="form-select" id="updateLeadSelect"></select></div>
+<div class="form-group"><label class="form-label">Status Baru</label><select class="form-select" id="updateLeadStatus"><option value="Pending">Pending</option><option value="Valid">Valid</option><option value="Converted">Converted</option><option value="Rejected">Rejected</option></select></div>
+<div class="form-group" id="transValueGroup" style="display:none"><label class="form-label">Nilai Transaksi (Rp)</label><input type="number" class="form-input" id="updateTransValue" placeholder="0"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button><button class="btn btn-primary" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button></div>
+</div>
+</div>
 
-            <!-- COMMISSIONS -->
-            <div id="page-commissions" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-money-bill-wave"></i> Komisi</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr><th>Tanggal</th><th>Affiliator</th><th>Tipe</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th></tr>
-                                </thead>
-                                <tbody id="commissionsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<script>
+const CONFIG={GAS_URL:'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',ADMIN_PASSWORD:'admin123'};
 
-    <!-- UPDATE LEAD MODAL -->
-    <div class="modal-overlay" id="updateLeadModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Update Status Lead</h3>
-                <button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Pilih Lead</label>
-                    <select class="form-select" id="updateLeadSelect"></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status Baru</label>
-                    <select class="form-select" id="updateLeadStatus">
-                        <option value="Pending">Pending</option>
-                        <option value="Valid">Valid</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                <div class="form-group" id="transValueGroup" style="display:none;">
-                    <label class="form-label">Nilai Transaksi (Rp)</label>
-                    <input type="number" class="form-input" id="updateTransValue" placeholder="0">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
-                <button class="btn btn-primary" id="btnUpdateLead" onclick="saveLeadUpdate()"><i class="fas fa-save"></i> Update</button>
-            </div>
-        </div>
-    </div>
+// GAS CALL (GET - Lebih Reliable)
+async function callGAS(action,paramsObj){
+const url=new URL(CONFIG.GAS_URL);
+url.searchParams.append('action',action);
+for(let key in paramsObj){
+if(paramsObj[key]!==undefined&&paramsObj[key]!==null){
+url.searchParams.append(key,typeof paramsObj[key]==='object'?JSON.stringify(paramsObj[key]):String(paramsObj[key]));
+}
+}
+try{const response=await fetch(url.toString());if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
+catch(err){return{success:false,error:err.message};}
+}
 
-    <script>
-        // ==================== ACCESS CONTROL ====================
-        (function checkAccess() {
-            try {
-                const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                if (!match) { return; }
-                const session = JSON.parse(decodeURIComponent(match[1]));
-                if (!session || !session.isAdmin) { return; }
-            } catch(e) {}
-        })();
+async function fetchFromGAS(action){
+try{const response=await fetch(CONFIG.GAS_URL+'?action='+encodeURIComponent(action));if(!response.ok)throw new Error('HTTP '+response.status);return await response.json();}
+catch(err){return{success:false,error:err.message}}
+}
 
-        // ==================== CONFIG ====================
-        const CONFIG = {
-            GAS_URL: 'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
-            ADMIN_PASSWORD: 'admin123'
-        };
+let DATA={users:[],leads:[],orders:[],commissions:[]};
 
-        // ==================== DEBUG LOGGER ====================
-        const Debug = {
-            enabled: true,
-            log: function(msg, data) {
-                console.log('[AffAdmin]', msg, data || '');
-                const panel = document.getElementById('debugLog');
-                const time = new Date().toLocaleTimeString();
-                const line = document.createElement('div');
-                line.textContent = `[${time}] ${msg}`;
-                panel.appendChild(line);
-                if (data) {
-                    const detail = document.createElement('div');
-                    detail.style.cssText = 'color:#aaa;padding-left:12px;margin-bottom:4px;';
-                    detail.textContent = typeof data === 'string' ? data : JSON.stringify(data).substring(0, 300);
-                    panel.appendChild(detail);
-                }
-                panel.scrollTop = panel.scrollHeight;
-            }
-        };
+async function syncAllData(){
+updateSyncStatus('syncing');
+const actions=[{action:'getUsers',key:'users'},{action:'getLeads',key:'leads'},{action:'getOrders',key:'orders'},{action:'getCommissions',key:'commissions'}];
+for(const item of actions){const result=await fetchFromGAS(item.action);if(result.success&&Array.isArray(result.data))DATA[item.key]=result.data}
+updateSyncStatus('synced');
+renderCurrentPage();
+}
 
-        // ==================== STATE ====================
-        let DATA = { users: [], leads: [], orders: [], commissions: [] };
+function renderDashboard(){
+const validLeads=DATA.leads.filter(l=>l.status==='Valid');
+const totalComm=DATA.commissions.reduce((a,c)=>a+(parseFloat(c.amount)||0),0);
+document.getElementById('dashTotalAff').textContent=DATA.users.length;
+document.getElementById('dashTotalLeads').textContent=DATA.leads.length;
+document.getElementById('dashValidLeads').textContent=validLeads.length;
+document.getElementById('dashTotalOrders').textContent=DATA.orders.length;
+document.getElementById('dashTotalComm').textContent='Rp '+formatNumber(totalComm);
+const recent=DATA.leads.slice(-5).reverse();
+document.getElementById('recentLeadsBody').innerHTML=recent.map(l=>{
+const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
+const tv=parseFloat(l.transactionValue)||0;
+const transVal=tv>0?'Rp '+formatNumber(tv):'-';
+return`<tr><td>${formatDate(l.date)}</td><td>${l.name}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
+}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
+}
 
-        // ==================== GAS: FETCH GET ====================
-        async function fetchFromGAS(action) {
-            try {
-                const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-                Debug.log('GAS GET:', action);
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const result = await response.json();
-                Debug.log('GAS GET OK:', action + ' count=' + (result.data ? result.data.length : 0));
-                return result;
-            } catch(err) {
-                Debug.log('GAS GET ERROR:', action + ': ' + err.message);
-                return { success: false, error: err.message };
-            }
-        }
+function renderAffiliators(){
+document.getElementById('affiliatorCount').textContent=DATA.users.length+' affiliator';
+document.getElementById('affiliatorsBody').innerHTML=DATA.users.map(u=>{
+const affLeads=DATA.leads.filter(l=>l.referralCode===u.referralCode);
+const affComm=DATA.commissions.filter(c=>c.affiliatorId===u.id);
+const totalComm=affComm.reduce((a,c)=>a+(parseFloat(c.amount)||0),0);
+return`<tr><td><strong>${u.name}</strong></td><td>${u.email}</td><td>${u.phone||'-'}</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">${u.referralCode}</code></td><td>${u.bank||'-'}</td><td><span class="badge badge-${u.status==='Active'?'valid':'pending'}">${u.status||'Active'}</span></td><td>${affLeads.length}</td><td>Rp ${formatNumber(totalComm)}</td></tr>`
+}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
+}
 
-        // ==================== GAS: SYNC WRITE (iframe form POST) ====================
-        async function syncToGAS(action, data) {
-            Debug.log('GAS SYNC:', action);
-            const iframe = document.getElementById('gasFrame');
-            if (!iframe) { Debug.log('ERROR: gasFrame tidak ditemukan'); return false; }
-            return new Promise((resolve) => {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = CONFIG.GAS_URL;
-                form.target = 'gasFrame';
-                form.style.display = 'none';
+function renderLeads(){
+const statusFilter=document.getElementById('filterLeadStatus').value;
+const searchFilter=document.getElementById('filterLeadSearch').value.toLowerCase();
+let leads=DATA.leads;
+if(statusFilter)leads=leads.filter(l=>l.status===statusFilter);
+if(searchFilter)leads=leads.filter(l=>(l.name||'').toLowerCase().includes(searchFilter));
+document.getElementById('leadsBody').innerHTML=leads.map(l=>{
+const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
+const tv=parseFloat(l.transactionValue)||0;
+const transVal=tv>0?'Rp '+formatNumber(tv):'-';
+return`<tr><td>${formatDate(l.date)}</td><td><strong>${l.name}</strong></td><td>${l.contact||'-'}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td>${l.source||'-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
+}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
+}
 
-                const af = document.createElement('input');
-                af.name = 'action';
-                af.value = action;
-                form.appendChild(af);
+function renderOrders(){
+document.getElementById('ordersBody').innerHTML=DATA.orders.map(o=>{
+const alamat=[o.namaJalanGedung,o.kecamatan,o.kotaKabupaten,o.provinsi,o.kodePos].filter(Boolean).join(', ');
+const price=parseFloat(o.price)||0;
+return`<tr><td>${formatDate(o.date)}</td><td>${o.productName||'-'}${o.qty>1?' x'+o.qty:''}</td><td>${o.buyerName||'-'}</td><td>${o.buyerPhone||'-'}<br><small>${o.buyerEmail||''}</small></td><td>${alamat||'-'}</td><td>${price>0?'Rp '+formatNumber(price):'-'}</td><td>${o.referralCode||'-'}</td><td><span class="badge badge-${(o.status||'pending').toLowerCase()}">${o.status||'Pending'}</span></td></tr>`
+}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada orders</td></tr>';
+}
 
-                for (let key in data) {
-                    const f = document.createElement('input');
-                    f.name = key;
-                    f.value = typeof data[key] === 'object' ? JSON.stringify(data[key]) : String(data[key] || '');
-                    form.appendChild(f);
-                }
+function renderCommissions(){
+document.getElementById('commissionsBody').innerHTML=DATA.commissions.map(c=>{
+const aff=DATA.users.find(u=>u.id===c.affiliatorId);
+return`<tr><td>${formatDate(c.date)}</td><td>${aff?aff.name:c.affiliatorId}</td><td>${c.type||'-'}</td><td>${c.description||'-'}</td><td>Rp ${formatNumber(parseFloat(c.amount)||0)}</td><td>${c.paid==='true'||c.paid===true?'<span class="badge badge-valid">Dibayar</span>':'<span class="badge badge-pending">Pending</span>'}</td></tr>`
+}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
+}
 
-                let resolved = false;
-                const cleanup = () => {
-                    if (resolved) return;
-                    resolved = true;
-                    try { document.body.removeChild(form); } catch(e) {}
-                    iframe.onload = null;
-                    Debug.log('GAS SYNC OK:', action);
-                    resolve(true);
-                };
+function openUpdateLeadModal(leadId){
+const select=document.getElementById('updateLeadSelect');
+select.innerHTML=DATA.leads.map(l=>`<option value="${l.id}">${l.name} (${l.status||'Pending'})</option>`).join('');
+if(leadId)select.value=leadId;
+document.getElementById('updateLeadModal').classList.add('active');
+}
 
-                iframe.onload = cleanup;
-                setTimeout(cleanup, 5000);
+document.getElementById('updateLeadStatus').addEventListener('change',function(){
+document.getElementById('transValueGroup').style.display=this.value==='Converted'?'block':'none';
+});
 
-                document.body.appendChild(form);
-                form.submit();
-            });
-        }
+async function saveLeadUpdate(){
+const leadId=document.getElementById('updateLeadSelect').value;
+const newStatus=document.getElementById('updateLeadStatus').value;
+const transValue=document.getElementById('updateTransValue').value;
+const lead=DATA.leads.find(l=>l.id===leadId);
+if(!lead){showToast('Lead tidak ditemukan','error');return}
+const result=await callGAS('updateLead',{id:leadId,status:newStatus,transactionValue:transValue});
+if(result.success){
+lead.status=newStatus;
+if(transValue)lead.transactionValue=transValue;
+closeModal('updateLeadModal');
+showToast('Lead updated!','success');
+renderCurrentPage();
+}else{showToast('Gagal update: '+(result.error||'unknown error'),'error')}
+}
 
-        // ==================== SYNC ALL ====================
-        async function syncAllData() {
-            updateSyncStatus('syncing', 'Sinkronasi...');
-            showToast('Memuat data dari server...', 'info');
+function showPage(page){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById('page-'+page).classList.add('active');
+document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
+const clicked=document.querySelector('.sidebar-menu a[data-page="'+page+'"]');
+if(clicked)clicked.classList.add('active');
+document.getElementById('pageTitle').textContent=page==='dashboard'?'Dashboard':page==='affiliators'?'Affiliators':page==='leads'?'Leads':page==='orders'?'Orders':'Komisi';
+renderCurrentPage();
+}
+function renderCurrentPage(){const activePage=document.querySelector('.page.active');if(!activePage)return;const pageId=activePage.id.replace('page-','');if(pageId==='dashboard')renderDashboard();if(pageId==='affiliators')renderAffiliators();if(pageId==='leads')renderLeads();if(pageId==='orders')renderOrders();if(pageId==='commissions')renderCommissions();}
 
-            const actions = [
-                { action: 'getUsers', key: 'users' },
-                { action: 'getLeads', key: 'leads' },
-                { action: 'getOrders', key: 'orders' },
-                { action: 'getCommissions', key: 'commissions' }
-            ];
+function adminLogin(){const input=document.getElementById('adminPassword').value;if(input===CONFIG.ADMIN_PASSWORD){document.getElementById('loginOverlay').style.display='none';document.getElementById('mainContent').style.display='block';AdminSession.save();showToast('Selamat datang, Admin!','success');syncAllData()}else{document.getElementById('loginError').style.display='block';document.getElementById('adminPassword').value=''}}
+function adminLogout(){AdminSession.clear();location.href='index.html'}
+function checkSession(){const session=AdminSession.load();if(session&&session.isAdmin){document.getElementById('loginOverlay').style.display='none';document.getElementById('mainContent').style.display='block';syncAllData()}}
 
-            for (const item of actions) {
-                const result = await fetchFromGAS(item.action);
-                if (result.success && Array.isArray(result.data)) {
-                    DATA[item.key] = result.data;
-                }
-            }
+const AdminSession={save:function(){try{document.cookie='aff_admin='+encodeURIComponent(JSON.stringify({isAdmin:true,ts:Date.now()}))+';path=/;max-age=86400;SameSite=Lax'}catch(e){}},load:function(){try{const match=document.cookie.match(/aff_admin=([^;]+)/);if(match)return JSON.parse(decodeURIComponent(match[1]))}catch(e){}return null}}
 
-            updateSyncStatus('synced', 'Data terbaru');
-            showToast('Data berhasil dimuat!', 'success');
-            renderCurrentPage();
-        }
+function refreshAllData(){syncAllData();showToast('Data refreshed!','success')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function formatNumber(num){return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function formatDate(dateStr){if(!dateStr)return'-';const d=new Date(dateStr);return isNaN(d.getTime())?String(dateStr):d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
+function showToast(message,type){const container=document.getElementById('toastContainer');const toast=document.createElement('div');toast.className='toast '+(type||'info');const icons={success:'check-circle',error:'times-circle',warning:'exclamation-circle',info:'info-circle'};toast.innerHTML='<i class="fas fa-'+(icons[type]||'info-circle')+'"></i> <span>'+message+'</span>';container.appendChild(toast);setTimeout(()=>toast.remove(),4000)}
+function updateSyncStatus(status){const el=document.getElementById('syncStatus');if(!el)return;el.innerHTML=status==='syncing'?'<i class="fas fa-spinner fa-spin"></i> Sinkronasi...':status==='synced'?'<i class="fas fa-check-circle"></i> Data terbaru':'<i class="fas fa-exclamation-circle"></i> Error'}
 
-        // ==================== RENDER PAGES ====================
-        function renderDashboard() {
-            const validLeads = DATA.leads.filter(l => l.status === 'Valid');
-            const totalComm = DATA.commissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-
-            document.getElementById('dashTotalAff').textContent = DATA.users.length;
-            document.getElementById('dashTotalLeads').textContent = DATA.leads.length;
-            document.getElementById('dashValidLeads').textContent = validLeads.length;
-            document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
-            document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
-
-            const recent = DATA.leads.slice(-5).reverse();
-            document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
-                const transVal = l.transactionValue ? 'Rp ' + formatNumber(l.transactionValue) : '-';
-                return `<tr>
-                    <td>${formatDate(l.date)}</td>
-                    <td>${l.name}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
-                    <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td>${transVal}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
-        }
-
-        function renderAffiliators() {
-            document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
-            document.getElementById('affiliatorsBody').innerHTML = DATA.users.map(u => {
-                const affLeads = DATA.leads.filter(l => l.referralCode === u.referralCode);
-                const affComm = DATA.commissions.filter(c => c.affiliatorId === u.id);
-                const totalComm = affComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-                return `<tr>
-                    <td><strong>${u.name}</strong></td>
-                    <td>${u.email}</td>
-                    <td>${u.phone || '-'}</td>
-                    <td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px;">${u.referralCode}</code></td>
-                    <td>${u.bank || '-'}</td>
-                    <td><span class="badge badge-${(u.status === 'Active') ? 'active' : 'pending'}">${u.status || 'Active'}</span></td>
-                    <td>${affLeads.length}</td>
-                    <td>Rp ${formatNumber(totalComm)}</td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada affiliator</td></tr>';
-        }
-
-        function renderLeads() {
-            const statusFilter = document.getElementById('filterLeadStatus').value;
-            const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
-
-            let leads = DATA.leads;
-            if (statusFilter) leads = leads.filter(l => l.status === statusFilter);
-            if (searchFilter) leads = leads.filter(l => (l.name || '').toLowerCase().includes(searchFilter));
-
-            document.getElementById('leadsBody').innerHTML = leads.map(l => {
-                const aff = DATA.users.find(u => u.referralCode === l.referralCode);
-                // PERBAIKAN: parseFloat transactionValue
-                const transVal = l.transactionValue ? 'Rp ' + formatNumber(parseFloat(l.transactionValue) || 0) : '-';
-                return `<tr>
-                    <td>${formatDate(l.date)}</td>
-                    <td><strong>${l.name}</strong></td>
-                    <td>${l.contact || '-'}</td>
-                    <td>${aff ? aff.name : l.referralCode}</td>
-                    <td><span class="badge badge-${(l.status || 'pending').toLowerCase()}">${l.status || 'Pending'}</span></td>
-                    <td>${transVal}</td>
-                    <td>${l.source || '-'}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada leads</td></tr>';
-        }
-
-        function renderOrders() {
-            document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
-                const alamat = [o.namaJalanGedung, o.kecamatan, o.kotaKabupaten, o.provinsi, o.kodePos].filter(Boolean).join(', ');
-                const price = parseFloat(o.price) || 0;
-                const ongkir = parseFloat(o.ongkir) || 0;
-                return `<tr>
-                    <td>${formatDate(o.date)}</td>
-                    <td>${o.productName || '-'}${o.qty > 1 ? ' x' + o.qty : ''}</td>
-                    <td>${o.buyerName || '-'}</td>
-                    <td>${o.buyerPhone || '-'}<br><small>${o.buyerEmail || ''}</small></td>
-                    <td>${alamat || '-'}</td>
-                    <td>${price > 0 ? 'Rp ' + formatNumber(price) : '-'}${ongkir > 0 ? '<br><small>Ongkir: Rp ' + formatNumber(ongkir) + '</small>' : ''}</td>
-                    <td>${o.referralCode || '-'}</td>
-                    <td><span class="badge badge-${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span></td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="8" style="text-align:center; color: var(--text-light);">Belum ada orders</td></tr>';
-        }
-
-        function renderCommissions() {
-            document.getElementById('commissionsBody').innerHTML = DATA.commissions.map(c => {
-                const aff = DATA.users.find(u => u.id === c.affiliatorId);
-                return `<tr>
-                    <td>${formatDate(c.date)}</td>
-                    <td>${aff ? aff.name : c.affiliatorId}</td>
-                    <td>${c.type || '-'}</td>
-                    <td>${c.description || '-'}</td>
-                    <td>Rp ${formatNumber(parseFloat(c.amount) || 0)}</td>
-                    <td>${c.paid === 'true' || c.paid === true ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>'}</td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="6" style="text-align:center; color: var(--text-light);">Belum ada komisi</td></tr>';
-        }
-
-        // ==================== UPDATE LEAD ====================
-        function openUpdateLeadModal(leadId) {
-            const select = document.getElementById('updateLeadSelect');
-            select.innerHTML = DATA.leads.map(l => `<option value="${l.id}">${l.name} (${l.status || 'Pending'})</option>`).join('');
-            if (leadId) select.value = leadId;
-            document.getElementById('updateLeadModal').classList.add('active');
-        }
-
-        document.getElementById('updateLeadStatus').addEventListener('change', function() {
-            document.getElementById('transValueGroup').style.display = this.value === 'Converted' ? 'block' : 'none';
-        });
-
-        async function saveLeadUpdate() {
-            const leadId = document.getElementById('updateLeadSelect').value;
-            const newStatus = document.getElementById('updateLeadStatus').value;
-            const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
-            const btn = document.getElementById('btnUpdateLead');
-
-            const lead = DATA.leads.find(l => l.id === leadId);
-            if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-            Debug.log('=== UPDATE LEAD ===');
-            Debug.log('Lead ID:', leadId);
-            Debug.log('Status:', newStatus);
-            Debug.log('TransactionValue:', transValue);
-
-            // Simpan status lama SEBELUM update
-            const oldStatus = lead.status;
-
-            // PERBAIKAN: Kirim transactionValue selalu (bukan hanya saat Converted)
-            const ok = await syncToGAS('updateLead', {
-                id: leadId,
-                status: newStatus,
-                transactionValue: transValue
-            });
-
-            Debug.log('GAS updateLead:', ok ? 'SUKSES' : 'GAGAL');
-
-            if (!ok) {
-                showToast('Gagal update ke server. Coba lagi.', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Update';
-                return;
-            }
-
-            // Update local state
-            lead.status = newStatus;
-            if (newStatus === 'Converted') lead.transactionValue = transValue;
-
-            // Jika status BARU jadi Valid dan sebelumnya bukan Valid
-            if (newStatus === 'Valid' && oldStatus !== 'Valid') {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
-                    const commission = {
-                        id: 'comm_' + Date.now(),
-                        affiliatorId: aff.id,
-                        type: 'Lead',
-                        description: 'Lead: ' + lead.name,
-                        amount: 10000,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    DATA.commissions.push(commission);
-                    await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission Lead:', 'OK');
-                }
-            }
-
-            // Jika status jadi Converted, tambah komisi transaksi
-            if (newStatus === 'Converted' && transValue > 0) {
-                const aff = DATA.users.find(u => u.referralCode === lead.referralCode);
-                if (aff) {
-                    const commission = {
-                        id: 'comm_' + (Date.now() + 1),
-                        affiliatorId: aff.id,
-                        type: 'Transaksi',
-                        description: 'Transaksi ' + lead.name,
-                        amount: transValue * 0.05,
-                        date: new Date().toISOString(),
-                        paid: false
-                    };
-                    DATA.commissions.push(commission);
-                    await syncToGAS('addCommission', commission);
-                    Debug.log('GAS addCommission Transaksi:', 'OK');
-                }
-            }
-
-            closeModal('updateLeadModal');
-            showToast('Lead updated & tersimpan di server!', 'success');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Update';
-
-            // Refresh data dari server setelah 2 detik
-            setTimeout(() => syncAllData(), 2000);
-        }
-
-        // ==================== NAVIGATION ====================
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-            const clicked = document.querySelector('.sidebar-menu a[data-page="' + page + '"]');
-            if (clicked) clicked.classList.add('active');
-            document.getElementById('pageTitle').textContent =
-                page === 'dashboard' ? 'Dashboard' :
-                page === 'affiliators' ? 'Affiliators' :
-                page === 'leads' ? 'Leads' :
-                page === 'orders' ? 'Orders' : 'Komisi';
-            renderCurrentPage();
-        }
-
-        function renderCurrentPage() {
-            const activePage = document.querySelector('.page.active');
-            if (!activePage) return;
-            const pageId = activePage.id.replace('page-', '');
-            if (pageId === 'dashboard') renderDashboard();
-            if (pageId === 'affiliators') renderAffiliators();
-            if (pageId === 'leads') renderLeads();
-            if (pageId === 'orders') renderOrders();
-            if (pageId === 'commissions') renderCommissions();
-        }
-
-        // ==================== AUTH ====================
-        function adminLogin() {
-            const input = document.getElementById('adminPassword').value;
-            if (input === CONFIG.ADMIN_PASSWORD) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                SessionManager.saveSession();
-                showToast('Selamat datang, Admin!', 'success');
-                syncAllData();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-            }
-        }
-
-        function adminLogout() {
-            SessionManager.clearSession();
-            location.href = 'index.html';
-        }
-
-        function checkSession() {
-            const session = SessionManager.loadSession();
-            if (session && session.isAdmin) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                syncAllData();
-            }
-        }
-
-        // ==================== SESSION ====================
-        const SessionManager = {
-            saveSession: function() {
-                try {
-                    const json = encodeURIComponent(JSON.stringify({ isAdmin: true, ts: Date.now() }));
-                    document.cookie = 'aff_admin_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-                } catch(e) {}
-            },
-            loadSession: function() {
-                try {
-                    const match = document.cookie.match(/aff_admin_session=([^;]+)/);
-                    if (match) return JSON.parse(decodeURIComponent(match[1]));
-                } catch(e) {}
-                return null;
-            },
-            clearSession: function() {
-                document.cookie = 'aff_admin_session=; path=/; max-age=0';
-            }
-        };
-
-        // ==================== UTILITIES ====================
-        function refreshAllData() { syncAllData(); }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        function formatNumber(num) {
-            return Math.round(parseFloat(num) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return String(dateStr);
-            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
-
-        function showToast(message, type) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + (type || 'info');
-            const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
-            toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
-        }
-
-        function updateSyncStatus(status, text) {
-            const el = document.getElementById('syncStatus');
-            if (!el) return;
-            el.className = 'sync-status ' + status;
-            const icons = { syncing: '<i class="fas fa-spinner fa-spin"></i>', synced: '<i class="fas fa-check-circle"></i>', error: '<i class="fas fa-exclamation-circle"></i>' };
-            el.innerHTML = (icons[status] || '') + ' ' + text;
-        }
-
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
-        });
-
-        // Init
-        document.addEventListener('DOMContentLoaded', function() {
-            checkSession();
-        });
-    </script>
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')}));
+document.addEventListener('DOMContentLoaded',function(){checkSession()});
+</script>
 </body>
 </html>
