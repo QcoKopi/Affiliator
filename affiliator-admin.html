@@ -200,8 +200,14 @@ document.getElementById('dashTotalComm').textContent='Rp '+formatNumber(totalCom
 const recent=DATA.leads.slice(-5).reverse();
 document.getElementById('recentLeadsBody').innerHTML=recent.map(l=>{
 const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
-const tv=parseFloat(l.transactionValue)||0;
-const transVal=tv>0?'Rp '+formatNumber(tv):'-';
+// Menghitung akumulasi otomatis dari data orders berdasarkan kecocokan leadId
+const leadOrders = DATA.orders.filter(o => String(o.leadId) === String(l.id));
+const totalOrderValue = leadOrders.reduce((sum, o) => sum + ((parseFloat(o.price) || 0) * (parseInt(o.qty) || 1)), 0);
+
+// Gunakan nilai akumulasi order jika ada, jika tidak ada gunakan data asli sheet
+const tv = totalOrderValue > 0 ? totalOrderValue : (parseFloat(l.transactionvalue || l.transactionValue) || 0);
+const transVal = tv > 0 ? 'Rp ' + formatNumber(tv) : '-';
+
 return`<tr><td>${formatDate(l.date)}</td><td>${l.name}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
 }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
 }
@@ -224,8 +230,13 @@ if(statusFilter)leads=leads.filter(l=>l.status===statusFilter);
 if(searchFilter)leads=leads.filter(l=>(l.name||'').toLowerCase().includes(searchFilter));
 document.getElementById('leadsBody').innerHTML=leads.map(l=>{
 const aff=DATA.users.find(u=>u.referralCode===l.referralCode);
-const tv=parseFloat(l.transactionValue)||0;
-const transVal=tv>0?'Rp '+formatNumber(tv):'-';
+// Menghitung akumulasi otomatis dari data orders berdasarkan kecocokan leadId
+const leadOrders = DATA.orders.filter(o => String(o.leadId) === String(l.id));
+const totalOrderValue = leadOrders.reduce((sum, o) => sum + ((parseFloat(o.price) || 0) * (parseInt(o.qty) || 1)), 0);
+
+// Gunakan nilai akumulasi order jika ada, jika tidak ada gunakan data asli sheet
+const tv = totalOrderValue > 0 ? totalOrderValue : (parseFloat(l.transactionvalue || l.transactionValue) || 0);
+const transVal = tv > 0 ? 'Rp ' + formatNumber(tv) : '-';
 return`<tr><td>${formatDate(l.date)}</td><td><strong>${l.name}</strong></td><td>${l.contact||'-'}</td><td>${aff?aff.name:l.referralCode}</td><td><span class="badge badge-${(l.status||'pending').toLowerCase()}">${l.status||'Pending'}</span></td><td>${transVal}</td><td>${l.source||'-'}</td><td><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal('${l.id}')"><i class="fas fa-edit"></i></button></td></tr>`
 }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
 }
