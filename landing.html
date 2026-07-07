@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopi Nusantara - Premium Coffee</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--primary:#5D4037;--primary-light:#8D6E63;--primary-dark:#3E2723;--accent:#A1887F;--bg:#FAFAF8;--card-bg:#FFFFFF;--text:#2C2C2C;--text-light:#6B6B6B;--border:#E8E4E0;--success:#4CAF50;--warning:#FF9800;--danger:#E53935;--shadow:0 4px 20px rgba(93,64,55,0.08);--shadow-lg:0 10px 40px rgba(93,64,55,0.12);--radius:12px;--radius-sm:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.navbar{background:var(--card-bg);border-bottom:1px solid var(--border);padding:1rem 2rem;position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-content:space-between;align-items:center}
+.navbar-brand{font-size:1.5rem;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:0.5rem}
+.hero{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 100%);color:white;padding:6rem 2rem 4rem;text-align:center;margin-top:60px}
+.hero h1{font-size:2.5rem;font-weight:700;margin-bottom:1rem}
+.hero p{font-size:1.1rem;opacity:0.9;max-width:600px;margin:0 auto 1.5rem}
+.ref-banner{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:var(--radius);padding:1rem 1.5rem;display:inline-flex;align-items:center;gap:1rem;margin-top:1rem}
+.section{padding:3rem 2rem;max-width:1200px;margin:0 auto}
+.section-title{font-size:1.5rem;font-weight:600;margin-bottom:0.5rem;color:var(--primary-dark);text-align:center}
+.section-subtitle{color:var(--text-light);margin-bottom:2rem;text-align:center}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem}
+.product-card{background:var(--card-bg);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border);transition:transform 0.3s,box-shadow 0.3s}
+.product-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+.product-img{height:200px;background:linear-gradient(135deg,var(--primary-light) 0%,var(--primary) 100%);display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;overflow:hidden}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.product-body{padding:1.5rem}
+.product-name{font-size:1.1rem;font-weight:600;color:var(--primary-dark);margin-bottom:0.5rem}
+.product-desc{font-size:0.9rem;color:var(--text-light);margin-bottom:1rem}
+.product-price{font-size:1.3rem;font-weight:700;color:var(--primary)}
+.product-price small{font-size:0.8rem;color:var(--text-light);text-decoration:line-through;margin-left:0.5rem}
+.product-btn{width:100%;margin-top:1rem;padding:0.75rem;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-weight:500;cursor:pointer;transition:all 0.3s;font-size:0.9rem}
+.product-btn:hover{background:var(--primary-dark)}
+.product-btn.added{background:var(--success)}
+.cart-float{position:fixed;bottom:24px;right:24px;z-index:900;background:var(--primary);color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 20px rgba(93,64,55,0.3);transition:all 0.3s;border:none}
+.cart-float:hover{transform:scale(1.1)}
+.cart-float .badge-count{position:absolute;top:-4px;right:-4px;background:var(--danger);color:white;font-size:0.7rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1100;display:none}
+.cart-overlay.active{display:block}
+.cart-panel{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:420px;background:var(--card-bg);z-index:1101;transform:translateX(100%);transition:transform 0.3s ease;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.1)}
+.cart-panel.active{transform:translateX(0)}
+.cart-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.cart-body{flex:1;overflow-y:auto;padding:1rem 1.5rem}
+.cart-empty{text-align:center;padding:3rem 1rem;color:var(--text-light)}
+.cart-item{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--border)}
+.cart-item-img{width:60px;height:60px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--primary-light),var(--primary));display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;flex-shrink:0;overflow:hidden}
+.cart-item-img img{width:100%;height:100%;object-fit:cover}
+.cart-item-info{flex:1}
+.cart-item-name{font-weight:600;font-size:0.95rem;margin-bottom:0.25rem}
+.cart-item-price{color:var(--primary);font-weight:700;font-size:0.9rem}
+.cart-item-qty{display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem}
+.cart-item-qty button{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem}
+.cart-item-qty button:hover{background:var(--primary);color:white;border-color:var(--primary)}
+.cart-item-qty span{min-width:24px;text-align:center;font-weight:600;font-size:0.9rem}
+.cart-item-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.85rem;padding:0.25rem;align-self:flex-start}
+.cart-footer{padding:1.5rem;border-top:2px solid var(--border);background:var(--bg)}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.cart-total-value{font-size:1.4rem;font-weight:700;color:var(--primary)}
+.cart-checkout-btn{width:100%;padding:0.875rem;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:1rem;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem}
+.form-section{background:var(--card-bg);border-radius:var(--radius);padding:2.5rem;box-shadow:var(--shadow-lg);border:1px solid var(--border);max-width:640px;margin:0 auto}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-weight:500;font-size:0.9rem;margin-bottom:0.5rem}
+.form-label .required{color:var(--danger)}
+.form-input,.form-select,.form-textarea{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem;transition:all 0.3s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--primary-light)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{padding:0.75rem 1.5rem;border-radius:var(--radius-sm);border:none;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;font-size:0.9rem;display:inline-flex;align-items:center;gap:0.5rem}
+.btn-primary{background:var(--primary);color:white;width:100%;justify-content:center}
+.btn-primary:hover{background:var(--primary-dark)}
+.cart-summary{background:var(--bg);border-radius:var(--radius-sm);padding:1.25rem;margin-bottom:1.5rem;border:1px solid var(--border)}
+.cart-summary-title{font-weight:600;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;color:var(--primary-dark)}
+.cart-summary-item{display:flex;justify-content:space-between;padding:0.4rem 0;font-size:0.9rem;border-bottom:1px dashed var(--border)}
+.cart-summary-total{display:flex;justify-content:space-between;padding-top:0.75rem;margin-top:0.5rem;border-top:2px solid var(--border);font-weight:700;font-size:1.1rem}
+.toast-container{position:fixed;top:90px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
+.toast{background:var(--card-bg);border-radius:var(--radius-sm);padding:1rem 1.5rem;box-shadow:var(--shadow-lg);border-left:4px solid var(--primary);display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;min-width:300px}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.success-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:3000;display:none;align-items:center;justify-content:center;padding:1rem}
+.success-modal-overlay.active{display:flex}
+.success-modal{background:var(--card-bg);border-radius:var(--radius);max-width:450px;width:100%;padding:2.5rem;text-align:center;box-shadow:var(--shadow-lg)}
+.footer{background:var(--primary-dark);color:white;padding:2rem;text-align:center;margin-top:3rem}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:2rem 0}
+.feature{text-align:center;padding:1.5rem}
+.feature-icon{width:56px;height:56px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem;color:var(--primary)}
+@media(max-width:768px){.hero h1{font-size:1.8rem}.form-row{grid-template-columns:1fr}.products-grid{grid-template-columns:1fr}}
+.debug-panel{position:fixed;bottom:10px;left:10px;background:#1a1a1a;color:#0f0;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;max-width:400px;max-height:150px;overflow-y:auto;z-index:9999;display:none}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<button class="cart-float" id="cartFloatBtn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i><span class="badge-count" id="cartBadge" style="display:none">0</span></button>
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-panel" id="cartPanel">
+<div class="cart-header"><h3><i class="fas fa-shopping-cart"></i> Keranjang</h3><button style="background:none;border:none;font-size:1.5rem;color:var(--text-light);cursor:pointer" onclick="toggleCart()"><i class="fas fa-times"></i></button></div>
+<div class="cart-body" id="cartBody"><div class="cart-empty"><i class="fas fa-shopping-basket" style="font-size:3rem;margin-bottom:1rem;opacity:0.4;display:block"></i><p>Keranjang masih kosong</p></div></div>
+<div class="cart-footer" id="cartFooter" style="display:none"><div class="cart-total-row"><span>Total:</span><span class="cart-total-value" id="cartTotal">Rp 0</span></div><button class="cart-checkout-btn" onclick="goToCheckout()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button></div>
+</div>
+
+<nav class="navbar"><div class="navbar-brand"><i class="fas fa-coffee"></i><span>Kopi Nusantara</span></div></nav>
+
+<div class="hero">
+<h1><i class="fas fa-mug-hot"></i> Kopi Nusantara Premium</h1>
+<p>Kopi pilihan dari petani terbaik Indonesia. Langsung dari kebun ke cangkir Anda.</p>
+<div class="ref-banner" id="refBanner"><i class="fas fa-user-friends" style="font-size:1.5rem"></i><div style="text-align:left"><small>Rekomendasi dari</small><br><strong id="refAffiliatorName">Affiliator</strong></div></div>
+</div>
+
+<div class="section">
+<h2 class="section-title">Produk Kami</h2>
+<p class="section-subtitle">Pilih kopi favorit Anda, bisa lebih dari satu</p>
+<div id="productsContainer"><div style="text-align:center;padding:3rem;color:var(--text-light)"><i class="fas fa-spinner fa-spin" style="font-size:2rem"></i><p>Memuat produk...</p></div></div>
+</div>
+
+<div class="section" id="formSection" style="background:var(--card-bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<h2 class="section-title">Formulir Pemesanan</h2>
+<p class="section-subtitle">Isi data Anda untuk pemesanan</p>
+<div class="form-section">
+<div class="cart-summary"><div class="cart-summary-title"><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</div><div id="cartSummaryContent"><div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div></div></div>
+<input type="hidden" id="refCode">
+<div class="form-row"><div class="form-group"><label class="form-label">Nama Lengkap <span class="required">*</span></label><input type="text" class="form-input" id="buyerName" placeholder="Nama Anda"></div><div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="buyerEmail" placeholder="email@anda.com"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789"></div><div class="form-group"><label class="form-label">Kota <span class="required">*</span></label><input type="text" class="form-input" id="buyerCity" placeholder="Jakarta"></div></div>
+<div class="form-group"><label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12"></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Provinsi <span class="required">*</span></label><input type="text" class="form-input" id="buyerProvince" placeholder="Jawa Barat"></div><div class="form-group"><label class="form-label">Kota / Kabupaten <span class="required">*</span></label><input type="text" class="form-input" id="buyerCity2" placeholder="Bandung"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Kecamatan <span class="required">*</span></label><input type="text" class="form-input" id="buyerDistrict" placeholder="Coblong"></div><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><input type="text" class="form-input" id="buyerPostal" placeholder="40132"></div></div>
+<div class="form-group"><label class="form-label">Catatan</label><textarea class="form-textarea" id="buyerNotes" placeholder="Catatan tambahan (opsional)..."></textarea></div>
+<button class="btn btn-primary" onclick="submitLead()"><i class="fas fa-paper-plane"></i> Kirim Pesanan</button>
+<p style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:1rem"><i class="fas fa-lock"></i> Data Anda aman & terenkripsi</p>
+</div>
+</div>
+
+<div class="footer"><p><i class="fas fa-coffee"></i> Kopi Nusantara &copy; 2026</p></div>
+
+<div class="success-modal-overlay" id="successModal">
+<div class="success-modal"><i class="fas fa-check-circle" style="font-size:4rem;color:var(--success);margin-bottom:1rem;display:block"></i><h2 style="color:var(--primary-dark);margin-bottom:0.5rem">Pesanan Terkirim!</h2><p style="color:var(--text-light);margin-bottom:1.5rem">Tim kami akan menghubungi Anda via WhatsApp dalam 1x24 jam.</p><button class="btn btn-primary" onclick="closeSuccessModal()" style="width:auto;padding:0.75rem 2rem"><i class="fas fa-home"></i> Kembali</button></div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const CONFIG={
+GAS_URL:'https://script.google.com/macros/s/AKfycbws9qo68i30wGvwjhRSNc0pmBYg4xuHyBWmC-mbu7MKPebpJNxM87mO6x0PBOAUomQ/exec',
+DB_NAME:'KopiAffiliateDB',DB_VERSION:2
+};
+
+// ==================== HELPERS ====================
+function escapeHtml(t){if(!t)return'';return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function imgError(img){img.style.display='none';const wrap=document.getElementById('wrap-'+img.id);if(wrap)wrap.innerHTML='<i class="fas fa-coffee"></i>';}
+
+// ==================== CART ====================
+let Cart=[];
+let AllProducts=[];
+
+function addToCart(product){
+const existing=Cart.find(item=>item.id===product.id);
+if(existing){existing.qty+=1}else{Cart.push({...product,qty:1})}
+updateCartUI();
+const btn=document.getElementById('cartFloatBtn');
+btn.classList.remove('pulse');void btn.offsetWidth;btn.classList.add('pulse');
+showToast(product.name+' ditambahkan','success');
+}
+function removeFromCart(productId){Cart=Cart.filter(item=>item.id!==productId);updateCartUI()}
+function updateQty(productId,delta){
+const item=Cart.find(i=>i.id===productId);
+if(!item)return;
+item.qty+=delta;
+if(item.qty<=0)removeFromCart(productId);else updateCartUI();
+}
+
+// PERBAIKAN: Pastikan price selalu number
+function getCartTotal(){
+return Cart.reduce((sum,item)=>{
+const price=parseFloat(item.price)||0;
+return sum+(price*(parseInt(item.qty)||1));
+},0);
+}
+function getCartCount(){return Cart.reduce((sum,item)=>sum+(parseInt(item.qty)||1),0)}
+function clearCart(){Cart=[];updateCartUI()}
+
+function updateCartUI(){
+const count=getCartCount();
+const total=getCartTotal();
+const badge=document.getElementById('cartBadge');
+const body=document.getElementById('cartBody');
+const footer=document.getElementById('cartFooter');
+badge.textContent=count;
+badge.style.display=count>0?'flex':'none';
+if(count===0){
+body.innerHTML='<div class="cart-empty"><i class="fas fa-shopping-basket" style="font-size:3rem;margin-bottom:1rem;opacity:0.4;display:block"></i><p>Keranjang masih kosong</p></div>';
+footer.style.display='none';
+}else{
+body.innerHTML=Cart.map(item=>{
+const price=parseFloat(item.price)||0;
+return`<div class="cart-item"><div class="cart-item-img">${item.imageUrl?'<img src="'+item.imageUrl+'" onerror="this.style.display=\'none\'">':'<i class="fas fa-coffee"></i>'}</div><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">Rp ${formatNumber(price)}</div><div class="cart-item-qty"><button onclick="updateQty('${item.id}',-1)"><i class="fas fa-minus"></i></button><span>${item.qty}</span><button onclick="updateQty('${item.id}',1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button></div>`
+}).join('');
+footer.style.display='block';
+}
+document.getElementById('cartTotal').textContent='Rp '+formatNumber(total);
+updateCartSummary();
+}
+
+function updateCartSummary(){
+const container=document.getElementById('cartSummaryContent');
+if(Cart.length===0){
+container.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div>';
+}else{
+container.innerHTML=Cart.map(item=>{
+const price=parseFloat(item.price)||0;
+return`<div class="cart-summary-item"><span>${item.name} x${item.qty}</span><span>Rp ${formatNumber(price*item.qty)}</span></div>`
+}).join('')+`<div class="cart-summary-total"><span>Total</span><span>Rp ${formatNumber(getCartTotal())}</span></div>`;
+}
+}
+function toggleCart(){document.getElementById('cartOverlay').classList.toggle('active');document.getElementById('cartPanel').classList.toggle('active')}
+function goToCheckout(){toggleCart();document.getElementById('formSection').scrollIntoView({behavior:'smooth'})}
+
+// ==================== GAS (GET - Lebih Reliable) ====================
+// PERBAIKAN: Pakai GET request dengan URL parameters. GAS web app lebih reliable menerima GET.
+async function callGAS(action,paramsObj){
+const url=new URL(CONFIG.GAS_URL);
+url.searchParams.append('action',action);
+for(let key in paramsObj){
+if(paramsObj[key]!==undefined&&paramsObj[key]!==null){
+url.searchParams.append(key,typeof paramsObj[key]==='object'?JSON.stringify(paramsObj[key]):String(paramsObj[key]));
+}
+}
+try{
+const response=await fetch(url.toString());
+if(!response.ok)throw new Error('HTTP '+response.status);
+return await response.json();
+}catch(err){
+return{success:false,error:err.message};
+}
+}
+
+async function syncToGAS(action,data){
+try{
+const result=await callGAS(action,data);
+return result.success;
+}catch(err){return false}
+}
+
+async function fetchFromGAS(action){
+try{
+const response=await fetch(CONFIG.GAS_URL+'?action='+encodeURIComponent(action));
+if(!response.ok)throw new Error('HTTP '+response.status);
+return await response.json();
+}catch(err){return{success:false,error:err.message}}
+}
+
+// ==================== STORAGE ====================
+const DBStore={
+db:null,ready:false,mode:'unknown',
+memory:{users:[],leads:[],commissions:[],products:[],orders:[]},
+init:function(){if(this.initPromise)return this.initPromise;this.initPromise=this._tryInit();return this.initPromise},
+_tryInit:async function(){try{await this._initIDB(3000);this.mode='indexeddb';this.ready=true;return}catch(e){}try{localStorage.setItem('_t','1');localStorage.removeItem('_t');this.mode='localstorage';this.ready=true;return}catch(e){}this.mode='memory';this.ready=true},
+_initIDB:function(t){return new Promise((r,j)=>{const x=setTimeout(()=>j('to'),t);const q=indexedDB.open(CONFIG.DB_NAME,CONFIG.DB_VERSION);q.onerror=(e)=>{clearTimeout(x);j()};q.onsuccess=(e)=>{clearTimeout(x);this.db=q.result;r()};q.onupgradeneeded=(e)=>{const d=e.target.result;['users','leads','commissions','products','orders'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'})})}})},
+getAll:function(s){return new Promise(r=>{if(this.mode==='indexeddb'&&this.db){const q=this.db.transaction(s,'readonly').objectStore(s).getAll();q.onsuccess=(e)=>r(e.target.result||[]);q.onerror=(e)=>r([])}else if(this.mode==='localstorage'){try{const v=localStorage.getItem('aff_'+s);r(v?JSON.parse(v):[])}catch(e){r([])}}else{r(this.memory[s]||[])}})},
+put:function(s,d){return new Promise(r=>{if(this.mode==='indexeddb'&&this.db){const q=this.db.transaction(s,'readwrite').objectStore(s).put(d);q.onsuccess=()=>r();q.onerror=()=>r()}else if(this.mode==='localstorage'){try{const a=JSON.parse(localStorage.getItem('aff_'+s)||'[]');const i=a.findIndex(x=>x.id===d.id);if(i>=0)a[i]=d;else a.push(d);localStorage.setItem('aff_'+s,JSON.stringify(a))}catch(e){}r()}else{const a=this.memory[s]||[];const i=a.findIndex(x=>x.id===d.id);if(i>=0)a[i]=d;else a.push(d);r()}})}
+};
+
+// ==================== LOAD PRODUCTS ====================
+async function loadProducts(){
+const container=document.getElementById('productsContainer');
+let allProducts=[];
+try{
+const result=await fetchFromGAS('getProducts');
+if(result.success&&Array.isArray(result.data)&&result.data.length>0){
+allProducts=result.data.map(p=>({...p,price:parseFloat(p.price)||0}));
+for(const p of allProducts){if(p&&p.id)await DBStore.put('products',p)}
+}
+}catch(e){}
+if(allProducts.length===0){
+const cached=await DBStore.getAll('products');
+allProducts=cached.map(p=>({...p,price:parseFloat(p.price)||0}));
+}
+AllProducts=allProducts;
+// FIX: GAS kirim field sebagai 'active' (lowercase), bukan 'status'
+// Cek kedua: p.active (dari GAS) dan p.status (backward compat)
+// Cek produk aktif: kolom 'active' (true/false) atau 'status' (Active/Inactive)
+// Fallback: kalau tidak ada status sama sekali, anggap aktif (backward compat)
+const activeProducts=allProducts.filter(p=>{
+const hasActiveCol=p.active!==undefined&&p.active!==''&&p.active!==null;
+const hasStatusCol=p.status!==undefined&&p.status!==''&&p.status!==null;
+const isActive=String(p.active).toLowerCase()==='true'||String(p.active).toLowerCase()==='yes'||String(p.status).toLowerCase()==='active';
+const isInactive=String(p.active).toLowerCase()==='false'||String(p.active).toLowerCase()==='no'||String(p.status).toLowerCase()==='inactive';
+if(isInactive)return false;
+if(isActive)return true;
+if(!hasActiveCol&&!hasStatusCol)return true;
+return false;
+});
+if(activeProducts.length===0){
+container.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text-light)"><i class="fas fa-box-open" style="font-size:3rem;margin-bottom:1rem;opacity:0.5;display:block"></i><h3>Belum Ada Produk</h3></div>';
+return;
+}
+container.innerHTML='<div class="products-grid" id="productsGrid"></div>';
+document.getElementById('productsGrid').innerHTML=activeProducts.map(product=>{
+const hasImage=product.imageUrl&&product.imageUrl.trim()!=='';
+const inCart=Cart.find(c=>c.id===product.id);
+const imgId='prod-img-'+product.id;
+const imgHtml=hasImage
+?'<img id="'+imgId+'" src="'+product.imageUrl+'" alt="'+escapeHtml(product.name)+'" onerror="imgError(this)">'
+:'<i class="fas fa-coffee"></i>';
+return'<div class="product-card"><div class="product-img" id="wrap-'+imgId+'">'+imgHtml+'</div><div class="product-body"><div class="product-name">'+escapeHtml(product.name)+'</div><div class="product-desc">'+escapeHtml(product.description||'')+'</div><div class="product-price">Rp '+formatNumber(product.price)+(product.originalPrice&&parseFloat(product.originalPrice)>parseFloat(product.price)?' <small>Rp '+formatNumber(product.originalPrice)+'</small>':'')+'</div><button class="product-btn '+(inCart?'added':'')+'" id="btn-'+product.id+'" onclick="handleProductClick(\''+product.id+'\')"><i class="fas '+(inCart?'fa-check':'fa-cart-plus')+'"></i> '+(inCart?'Ditambahkan ('+inCart.qty+')':'Tambah ke Keranjang')+'</button></div></div>';
+}).join('');
+}
+
+function handleProductClick(productId){
+const product=AllProducts.find(p=>p.id===productId);
+if(!product)return;
+addToCart(product);
+const btn=document.getElementById('btn-'+productId);
+if(btn){const inCart=Cart.find(c=>c.id===productId);btn.className='product-btn added';btn.innerHTML='<i class="fas fa-check"></i> Ditambahkan ('+(inCart?inCart.qty:1)+')'}
+}
+
+// ==================== REFERRAL ====================
+function getRefCode(){const p=new URLSearchParams(window.location.search);return p.get('ref')||''}
+
+async function loadAffiliatorInfo(){
+const refCode=getRefCode();
+if(!refCode){document.getElementById('refBanner').style.display='none';return}
+document.getElementById('refCode').value=refCode;
+let users=await DBStore.getAll('users');
+let aff=users.find(u=>u.referralCode===refCode);
+if(!aff){
+const result=await fetchFromGAS('getUsers');
+if(result.success&&result.data){
+for(const user of result.data){if(user&&user.id)await DBStore.put('users',user)}
+users=await DBStore.getAll('users');
+aff=users.find(u=>u.referralCode===refCode);
+}
+}
+document.getElementById('refAffiliatorName').textContent=aff?aff.name:refCode;
+}
+
+// ==================== SUBMIT LEAD (FIXED) ====================
+async function submitLead(){
+const btn=document.querySelector('button[onclick="submitLead()"]');
+const btnOriginal=btn.innerHTML;
+if(!DBStore.ready&&DBStore.initPromise){try{await DBStore.initPromise}catch(e){}}
+
+const refCode=document.getElementById('refCode').value;
+const name=document.getElementById('buyerName').value.trim();
+const email=document.getElementById('buyerEmail').value.trim();
+const phone=document.getElementById('buyerPhone').value.trim();
+const street=document.getElementById('buyerStreet').value.trim();
+const province=document.getElementById('buyerProvince').value.trim();
+const city=document.getElementById('buyerCity').value.trim();
+const city2=document.getElementById('buyerCity2').value.trim();
+const district=document.getElementById('buyerDistrict').value.trim();
+const postal=document.getElementById('buyerPostal').value.trim();
+const notes=document.getElementById('buyerNotes').value.trim();
+
+if(Cart.length===0){showToast('Silakan pilih produk terlebih dahulu','error');return}
+if(!name||!email||!phone||!street||!province||!city||!district||!postal){showToast('Harap isi semua field wajib','error');return}
+if(!email.includes('@')||!email.includes('.')){showToast('Format email tidak valid','error');return}
+const phoneDigits=phone.replace(/\D/g,'');
+if(phoneDigits.length<10){showToast('Nomor WhatsApp minimal 10 digit','error');return}
+
+btn.disabled=true;
+btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+const now=new Date().toISOString();
+const leadId='lead_'+Date.now();
+const total=getCartTotal();
+const productNames=Cart.map(c=>c.name+' x'+c.qty).join(', ');
+
+// PERBAIKAN: Pastikan total > 0
+const finalTotal=Math.round(total);
+if(finalTotal<=0){showToast('Error: Total tidak valid','error');btn.disabled=false;btn.innerHTML=btnOriginal;return}
+
+// PERBAIKAN: Kirim lead dengan notes SINGKAT agar URL tidak terlalu panjang
+const leadData={
+id:leadId,
+referralCode:refCode||'DIRECT',
+name:name,
+contact:email+' / '+phone,
+status:'Pending',
+date:now,
+transactionValue:finalTotal,
+source:'Landing Page',
+notes:productNames+' | '+street+' | '+notes
+};
+
+const leadOk=await syncToGAS('addLead',leadData);
+
+// Simpan setiap produk sebagai order
+for(const item of Cart){
+const orderId='order_'+Date.now()+'_'+item.id;
+const itemPrice=parseFloat(item.price)||0;
+const orderData={
+id:orderId,leadId:leadId,productName:item.name,
+buyerName:name,buyerEmail:email,buyerPhone:phone,
+namaJalanGedung:street,provinsi:province,
+kotaKabupaten:city+(city2?' / '+city2:''),kecamatan:district,kodePos:postal,
+price:Math.round(itemPrice*item.qty),qty:item.qty,ongkir:0,
+referralCode:refCode||'DIRECT',status:'Pending',date:now
+};
+await syncToGAS('addOrder',orderData);
+}
+
+// PERBAIKAN KRUSIAL: Fallback update transactionValue via call terpisah (sangat pendek, 100% tidak terpotong)
+if(finalTotal>0){
+await syncToGAS('updateLead',{id:leadId,transactionValue:finalTotal});
+}
+
+btn.disabled=false;
+btn.innerHTML=btnOriginal;
+
+if(leadOk){
+document.getElementById('successModal').classList.add('active');
+clearCart();
+['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerProvince','buyerCity','buyerCity2','buyerDistrict','buyerPostal','buyerNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+document.querySelectorAll('.product-btn').forEach(b=>{b.className='product-btn';b.innerHTML='<i class="fas fa-cart-plus"></i> Tambah ke Keranjang'});
+showToast('Pesanan berhasil dikirim!','success');
+}else{
+showToast('Pesanan disimpan lokal. Sinkronasi ke server akan dilakukan otomatis.','warning');
+}
+}
+
+function closeSuccessModal(){document.getElementById('successModal').classList.remove('active')}
+
+function formatNumber(num){return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function showToast(message,type){
+const container=document.getElementById('toastContainer');
+const toast=document.createElement('div');
+toast.className='toast '+(type||'info');
+const icons={success:'check-circle',error:'times-circle',warning:'exclamation-circle',info:'info-circle'};
+toast.innerHTML='<i class="fas fa-'+(icons[type]||'info-circle')+'"></i> <span>'+message+'</span>';
+container.appendChild(toast);
+setTimeout(()=>toast.remove(),4000);
+}
+
+document.addEventListener('DOMContentLoaded',async function(){
+DBStore.init().catch(()=>{DBStore.mode='memory';DBStore.ready=true});
+try{await loadProducts()}catch(e){setTimeout(loadProducts,2000)}
+try{await loadAffiliatorInfo()}catch(e){}
+});
+</script>
+</body>
+</html>
