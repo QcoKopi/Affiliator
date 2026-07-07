@@ -251,25 +251,31 @@ return`<tr><td>${formatDate(o.date)}</td><td>${o.productName||'-'}${o.qty>1?' x'
 
 function renderCommissions(){
     document.getElementById('commissionsBody').innerHTML=DATA.commissions.map(c=>{
-        const aff=DATA.users.find(u=>u.id===c.affiliatorId);
+        // Ambil ID affiliator dengan toleransi huruf kapital properti dari GAS
+        const affId = c.affiliatorid || c.affiliatorId;
+        const aff=DATA.users.find(u=>u.id===affId);
         
-        // Membuat tombol aksi bayar jika statusnya masih pending
-        const isPaid = c.paid==='true' || c.paid===true;
+        // Membaca status pembayaran (mendukung string 'true' / boolean true)
+        const isPaid = String(c.paid).toLowerCase() === 'true' || c.paid === true;
         const statusBadge = isPaid ? '<span class="badge badge-valid">Dibayar</span>' : '<span class="badge badge-pending">Pending</span>';
         
-        // Jika belum dibayar, berikan tombol untuk mengubah status ke Google Sheet
-        const actionBtn = !isPaid ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${c.id}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        // Buat tombol aksi bayar
+        const commId = c.id || c.commId;
+        const actionBtn = !isPaid ? `<button class="btn btn-sm btn-success" onclick="markCommissionAsPaid('${commId}')"><i class="fas fa-check"></i> Bayar</button>` : '-';
+        
+        // Ambil nominal komisi
+        const amount = parseFloat(c.amount) || 0;
         
         return`<tr>
             <td>${formatDate(c.date)}</td>
-            <td>${aff?aff.name:c.affiliatorId}</td>
+            <td><strong>${aff ? aff.name : (affId || '-')}</strong></td>
             <td>${c.type||'-'}</td>
             <td>${c.description||'-'}</td>
-            <td>Rp ${formatNumber(parseFloat(c.amount)||0)}</td>
+            <td>Rp ${formatNumber(amount)}</td>
             <td>${statusBadge}</td>
             <td>${actionBtn}</td>
         </tr>`
-    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada data komisi</td></tr>';
 }
 
 // Fungsi baru untuk menembak perubahan ke Google Apps Script
