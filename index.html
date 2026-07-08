@@ -564,7 +564,7 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 </div>
 </div>
 </div>
-<p style="font-size:0.8rem;color:var(--text-light);margin-top:0.5rem"><i class="fas fa-info-circle"></i> Untuk perubahan KTP atau No. Rekening, silakan email ke <a href="mailto:qcoffee.indonesia@gmail.com" style="color:var(--primary)">qcoffee.indonesia@gmail.com</a></p>
+<p style="font-size:0.8rem;color:var(--text-light);margin-top:0.5rem"><i class="fas fa-info-circle"></i> Untuk perubahan KTP atau No. Rekening, silakan kirimkan foto ke email ke <a href="mailto:qcoffee.indonesia@gmail.com" style="color:var(--primary)">qcoffee.indonesia@gmail.com</a></p>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-outline" onclick="closeModal('userDetailModal')">Tutup</button>
@@ -1737,7 +1737,7 @@ if (!phone) { showToast('User tidak punya nomor WhatsApp', 'error'); return; }
 
 var refCode = u.referralcode || u.referralCode || '';
 var name = u.name || 'Affiliator';
-var waMsg = 'Halo ' + name + ', selamat! Akun affiliator Anda sudah aktif. Kode referral: ' + refCode + '. Link: https://qcokopi.github.io/Affiliator/landing.html?ref=' + encodeURIComponent(refCode) + ' . Silakan login dan mulai promosikan produk kami. Komisi 5% per transaksi. - Tim Kopi Affiliate';
+var waMsg = 'Halo ' + name + ', selamat! Akun affiliator Anda sudah aktif. Silahkan login Link: https://qcokopi.github.io/Affiliator/index.html . dan mulai promosikan produk kami. Komisi 5% per transaksi. - Tim Kopi Affiliate';
 var waLink = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(waMsg);
 
 if (!confirm('Aktifkan user ini? WhatsApp akan terbuka untuk kirim notifikasi.')) return;
