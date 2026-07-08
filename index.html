@@ -263,7 +263,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-body">
 <div class="table-container">
 <table class="data-table">
-<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th></tr></thead>
+<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th><th>Aksi</th></tr></thead>
 <tbody id="affiliatorsBody"></tbody>
 </table>
 </div>
@@ -501,10 +501,60 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 </div>
 </div>
 
+<!-- ==================== USER DETAIL MODAL ==================== -->
+<div class="modal-overlay" id="userDetailModal" style="z-index:10003">
+<div class="modal" style="max-width:600px">
+<div class="modal-header"><h3><i class="fas fa-user-edit"></i> Detail Affiliator</h3><button class="modal-close" onclick="closeModal('userDetailModal')">&times;</button></div>
+<div class="modal-body">
+<input type="hidden" id="detailUserId">
+<div class="form-row">
+<div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="detailName"></div>
+<div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="detailEmail"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">No. WhatsApp</label><input type="tel" class="form-input" id="detailPhone"></div>
+<div class="form-group"><label class="form-label">Password Baru <small style="font-weight:400;color:var(--text-light)">(kosongkan jika tidak diubah)</small></label><input type="password" class="form-input" id="detailPassword" placeholder="Password baru"></div>
+</div>
+<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin:1rem 0;border:1.5px solid var(--border)">
+<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.75rem"><strong>Data yang tidak dapat diubah:</strong></p>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Referral Code</label><input type="text" class="form-input" id="detailRefCode" readonly style="background:var(--border);cursor:not-allowed"></div>
+<div class="form-group"><label class="form-label">Status</label><input type="text" class="form-input" id="detailStatus" readonly style="background:var(--border);cursor:not-allowed"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Bank & Rekening</label><input type="text" class="form-input" id="detailBank" readonly style="background:var(--border);cursor:not-allowed"></div>
+<div class="form-group"><label class="form-label">Tanggal Daftar</label><input type="text" class="form-input" id="detailJoined" readonly style="background:var(--border);cursor:not-allowed"></div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">Foto KTP</label>
+<div id="detailKtpSection" style="display:none">
+<a id="detailKtpLink" href="#" target="_blank" class="btn btn-outline btn-sm" style="width:100%"><i class="fas fa-external-link-alt"></i> Lihat Foto KTP</a>
+</div>
+<p id="detailKtpMissing" style="font-size:0.8rem;color:var(--text-light)"><i class="fas fa-times-circle" style="color:var(--danger)"></i> Foto KTP belum diupload</p>
+</div>
+<div class="form-group">
+<label class="form-label">Foto Cover Buku Tabungan</label>
+<div id="detailTabunganSection" style="display:none">
+<a id="detailTabunganLink" href="#" target="_blank" class="btn btn-outline btn-sm" style="width:100%"><i class="fas fa-external-link-alt"></i> Lihat Foto Tabungan</a>
+</div>
+<p id="detailTabunganMissing" style="font-size:0.8rem;color:var(--text-light)"><i class="fas fa-times-circle" style="color:var(--danger)"></i> Foto Tabungan belum diupload</p>
+</div>
+</div>
+<p style="font-size:0.8rem;color:var(--text-light);margin-top:0.5rem"><i class="fas fa-info-circle"></i> Untuk perubahan KTP atau No. Rekening, silakan email ke <a href="mailto:qcoffee.indonesia@gmail.com" style="color:var(--primary)">qcoffee.indonesia@gmail.com</a></p>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-outline" onclick="closeModal('userDetailModal')">Tutup</button>
+<button type="button" class="btn btn-primary" id="btnSaveUserDetail" onclick="saveUserDetail()"><i class="fas fa-save"></i> Simpan Perubahan</button>
+</div>
+</div>
+</div>
+
 <script>
 // ==================== CONFIG ====================
 const CONFIG = {
-GAS_URL:'https://script.google.com/macros/s/AKfycbxz2nqW27AUxb8bLdbpiBMOvuRbBwqL7Kv6S1OFO5vStrxz-sqASPZhUzivtl0FPX4/exec',
+GAS_URL:'https://script.google.com/macros/s/AKfycbzfqIHj2RIi3YDayjA5jbVC-xYydW9QahJbzDAGUzm6r8y6bYFlCUL2RJRA-y7e3vQ/exec',
 };
 
 // ==================== STATE ====================
@@ -912,12 +962,27 @@ function renderAffiliators() {
 if (!currentUser || !currentUser.isAdmin) return;
 document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
 document.getElementById('affiliatorsBody').innerHTML = DATA.users.map(u => {
-const ref = u.referralcode || u.referralCode;
-const affLeads = DATA.leads.filter(l => (l.referralcode || l.referralCode) === ref);
-const affComm = DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === u.id);
-const totalComm = affComm.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-return '<tr><td><strong>' + (u.name || '-') + '</strong></td><td>' + (u.email || '-') + '</td><td>' + (u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + (ref || '-') + '</code></td><td>' + (u.bank || '-') + '</td><td><span class="badge badge-' + ((u.status === 'Active') ? 'active' : 'pending') + '">' + (u.status || 'Active') + '</span></td><td>' + affLeads.length + '</td><td>Rp ' + formatNumber(totalComm) + '</td></tr>';
-}).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
+var ref = u.referralcode || u.referralCode;
+var affLeads = DATA.leads.filter(function(l) { return (l.referralcode || l.referralCode) === ref; });
+var affComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === u.id; });
+var totalComm = affComm.reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
+var isPending = (u.status === 'Pending');
+var isActive = (u.status === 'Active');
+var statusBadge = '<span class="badge badge-' + (isActive ? 'active' : (isPending ? 'pending' : 'inactive')) + '">' + (u.status || 'Active') + '</span>';
+
+var actionBtns = '<div style="display:flex;gap:4px">' +
+'<button class="btn btn-sm btn-outline" onclick="openUserDetailModal(\'' + u.id + '\')" title="Detail"><i class="fas fa-eye"></i></button>';
+
+if (isPending) {
+actionBtns += ' <button class="btn btn-sm btn-success" onclick="activateUser(\'' + u.id + '\')" title="Aktifkan"><i class="fas fa-check"></i></button>';
+} else if (isActive) {
+actionBtns += ' <button class="btn btn-sm btn-warning" onclick="deactivateUser(\'' + u.id + '\')" title="Nonaktifkan"><i class="fas fa-ban"></i></button>';
+}
+
+actionBtns += '</div>';
+
+return '<tr><td><strong>' + (u.name || '-') + '</strong></td><td>' + (u.email || '-') + '</td><td>' + (u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + (ref || '-') + '</code></td><td>' + (u.bank || '-') + '</td><td>' + statusBadge + '</td><td>' + affLeads.length + '</td><td>Rp ' + formatNumber(totalComm) + '</td><td>' + actionBtns + '</td></tr>';
+}).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
 }
 
 // ==================== LEADS ====================
@@ -1460,6 +1525,123 @@ btn.disabled = false;
 btn.innerHTML = origHTML;
 var stepElRem = document.getElementById('regStepInfo');
 if (stepElRem) stepElRem.remove();
+}
+}
+
+// ==================== USER DETAIL & ACTIVATION ====================
+function openUserDetailModal(userId) {
+var u = DATA.users.find(function(user) { return String(user.id) === String(userId); });
+if (!u) { showToast('User tidak ditemukan', 'error'); return; }
+
+document.getElementById('detailUserId').value = u.id || '';
+document.getElementById('detailName').value = u.name || '';
+document.getElementById('detailEmail').value = u.email || '';
+document.getElementById('detailPhone').value = u.phone || u.whatsapp || '';
+document.getElementById('detailPassword').value = '';
+document.getElementById('detailRefCode').value = u.referralcode || u.referralCode || '';
+document.getElementById('detailStatus').value = u.status || 'Pending';
+document.getElementById('detailBank').value = u.bank || '-';
+document.getElementById('detailJoined').value = formatDate(u.joined);
+
+var ktpUrl = u.ktpurl || u.ktpUrl || '';
+var tabunganUrl = u.tabunganurl || u.tabunganUrl || '';
+
+if (ktpUrl) {
+document.getElementById('detailKtpSection').style.display = '';
+document.getElementById('detailKtpLink').href = ktpUrl;
+document.getElementById('detailKtpMissing').style.display = 'none';
+} else {
+document.getElementById('detailKtpSection').style.display = 'none';
+document.getElementById('detailKtpMissing').style.display = '';
+}
+
+if (tabunganUrl) {
+document.getElementById('detailTabunganSection').style.display = '';
+document.getElementById('detailTabunganLink').href = tabunganUrl;
+document.getElementById('detailTabunganMissing').style.display = 'none';
+} else {
+document.getElementById('detailTabunganSection').style.display = 'none';
+document.getElementById('detailTabunganMissing').style.display = '';
+}
+
+document.getElementById('userDetailModal').classList.add('active');
+}
+
+async function saveUserDetail() {
+var userId = document.getElementById('detailUserId').value;
+var name = document.getElementById('detailName').value.trim();
+var email = document.getElementById('detailEmail').value.trim();
+var phone = document.getElementById('detailPhone').value.trim();
+var password = document.getElementById('detailPassword').value;
+
+if (!name || !email || !phone) {
+showToast('Nama, Email, dan Phone wajib diisi', 'error'); return;
+}
+
+var btn = document.getElementById('btnSaveUserDetail');
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+try {
+var params = { action: 'updateUser', id: userId, name: name, email: email, phone: phone };
+if (password) params.password = password;
+
+var res = await callGASGet('updateUser', params);
+if (res && res.success) {
+showToast('Data user berhasil diperbarui!', 'success');
+closeModal('userDetailModal');
+await syncAllData();
+} else {
+showToast((res && res.error) ? res.error : 'Gagal menyimpan', 'error');
+}
+} catch(err) {
+showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+}
+}
+
+async function activateUser(userId) {
+var u = DATA.users.find(function(user) { return String(user.id) === String(userId); });
+if (!u) { showToast('User tidak ditemukan', 'error'); return; }
+
+var phone = (u.phone || '').replace(/\D/g, '');
+if (!phone) { showToast('User tidak punya nomor WhatsApp', 'error'); return; }
+
+var refCode = u.referralcode || u.referralCode || '';
+var name = u.name || 'Affiliator';
+var waMsg = 'Halo ' + name + ', selamat! Akun affiliator Anda sudah aktif. Kode referral: ' + refCode + '. Link: https://qcokopi.github.io/Affiliator/landing.html?ref=' + encodeURIComponent(refCode) + ' . Silakan login dan mulai promosikan produk kami. Komisi 5% per transaksi. - Tim Kopi Affiliate';
+var waLink = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(waMsg);
+
+if (!confirm('Aktifkan user ini? Setelah aktif, WhatsApp akan terbuka untuk kirim notifikasi ke ' + phone)) return;
+
+try {
+var res = await callGASGet('updateUser', { action: 'updateUser', id: userId, status: 'Active' });
+if (res && res.success) {
+showToast('User berhasil diaktifkan! Buka WhatsApp untuk kirim notifikasi.', 'success');
+window.open(waLink, '_blank');
+await syncAllData();
+} else {
+showToast((res && res.error) ? res.error : 'Gagal mengaktifkan', 'error');
+}
+} catch(err) {
+showToast('Terjadi kesalahan', 'error');
+}
+}
+
+async function deactivateUser(userId) {
+if (!confirm('Nonaktifkan user ini?')) return;
+try {
+var res = await callGASGet('updateUser', { action: 'updateUser', id: userId, status: 'Inactive' });
+if (res && res.success) {
+showToast('User berhasil dinonaktifkan', 'success');
+await syncAllData();
+} else {
+showToast((res && res.error) ? res.error : 'Gagal menonaktifkan', 'error');
+}
+} catch(err) {
+showToast('Terjadi kesalahan', 'error');
 }
 }
 
