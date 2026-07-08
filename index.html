@@ -1253,26 +1253,73 @@ reader.readAsDataURL(file);
 
 function resizeImage(file, maxWidth, quality) {
 return new Promise(function(resolve, reject) {
+var timeout = setTimeout(function() { reject(new Error('Timeout memproses foto')); }, 15000);
 var img = new Image();
 var reader = new FileReader();
 reader.onload = function(e) {
 img.onload = function() {
+clearTimeout(timeout);
 var canvas = document.createElement('canvas');
 var w = img.width, h = img.height;
 if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
 canvas.width = w;
 canvas.height = h;
 var ctx = canvas.getContext('2d');
+ctx.fillStyle = '#FFFFFF';
+ctx.fillRect(0, 0, w, h);
 ctx.drawImage(img, 0, 0, w, h);
-var dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', quality);
+var dataUrl = canvas.toDataURL('image/jpeg', quality);
 resolve(dataUrl.split(',')[1]);
 };
-img.onerror = reject;
+img.onerror = function() { clearTimeout(timeout); reject(new Error('Gagal membaca gambar')); };
 img.src = e.target.result;
 };
-reader.onerror = reject;
+reader.onerror = function() { clearTimeout(timeout); reject(new Error('Gagal membaca file')); };
 reader.readAsDataURL(file);
 });
+}
+
+async function submitRegisterToGAS(data) {
+return new Promise(function(resolve) {
+var iframe = document.getElementById('gasFrame');
+var form = document.createElement('form');
+form.method = 'POST';
+form.action = CONFIG.GAS_URL;
+form.target = 'gasFrame';
+form.style.display = 'none';
+
+var af = document.createElement('input');
+af.name = 'action';
+af.value = 'registerAffiliator';
+form.appendChild(af);
+
+for (var key in data) {
+if (data[key] !== undefined && data[key] !== null) {
+var f = document.createElement('input');
+f.name = key;
+f.value = String(data[key] || '');
+form.appendChild(f);
+}
+}
+
+iframe.onload = function() { resolve(true); };
+setTimeout(function() { resolve(true); }, 6000);
+
+document.body.appendChild(form);
+form.submit();
+setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 8000);
+});
+}
+
+async function verifyUserRegistered(email) {
+try {
+var res = await fetchFromGAS('getUsers');
+if (res.success && Array.isArray(res.data)) {
+var found = res.data.find(function(u) { return String(u.email).toLowerCase() === email.toLowerCase(); });
+return found ? found : null;
+}
+} catch(e) {}
+return null;
 }
 
 async function handleRegisterSubmit(e) {
@@ -1301,48 +1348,57 @@ if (!tabunganFile) { showToast('Foto Cover Buku Tabungan wajib diunggah', 'error
 var btn = document.getElementById('btnRegisterSubmit');
 var origHTML = btn.innerHTML;
 btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftarkan...';
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+var stepEl = document.createElement('div');
+stepEl.id = 'regStepInfo';
+stepEl.style.cssText = 'text-align:center;font-size:0.85rem;color:var(--text-light);margin-top:0.5rem';
+btn.parentNode.insertBefore(stepEl, btn.nextSibling);
+
+function setStep(msg) {
+var el = document.getElementById('regStepInfo');
+if (el) el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ' + msg;
+}
 
 try {
-showToast('Memproses foto, harap tunggu...', 'info');
-var ktpBase64 = await resizeImage(ktpFile, 800, 0.8);
-var tabunganBase64 = await resizeImage(tabunganFile, 800, 0.8);
+setStep('Mengecilkan foto KTP...');
+var ktpBase64 = await resizeImage(ktpFile, 600, 0.6);
+setStep('Mengecilkan foto tabungan...');
+var tabunganBase64 = await resizeImage(tabunganFile, 600, 0.6);
 
-var body = new URLSearchParams();
-body.append('action', 'registerAffiliator');
-body.append('name', name);
-body.append('email', email);
-body.append('phone', phone);
-body.append('password', password);
-body.append('bank', bank);
-body.append('bankAccount', bankAccount);
-body.append('ktpBase64', ktpBase64);
-body.append('ktpMimeType', ktpFile.type || 'image/jpeg');
-body.append('tabunganBase64', tabunganBase64);
-body.append('tabunganMimeType', tabunganFile.type || 'image/jpeg');
+setStep('Mengirim data ke server...');
+var submitData = {
+name: name, email: email, phone: phone, password: password,
+bank: bank, bankAccount: bankAccount,
+ktpBase64: ktpBase64, ktpMimeType: ktpFile.type || 'image/jpeg',
+tabunganBase64: tabunganBase64, tabunganMimeType: tabunganFile.type || 'image/jpeg'
+};
 
-var response = await fetch(CONFIG.GAS_URL, {
-method: 'POST',
-headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-body: body
-});
-if (!response.ok) throw new Error('HTTP ' + response.status);
-var res = await response.json();
+await submitRegisterToGAS(submitData);
 
-if (res && res.success) {
+setStep('Menunggu konfirmasi server (10 detik)...');
+await new Promise(function(r) { setTimeout(r, 10000); });
+
+setStep('Memverifikasi pendaftaran...');
+var userFound = await verifyUserRegistered(email);
+
+if (userFound) {
 document.getElementById('regSuccessName').textContent = name;
-document.getElementById('regSuccessRefCode').textContent = res.referralCode || '-';
+document.getElementById('regSuccessRefCode').textContent = (userFound.referralcode || userFound.referralCode || '-');
 closeModal('registerModal');
 document.getElementById('registerSuccessModal').classList.add('active');
 } else {
-showToast((res && res.error) ? res.error : 'Pendaftaran gagal', 'error');
+showToast('Server sedang memproses. Silakan cek email dalam 1-2 menit.', 'warning');
+closeModal('registerModal');
 }
 } catch(err) {
-showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
-Debug.log('REGISTER ERROR:', err.message);
+showToast('Error: ' + (err.message || 'Terjadi kesalahan'), 'error');
+Debug.log('REGISTER ERROR:', err.message || err);
 } finally {
 btn.disabled = false;
 btn.innerHTML = origHTML;
+var stepElRem = document.getElementById('regStepInfo');
+if (stepElRem) stepElRem.remove();
 }
 }
 
