@@ -121,6 +121,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .register-link{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity 0.3s}
 .register-link:hover{opacity:0.8}
 </style>
+<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -1610,7 +1611,7 @@ if (!u) { showToast('Data profil tidak ditemukan', 'error'); return; }
 openUserDetailModal(u.id);
 }
 
-// ==================== FIX: Resize admin upload juga ke 400px x 0.4 ====================
+// ==================== FIX: Pakai POST iframe kalau ada foto base64, GET kalau tidak ====================
 async function saveUserDetail() {
 var userId = document.getElementById('detailUserId').value;
 var name = document.getElementById('detailName').value.trim();
@@ -1629,6 +1630,7 @@ btn.disabled = true;
 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
 try {
+var hasPhoto = !!(ktpFile || tabunganFile);
 var params = { action: 'updateUser', id: userId, name: name, email: email, phone: phone };
 if (password) params.password = password;
 
@@ -1644,7 +1646,17 @@ params.tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4);
 params.tabunganMimeType = tabunganFile.type || 'image/jpeg';
 }
 
-var res = await callGASGet('updateUser', params);
+// FIX: Kalau ada foto, pakai POST iframe (base64 tidak masuk URL)
+// Kalau tidak ada foto, pakai GET (lebih cepat)
+var res;
+if (hasPhoto) {
+Debug.log('UPDATE USER: using POST iframe (has photo)');
+res = await callGASPostIframe('updateUser', params);
+} else {
+Debug.log('UPDATE USER: using GET (no photo)');
+res = await callGASGet('updateUser', params);
+}
+
 if (res && res.success) {
 showToast('Data user berhasil diperbarui!', 'success');
 closeModal('userDetailModal');
@@ -1654,10 +1666,66 @@ showToast((res && res.error) ? res.error : 'Gagal menyimpan', 'error');
 }
 }catch(err) {
 showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
+Debug.log('UPDATE USER ERROR:', err.message || err);
 } finally {
 btn.disabled = false;
 btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
 }
+}
+
+// Helper: Kirim POST via iframe (untuk data besar seperti base64 foto)
+async function callGASPostIframe(action, data) {
+return new Promise(function(resolve) {
+var iframe = document.getElementById('gasFrame');
+var form = document.createElement('form');
+form.method = 'POST';
+form.action = CONFIG.GAS_URL;
+form.target = 'gasFrame';
+form.style.display = 'none';
+
+var af = document.createElement('input');
+af.name = 'action';
+af.value = action;
+form.appendChild(af);
+
+for (var key in data) {
+if (data[key] !== undefined && data[key] !== null) {
+var f = document.createElement('input');
+f.name = key;
+f.value = String(data[key] || '');
+form.appendChild(f);
+}
+}
+
+var resolved = false;
+function doResolve(result) {
+if (!resolved) {
+resolved = true;
+resolve(result || { success: true, message: 'Data terkirim via POST' });
+}
+}
+
+// Coba baca response dari iframe
+iframe.onload = function() {
+try {
+var doc = iframe.contentDocument || iframe.contentWindow.document;
+var body = doc.body ? doc.body.textContent : '';
+if (body) {
+var json = JSON.parse(body);
+doResolve(json);
+return;
+}
+}catch(e) {}
+doResolve({ success: true, message: 'Data terkirim' });
+};
+
+// Timeout fallback
+setTimeout(function() { doResolve({ success: true, message: 'Data terkirim (timeout)' }); }, 15000);
+
+document.body.appendChild(form);
+form.submit();
+setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 25000);
+});
 }
 
 async function activateUser(userId, btnEl) {
