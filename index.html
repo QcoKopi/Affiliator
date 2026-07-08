@@ -121,6 +121,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .register-link{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity 0.3s}
 .register-link:hover{opacity:0.8}
 </style>
+<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -1614,7 +1615,7 @@ async function activateUser(userId, btnEl) {
 var u = DATA.users.find(function(user) { return String(user.id) === String(userId); });
 if (!u) { showToast('User tidak ditemukan', 'error'); return; }
 
-var phone = (u.phone || '').replace(/\D/g, '');
+var phone = String(u.phone || '').replace(/\D/g, '');
 if (!phone) { showToast('User tidak punya nomor WhatsApp', 'error'); return; }
 
 var refCode = u.referralcode || u.referralCode || '';
