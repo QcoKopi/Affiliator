@@ -120,7 +120,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .password-stuff span.strong{background:var(--success)}
 .register-link{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity 0.3s}
 .register-link:hover{opacity:0.8}
+
+/* ===== INVOICE MODAL ===== */
+.invoice-preview{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;font-family:'Courier New',monospace;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+.invoice-field{background:#f9f9f9;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0.5rem 0.75rem;font-size:0.85rem;width:100%;font-family:inherit}
+.invoice-field:focus{outline:none;border-color:var(--primary-light)}
+.invoice-total-row{font-weight:700;font-size:1rem;color:var(--primary-dark);border-top:2px solid var(--border);padding-top:0.75rem;margin-top:0.75rem}
 </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -569,6 +576,35 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="modal-footer">
 <button type="button" class="btn btn-outline" onclick="closeModal('userDetailModal')">Tutup</button>
 <button type="button" class="btn btn-primary" id="btnSaveUserDetail" onclick="saveUserDetail()"><i class="fas fa-save"></i> Simpan Perubahan</button>
+</div>
+</div>
+</div>
+
+<!-- ==================== INVOICE MODAL ==================== -->
+<div class="modal-overlay" id="invoiceModal" style="z-index:10004">
+<div class="modal" style="max-width:500px">
+<div class="modal-header"><h3><i class="fas fa-file-invoice" style="color:var(--info)"></i> Buat Invoice</h3><button class="modal-close" onclick="closeModal('invoiceModal')">&times;</button></div>
+<div class="modal-body">
+<input type="hidden" id="invLeadId">
+<div class="form-row">
+<div class="form-group"><label class="form-label">Nama Penerima</label><input type="text" class="invoice-field" id="invName" readonly></div>
+<div class="form-group"><label class="form-label">No. HP</label><input type="text" class="invoice-field" id="invPhone" readonly></div>
+</div>
+<div class="form-group"><label class="form-label">Alamat Lengkap</label><textarea class="invoice-field" id="invAddress" rows="2" readonly></textarea></div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Produk</label><input type="text" class="invoice-field" id="invProduct" readonly></div>
+<div class="form-group"><label class="form-label">Qty</label><input type="number" class="invoice-field" id="invQty" readonly style="width:80px"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Harga Produk (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invPrice" oninput="calculateInvoiceTotal()"></div>
+<div class="form-group"><label class="form-label">Ongkir (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invOngkir" value="0" oninput="calculateInvoiceTotal()"></div>
+</div>
+<div class="invoice-total-row" style="text-align:right">Total: <span id="invTotal">Rp 0</span></div>
+<div class="form-group" style="margin-top:1rem"><label class="form-label">Preview Invoice (WhatsApp)</label><div class="invoice-preview" id="invPreview"></div></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-outline" onclick="closeModal('invoiceModal')">Batal</button>
+<button class="btn btn-success" id="btnSendInvoice" onclick="sendInvoiceWA()"><i class="fab fa-whatsapp"></i> Kirim via WhatsApp</button>
 </div>
 </div>
 </div>
@@ -1041,7 +1077,10 @@ statusBtns = '<button class="btn btn-sm btn-success" onclick="updateLeadStatus(\
 } else if (stat === 'valid') {
 statusBtns = '<button class="btn btn-sm btn-primary" onclick="updateLeadStatus(\'' + leadId + '\',\'converted\')" title="Convert"><i class="fas fa-exchange-alt"></i></button>';
 }
-actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal(\'' + leadId + '\')" title="Edit"><i class="fas fa-edit"></i></button>' + (statusBtns ? ' ' + statusBtns : '');
+// Tombol Invoice: hanya muncul kalau lead punya order
+var hasOrder = DATA.orders.some(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
+var invoiceBtn = hasOrder ? ' <button class="btn btn-sm btn-outline" onclick="openInvoiceModal(\'' + leadId + '\')" title="Invoice" style="color:var(--info);border-color:var(--info)"><i class="fas fa-file-invoice"></i></button>' : '';
+actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal(\'' + leadId + '\')" title="Edit"><i class="fas fa-edit"></i></button>' + (statusBtns ? ' ' + statusBtns : '') + invoiceBtn;
 } else {
 actionBtn = '<button class="btn btn-sm btn-outline" onclick="viewLeadDetail(\'' + leadId + '\')" title="Lihat Detail"><i class="fas fa-eye"></i></button>';
 }
@@ -1786,6 +1825,75 @@ showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
 } finally {
 if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHTML; }
 }
+}
+
+// ==================== INVOICE FUNCTIONS ====================
+function openInvoiceModal(leadId) {
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
+
+// Cari order yang terkait dengan lead ini
+var order = DATA.orders.find(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
+if (!order) { showToast('Order tidak ditemukan untuk lead ini', 'error'); return; }
+
+document.getElementById('invLeadId').value = leadId;
+document.getElementById('invName').value = order.buyername || order.buyerName || lead.name || '';
+document.getElementById('invPhone').value = order.buyerphone || order.buyerPhone || lead.contact || '';
+
+var alamat = [order.namajalangedung || order.namaJalanGedung, order.kecamatan, order.kotakabupaten || order.kotaKabupaten, order.provinsi, order.kodepos || order.kodePos].filter(Boolean).join(', ');
+document.getElementById('invAddress').value = alamat;
+
+document.getElementById('invProduct').value = order.productname || order.productName || '';
+document.getElementById('invQty').value = order.qty || 1;
+document.getElementById('invPrice').value = order.price || 0;
+document.getElementById('invOngkir').value = order.ongkir || 0;
+
+calculateInvoiceTotal();
+document.getElementById('invoiceModal').classList.add('active');
+}
+
+function calculateInvoiceTotal() {
+var price = parseFloat(document.getElementById('invPrice').value) || 0;
+var qty = parseInt(document.getElementById('invQty').value) || 1;
+var ongkir = parseFloat(document.getElementById('invOngkir').value) || 0;
+var subtotal = price * qty;
+var total = subtotal + ongkir;
+
+document.getElementById('invTotal').textContent = 'Rp ' + formatNumber(total);
+
+// Generate preview text
+var name = document.getElementById('invName').value || '-';
+var phone = document.getElementById('invPhone').value || '-';
+var address = document.getElementById('invAddress').value || '-';
+var product = document.getElementById('invProduct').value || '-';
+
+var preview = '*INVOICE - CV Kemari Sukses Makmur*\n\n';
+preview += 'Kepada: ' + name + '\n';
+preview += 'Alamat: ' + address + '\n';
+preview += 'No. HP: ' + phone + '\n\n';
+preview += 'Produk: ' + product + ' x' + qty + '\n';
+preview += 'Harga: Rp ' + formatNumber(price) + '\n';
+if (ongkir > 0) preview += 'Ongkir: Rp ' + formatNumber(ongkir) + '\n';
+preview += '-------------------\n';
+preview += '*Total: Rp ' + formatNumber(total) + '*\n\n';
+preview += 'Pembayaran via transfer:\n';
+preview += 'BCA - 1234567890\n';
+preview += 'a/n PT Kopi Affiliate\n\n';
+preview += 'Konfirmasi pembayaran ke WA ini.\nTerima kasih.';
+
+document.getElementById('invPreview').textContent = preview;
+}
+
+function sendInvoiceWA() {
+var phone = document.getElementById('invPhone').value.replace(/\D/g, '');
+if (!phone) { showToast('Nomor HP tidak valid', 'error'); return; }
+
+var preview = document.getElementById('invPreview').textContent;
+if (!preview) { showToast('Invoice kosong', 'error'); return; }
+
+var waLink = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(preview);
+window.open(waLink, '_blank');
+closeModal('invoiceModal');
 }
 
 // ==================== INIT ====================
