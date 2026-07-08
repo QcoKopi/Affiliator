@@ -86,6 +86,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 @media(max-width:768px){.hero h1{font-size:1.8rem}.form-row{grid-template-columns:1fr}.products-grid{grid-template-columns:1fr}}
 .debug-panel{position:fixed;bottom:10px;left:10px;background:#1a1a1a;color:#0f0;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;max-width:400px;max-height:150px;overflow-y:auto;z-index:9999;display:none}
 </style>
+<base target="_blank">
 </head>
 <body>
 <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
@@ -120,10 +121,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="cart-summary"><div class="cart-summary-title"><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</div><div id="cartSummaryContent"><div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div></div></div>
 <input type="hidden" id="refCode">
 <div class="form-row"><div class="form-group"><label class="form-label">Nama Lengkap <span class="required">*</span></label><input type="text" class="form-input" id="buyerName" placeholder="Nama Anda"></div><div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="buyerEmail" placeholder="email@anda.com"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789"></div><div class="form-group"><label class="form-label">Kota <span class="required">*</span></label><input type="text" class="form-input" id="buyerCity" placeholder="Jakarta"></div></div>
-<div class="form-group"><label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12"></div>
-<div class="form-row"><div class="form-group"><label class="form-label">Provinsi <span class="required">*</span></label><input type="text" class="form-input" id="buyerProvince" placeholder="Jawa Barat"></div><div class="form-group"><label class="form-label">Kota / Kabupaten <span class="required">*</span></label><input type="text" class="form-input" id="buyerCity2" placeholder="Bandung"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">Kecamatan <span class="required">*</span></label><input type="text" class="form-input" id="buyerDistrict" placeholder="Coblong"></div><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><input type="text" class="form-input" id="buyerPostal" placeholder="40132"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789"></div><div class="form-group"><label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Provinsi <span class="required">*</span></label><select class="form-input" id="buyerProvince" onchange="onProvinceChange()"><option value="">Pilih Provinsi...</option></select></div><div class="form-group"><label class="form-label">Kota / Kabupaten <span class="required">*</span></label><select class="form-input" id="buyerCity2" onchange="onCityChange()" disabled><option value="">Pilih Kota...</option></select></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Kecamatan <span class="required">*</span></label><select class="form-input" id="buyerDistrict" onchange="onDistrictChange()" disabled><option value="">Pilih Kecamatan...</option></select></div><div class="form-group"><label class="form-label">Kelurahan <span class="required">*</span></label><select class="form-input" id="buyerKelurahan" onchange="onVillageChange()" disabled><option value="">Pilih Kelurahan...</option></select></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><select class="form-input" id="buyerPostal" disabled><option value="">Pilih Kode Pos...</option></select></div><div class="form-group"><label class="form-label">Kota (auto)</label><input type="text" class="form-input" id="buyerCity" placeholder="Otomatis" readonly style="background:var(--bg);color:var(--text-light)"></div></div>
 <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-textarea" id="buyerNotes" placeholder="Catatan tambahan (opsional)..."></textarea></div>
 <button class="btn btn-primary" onclick="submitLead()"><i class="fas fa-paper-plane"></i> Kirim Pesanan</button>
 <p style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:1rem"><i class="fas fa-lock"></i> Data Anda aman & terenkripsi</p>
@@ -317,18 +318,13 @@ const refCode=getRefCode();
 if(!refCode){document.getElementById('refBanner').style.display='none';return}
 document.getElementById('refCode').value=refCode;
 let users=await DBStore.getAll('users');
-// FIX: Cek kedua field: lowercase 'referralcode' (dari GAS) dan camelCase 'referralCode'
-let aff=users.find(u=>(u.referralcode||u.referralCode||'').toUpperCase()===refCode.toUpperCase());
+let aff=users.find(u=>u.referralCode===refCode);
 if(!aff){
-// FIX: Fetch dari GAS dengan timeout 5 detik — tidak blocking UI
-const result=await Promise.race([
-fetchFromGAS('getUsers'),
-new Promise(r=>setTimeout(()=>r({success:false}),5000))
-]);
+const result=await fetchFromGAS('getUsers');
 if(result.success&&result.data){
 for(const user of result.data){if(user&&user.id)await DBStore.put('users',user)}
 users=await DBStore.getAll('users');
-aff=users.find(u=>(u.referralcode||u.referralCode||'').toUpperCase()===refCode.toUpperCase());
+aff=users.find(u=>u.referralCode===refCode);
 }
 }
 document.getElementById('refAffiliatorName').textContent=aff?aff.name:refCode;
@@ -345,15 +341,19 @@ const name=document.getElementById('buyerName').value.trim();
 const email=document.getElementById('buyerEmail').value.trim();
 const phone=document.getElementById('buyerPhone').value.trim();
 const street=document.getElementById('buyerStreet').value.trim();
-const province=document.getElementById('buyerProvince').value.trim();
-const city=document.getElementById('buyerCity').value.trim();
-const city2=document.getElementById('buyerCity2').value.trim();
-const district=document.getElementById('buyerDistrict').value.trim();
+const provinceRaw=document.getElementById('buyerProvince').value.trim();
+const province=provinceRaw?provinceRaw.split('|')[1]||provinceRaw:'';
+const cityRaw=document.getElementById('buyerCity2').value.trim();
+const city=cityRaw?cityRaw.split('|')[1]||cityRaw:'';
+const districtRaw=document.getElementById('buyerDistrict').value.trim();
+const district=districtRaw?districtRaw.split('|')[1]||districtRaw:'';
+const kelurahanRaw=document.getElementById('buyerKelurahan').value.trim();
+const kelurahan=kelurahanRaw?kelurahanRaw.split('|')[1]||kelurahanRaw:'';
 const postal=document.getElementById('buyerPostal').value.trim();
 const notes=document.getElementById('buyerNotes').value.trim();
 
 if(Cart.length===0){showToast('Silakan pilih produk terlebih dahulu','error');return}
-if(!name||!email||!phone||!street||!province||!city||!district||!postal){showToast('Harap isi semua field wajib','error');return}
+if(!name||!email||!phone||!street||!province||!city||!district||!kelurahan||!postal){showToast('Harap isi semua field wajib','error');return}
 if(!email.includes('@')||!email.includes('.')){showToast('Format email tidak valid','error');return}
 const phoneDigits=phone.replace(/\D/g,'');
 if(phoneDigits.length<10){showToast('Nomor WhatsApp minimal 10 digit','error');return}
@@ -390,7 +390,7 @@ const orderData={
 id:orderId,leadId:leadId,productName:item.name,
 buyerName:name,buyerEmail:email,buyerPhone:phone,
 namaJalanGedung:street,provinsi:province,
-kotaKabupaten:city+(city2?' / '+city2:''),kecamatan:district,kodePos:postal,
+kotaKabupaten:city,kecamatan:district,kelurahan:kelurahan,kodePos:postal,
 price:Math.round(itemPrice*item.qty),qty:item.qty,ongkir:0,
 referralCode:refCode||'DIRECT',status:'Pending',date:now
 };
@@ -407,7 +407,9 @@ btn.innerHTML=btnOriginal;
 if(leadOk){
 document.getElementById('successModal').classList.add('active');
 clearCart();
-['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerProvince','buyerCity','buyerCity2','buyerDistrict','buyerPostal','buyerNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerCity'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+// Reset semua dropdown wilayah ke default
+resetWilayahDropdowns();
 document.querySelectorAll('.product-btn').forEach(b=>{b.className='product-btn';b.innerHTML='<i class="fas fa-cart-plus"></i> Tambah ke Keranjang'});
 showToast('Pesanan berhasil dikirim!','success');
 }else{
@@ -416,6 +418,207 @@ showToast('Pesanan disimpan lokal. Sinkronasi ke server akan dilakukan otomatis.
 }
 
 function closeSuccessModal(){document.getElementById('successModal').classList.remove('active')}
+
+// ==================== API WILAYAH INDONESIA ====================
+const WILAYAH_API = 'https://www.emsifa.com/api-wilayah-indonesia/api';
+
+async function loadProvinces(){
+try{
+var sel = document.getElementById('buyerProvince');
+sel.innerHTML = '<option value="">Memuat provinsi...</option>';
+var res = await fetch(WILAYAH_API + '/provinces.json');
+var data = await res.json();
+sel.innerHTML = '<option value="">Pilih Provinsi...</option>';
+for(var i = 0; i < data.length; i++){
+var opt = document.createElement('option');
+opt.value = data[i].id + '|' + data[i].name;
+opt.textContent = data[i].name;
+sel.appendChild(opt);
+}
+}catch(e){
+document.getElementById('buyerProvince').innerHTML = '<option value="">Gagal memuat</option>';
+}
+}
+
+async function onProvinceChange(){
+var provSel = document.getElementById('buyerProvince');
+var citySel = document.getElementById('buyerCity2');
+var distSel = document.getElementById('buyerDistrict');
+var villSel = document.getElementById('buyerKelurahan');
+var postSel = document.getElementById('buyerPostal');
+var autoCity = document.getElementById('buyerCity');
+
+// Reset child dropdowns
+citySel.innerHTML = '<option value="">Pilih Kota...</option>'; citySel.disabled = true;
+distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true;
+villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true;
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
+autoCity.value = '';
+
+if(!provSel.value) return;
+
+var provId = provSel.value.split('|')[0];
+var provName = provSel.value.split('|')[1];
+autoCity.value = provName;
+
+citySel.innerHTML = '<option value="">Memuat kota...</option>';
+try{
+var res = await fetch(WILAYAH_API + '/regencies/' + provId + '.json');
+var data = await res.json();
+citySel.innerHTML = '<option value="">Pilih Kota...</option>';
+for(var i = 0; i < data.length; i++){
+var opt = document.createElement('option');
+opt.value = data[i].id + '|' + data[i].name;
+opt.textContent = data[i].name;
+citySel.appendChild(opt);
+}
+citySel.disabled = false;
+}catch(e){
+citySel.innerHTML = '<option value="">Gagal memuat</option>';
+}
+}
+
+async function onCityChange(){
+var citySel = document.getElementById('buyerCity2');
+var distSel = document.getElementById('buyerDistrict');
+var villSel = document.getElementById('buyerKelurahan');
+var postSel = document.getElementById('buyerPostal');
+var autoCity = document.getElementById('buyerCity');
+
+distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true;
+villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true;
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
+
+if(!citySel.value) return;
+
+var cityId = citySel.value.split('|')[0];
+var cityName = citySel.value.split('|')[1];
+autoCity.value = cityName;
+
+distSel.innerHTML = '<option value="">Memuat kecamatan...</option>';
+try{
+var res = await fetch(WILAYAH_API + '/districts/' + cityId + '.json');
+var data = await res.json();
+distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>';
+for(var i = 0; i < data.length; i++){
+var opt = document.createElement('option');
+opt.value = data[i].id + '|' + data[i].name;
+opt.textContent = data[i].name;
+distSel.appendChild(opt);
+}
+distSel.disabled = false;
+}catch(e){
+distSel.innerHTML = '<option value="">Gagal memuat</option>';
+}
+}
+
+async function onDistrictChange(){
+var distSel = document.getElementById('buyerDistrict');
+var villSel = document.getElementById('buyerKelurahan');
+var postSel = document.getElementById('buyerPostal');
+
+villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true;
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
+
+if(!distSel.value) return;
+
+var distId = distSel.value.split('|')[0];
+
+villSel.innerHTML = '<option value="">Memuat kelurahan...</option>';
+try{
+var res = await fetch(WILAYAH_API + '/villages/' + distId + '.json');
+var data = await res.json();
+villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>';
+for(var i = 0; i < data.length; i++){
+var opt = document.createElement('option');
+opt.value = data[i].id + '|' + data[i].name;
+opt.textContent = data[i].name;
+villSel.appendChild(opt);
+}
+villSel.disabled = false;
+}catch(e){
+villSel.innerHTML = '<option value="">Gagal memuat</option>';
+}
+}
+
+async function onVillageChange(){
+var villSel = document.getElementById('buyerKelurahan');
+var postSel = document.getElementById('buyerPostal');
+
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
+
+if(!villSel.value) return;
+
+var villName = villSel.value.split('|')[1];
+
+// Coba ambil kode pos dari API kodepos
+postSel.innerHTML = '<option value="">Memuat kode pos...</option>';
+try{
+var res = await fetch('https://kodepos.vercel.app/search/?q=' + encodeURIComponent(villName));
+var data = await res.json();
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>';
+if(data.data && data.data.length > 0){
+// Filter hasil yang sesuai dengan kelurahan
+var found = [];
+for(var i = 0; i < data.data.length; i++){
+if(data.data[i].village && data.data[i].village.toLowerCase() === villName.toLowerCase()){
+found.push(data.data[i]);
+}
+}
+// Kalau tidak ada exact match, pakai semua hasil
+if(found.length === 0) found = data.data;
+// Deduplicate kode pos
+var seen = {};
+for(var i = 0; i < found.length; i++){
+var kp = found[i].postalcode || found[i].postal_code || '';
+if(kp && !seen[kp]){
+seen[kp] = true;
+var opt = document.createElement('option');
+opt.value = kp;
+opt.textContent = villName + ' - ' + kp;
+postSel.appendChild(opt);
+}
+}
+}
+// Kalau tetap kosong, fallback ke input manual
+if(postSel.options.length <= 1){
+postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
+}else{
+postSel.disabled = false;
+}
+}catch(e){
+// Fallback: ganti select jadi input text
+postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
+}
+}
+
+function resetWilayahDropdowns(){
+var citySel = document.getElementById('buyerCity2');
+var distSel = document.getElementById('buyerDistrict');
+var villSel = document.getElementById('buyerKelurahan');
+var postSel = document.getElementById('buyerPostal');
+var autoCity = document.getElementById('buyerCity');
+
+// Pastikan elemen adalah select (bukan input fallback)
+if(citySel && citySel.tagName === 'SELECT'){ citySel.innerHTML = '<option value="">Pilih Kota...</option>'; citySel.disabled = true; }
+if(distSel && distSel.tagName === 'SELECT'){ distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true; }
+if(villSel && villSel.tagName === 'SELECT'){ villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true; }
+// Kode pos: kalau jadi input text, kembalikan ke select
+if(postSel){
+if(postSel.tagName === 'INPUT'){
+// Ganti kembali ke select
+var newSel = document.createElement('select');
+newSel.className = 'form-input';
+newSel.id = 'buyerPostal';
+newSel.disabled = true;
+newSel.innerHTML = '<option value="">Pilih Kode Pos...</option>';
+postSel.parentNode.replaceChild(newSel, postSel);
+}else{
+postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
+}
+}
+if(autoCity) autoCity.value = '';
+}
 
 function formatNumber(num){return Math.round(parseFloat(num)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
 function showToast(message,type){
@@ -432,6 +635,8 @@ document.addEventListener('DOMContentLoaded',async function(){
 DBStore.init().catch(()=>{DBStore.mode='memory';DBStore.ready=true});
 try{await loadProducts()}catch(e){setTimeout(loadProducts,2000)}
 try{await loadAffiliatorInfo()}catch(e){}
+// Load daftar provinsi saat halaman siap
+try{await loadProvinces()}catch(e){}
 });
 </script>
 </body>
