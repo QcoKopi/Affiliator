@@ -982,7 +982,7 @@ var statusBadge = '<span class="badge badge-' + (isActive ? 'active' : (isPendin
 var actionBtns = '<div style="display:flex;gap:4px">' +
 '<button class="btn btn-sm btn-outline" onclick="openUserDetailModal(\'' + u.id + '\')" title="Detail"><i class="fas fa-eye"></i></button>';
 
-if (isPending) {
+if (isPending || u.status === 'Inactive') {
 actionBtns += ' <button class="btn btn-sm btn-success" onclick="activateUser(\'' + u.id + '\', this)" title="Aktifkan"><i class="fas fa-check"></i></button>';
 } else if (isActive) {
 actionBtns += ' <button class="btn btn-sm btn-warning" onclick="deactivateUser(\'' + u.id + '\', this)" title="Nonaktifkan"><i class="fas fa-ban"></i></button>';
@@ -1220,14 +1220,18 @@ const d = new Date(dateStr);
 return isNaN(d.getTime()) ? String(dateStr) : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function showToast(message, type) {
+function showToast(message, type, isHtml) {
 const container = document.getElementById('toastContainer');
 const toast = document.createElement('div');
 toast.className = 'toast ' + (type || 'info');
 const icons = { success: 'check-circle', error: 'times-circle', warning: 'exclamation-circle', info: 'info-circle' };
+if (isHtml) {
 toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
+} else {
+toast.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i> <span>' + message + '</span>';
+}
 container.appendChild(toast);
-setTimeout(() => toast.remove(), 4000);
+setTimeout(function() { toast.remove(); }, 8000);
 }
 
 function updateSyncStatus(status) {
@@ -1625,11 +1629,8 @@ var waLink = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(waMsg);
 
 if (!confirm('Aktifkan user ini? WhatsApp akan terbuka untuk kirim notifikasi.')) return;
 
-// Buka WA link LANGSUNG (sebelum await, supaya tidak di-block popup blocker)
-var waWin = window.open(waLink, '_blank');
-if (!waWin) {
-showToast('Popup di-block browser. Klik link WA di notifikasi berikut.', 'warning');
-}
+// Tampilkan toast dengan link WA (tidak di-block popup blocker)
+showToast('<a href="' + waLink + '" target="_blank" style="color:white;text-decoration:underline;font-weight:600"><i class="fab fa-whatsapp"></i> Klik di sini untuk kirim WA notifikasi</a>', 'success', true);
 
 var origHTML = '';
 if (btnEl) { origHTML = btnEl.innerHTML; btnEl.disabled = true; btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
