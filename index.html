@@ -705,7 +705,7 @@ const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
 const response = await fetchWithTimeout(url, {}, 15000);
 if (!response.ok) throw new Error('HTTP ' + response.status);
 return await response.json();
-} catch(err) {
+}catch(err) {
 Debug.log('GAS GET ERROR:', action + ': ' + err.message);
 return { success: false, error: err.message };
 }
@@ -751,18 +751,16 @@ url += '&' + key + '=' + encodeURIComponent(String(params[key]));
 const response = await fetchWithTimeout(url, {}, 15000);
 if (!response.ok) throw new Error('HTTP ' + response.status);
 return await response.json();
-} catch(err) {
+}catch(err) {
 Debug.log('GAS GET PARAM ERROR:', action + ': ' + err.message);
 return { success: false, error: err.message };
 }
 }
 
 // ==================== SYNC ALL DATA ====================
-// FIX: Parallel fetch semua endpoint sekaligus — jauh lebih cepat dari sequential
 async function syncAllData() {
 updateSyncStatus('syncing');
 
-// Fetch 4 endpoint secara paralel (Promise.all) — tidak sequential
 const [usersRes, leadsRes, ordersRes, commsRes] = await Promise.all([
 fetchFromGAS('getUsers'),
 fetchFromGAS('getLeads'),
@@ -775,7 +773,6 @@ if (leadsRes.success && Array.isArray(leadsRes.data)) DATA.leads = leadsRes.data
 if (ordersRes.success && Array.isArray(ordersRes.data)) DATA.orders = ordersRes.data;
 if (commsRes.success && Array.isArray(commsRes.data)) DATA.commissions = commsRes.data;
 
-// Products hanya untuk admin (fetch terpisah — tidak perlu tunggu)
 if (currentUser && currentUser.isAdmin) {
 const pRes = await fetchFromGAS('getProducts');
 if (pRes.success && Array.isArray(pRes.data)) DATA.products = pRes.data;
@@ -817,7 +814,6 @@ document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
 document.getElementById('dashValidLeads').textContent = validLeads.length;
 document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-// Tampilkan card referral link untuk affiliator (bukan admin)
 if (currentUser && !currentUser.isAdmin && currentUser.referralCode) {
 document.getElementById('refLinkCard').style.display = '';
 document.getElementById('refCodeBadge').textContent = currentUser.referralCode;
@@ -847,7 +843,6 @@ return;
 }
 body.innerHTML = DATA.products.map(p => {
 const pId = p.id || '';
-// Cek kedua field: active (true/false) dan status (Active/Inactive)
 const hasActiveCol = p.active !== undefined && p.active !== '' && p.active !== null;
 const hasStatusCol = p.status !== undefined && p.status !== '' && p.status !== null;
 const isAct = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
@@ -916,7 +911,7 @@ refreshLandingPreview();
 showToast(res.error || 'Gagal menyimpan produk', 'error');
 updateSyncStatus('synced');
 }
-} catch(err) {
+}catch(err) {
 showToast('Koneksi terputus saat menyimpan produk', 'error');
 updateSyncStatus('error');
 }
@@ -935,17 +930,15 @@ refreshLandingPreview();
 showToast(res.error || 'Gagal menghapus produk', 'error');
 updateSyncStatus('synced');
 }
-} catch(err) {
+}catch(err) {
 showToast('Koneksi bermasalah', 'error');
 updateSyncStatus('error');
 }
 }
 
-// Toggle status produk (Aktif <-> Non-Aktif) langsung dari tabel
 async function toggleProductStatus(id) {
 const p = DATA.products.find(prod => String(prod.id) === String(id));
 if (!p) return;
-// Cek aktif dari kedua field: active (true/false) dan status (Active/Inactive)
 const currentlyActive = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
 const newActive = currentlyActive ? 'false' : 'true';
 updateSyncStatus('syncing');
@@ -970,13 +963,12 @@ refreshLandingPreview();
 showToast(res.error || 'Gagal mengubah status produk', 'error');
 updateSyncStatus('synced');
 }
-} catch(err) {
+}catch(err) {
 showToast('Koneksi terputus saat mengubah status', 'error');
 updateSyncStatus('error');
 }
 }
 
-// Refresh iframe preview landing page
 function refreshLandingPreview() {
 const frame = document.getElementById('landingPreviewFrame');
 if (frame) {
@@ -1068,13 +1060,12 @@ await syncAllData();
 showToast(res.error || 'Gagal merubah status lead', 'error');
 updateSyncStatus('synced');
 }
-} catch(e) {
+}catch(e) {
 showToast('Koneksi bermasalah', 'error');
 updateSyncStatus('error');
 }
 }
 
-// ==================== VIEW LEAD DETAIL (Affiliator Read-Only) ====================
 function viewLeadDetail(leadId) {
 const lead = DATA.leads.find(l => l.id === leadId);
 if (!lead) return;
@@ -1084,7 +1075,6 @@ const detail = 'Nama: ' + (lead.name || '-') + '\nKontak: ' + (lead.contact || l
 alert(detail);
 }
 
-// ==================== UPDATE LEAD MODAL ====================
 function openUpdateLeadModal(leadId) {
 if (!currentUser || !currentUser.isAdmin) return;
 const select = document.getElementById('updateLeadSelect');
@@ -1177,7 +1167,7 @@ await syncAllData();
 showToast(res.error || 'Gagal memperbarui status bayar', 'error');
 updateSyncStatus('synced');
 }
-} catch(e) {
+}catch(e) {
 showToast('Koneksi bermasalah ke server GAS', 'error');
 updateSyncStatus('error');
 }
@@ -1208,7 +1198,6 @@ SessionManager.clearSession();
 window.location.reload();
 }
 
-// ==================== REFERRAL LINK ====================
 function copyReferralLink() {
 const input = document.getElementById('refLinkInput');
 if (!input || !input.value) return;
@@ -1217,7 +1206,7 @@ input.setSelectionRange(0, 99999);
 try {
 navigator.clipboard.writeText(input.value);
 showToast('Link referral disalin ke clipboard!', 'success');
-} catch(e) {
+}catch(e) {
 document.execCommand('copy');
 showToast('Link referral disalin!', 'success');
 }
@@ -1308,7 +1297,6 @@ document.getElementById('tabunganUploadWrap').classList.remove('has-file');
 document.querySelectorAll('#passwordStuff span').forEach(function(s) { s.className = ''; });
 document.getElementById('passwordLabel').textContent = 'Kekuatan password';
 
-// Restore form dari localStorage kalau ada
 var saved = localStorage.getItem('aff_register_draft');
 if (saved) {
 try {
@@ -1318,10 +1306,9 @@ if (d.email) document.getElementById('regEmail').value = d.email;
 if (d.phone) document.getElementById('regPhone').value = d.phone;
 if (d.bank) document.getElementById('regBank').value = d.bank;
 if (d.bankAccount) document.getElementById('regBankAccount').value = d.bankAccount;
-} catch(e) {}
+}catch(e) {}
 }
 
-// Auto-save setiap 3 detik
 window._registerAutoSave = setInterval(function() {
 var data = {
 name: document.getElementById('regName').value,
@@ -1387,6 +1374,7 @@ reader.readAsDataURL(file);
 });
 }
 
+// ==================== FIX: Resize image lebih kecil untuk menghindari batas POST ====================
 function resizeImage(file, maxWidth, quality) {
 return new Promise(function(resolve, reject) {
 var timeout = setTimeout(function() { reject(new Error('Timeout memproses foto')); }, 15000);
@@ -1457,10 +1445,11 @@ if (res.success && Array.isArray(res.data)) {
 var found = res.data.find(function(u) { return String(u.email).toLowerCase() === email.toLowerCase(); });
 return found ? found : null;
 }
-} catch(e) {}
+}catch(e) {}
 return null;
 }
 
+// ==================== FIX: Resize image ke 400px x 0.4 quality (lebih kecil = base64 lebih pendek) ====================
 async function handleRegisterSubmit(e) {
 e.preventDefault();
 var name = document.getElementById('regName').value.trim();
@@ -1484,7 +1473,6 @@ showToast('Password minimal 6 karakter', 'error'); return;
 if (!ktpFile) { showToast('Foto KTP wajib diunggah', 'error'); return; }
 if (!tabunganFile) { showToast('Foto Cover Buku Tabungan wajib diunggah', 'error'); return; }
 
-// Clear auto-save interval
 if (window._registerAutoSave) { clearInterval(window._registerAutoSave); window._registerAutoSave = null; }
 
 var btn = document.getElementById('btnRegisterSubmit');
@@ -1503,10 +1491,11 @@ if (el) el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ' + msg;
 }
 
 try {
+// FIX: Resize ke 400px width, quality 0.4 (sebelumnya 600px, 0.6)
 setStep('Mengecilkan foto KTP...');
-var ktpBase64 = await resizeImage(ktpFile, 600, 0.6);
+var ktpBase64 = await resizeImage(ktpFile, 400, 0.4);
 setStep('Mengecilkan foto tabungan...');
-var tabunganBase64 = await resizeImage(tabunganFile, 600, 0.6);
+var tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4);
 
 setStep('Mengirim data ke server...');
 var submitData = {
@@ -1515,6 +1504,8 @@ bank: bank, bankAccount: bankAccount,
 ktpBase64: ktpBase64, ktpMimeType: ktpFile.type || 'image/jpeg',
 tabunganBase64: tabunganBase64, tabunganMimeType: tabunganFile.type || 'image/jpeg'
 };
+
+Debug.log('REGISTER: ktpBase64 length=' + ktpBase64.length + ', tabunganBase64 length=' + tabunganBase64.length);
 
 setStep('Mengirim data ke server...');
 var sendOk = await submitRegisterViaIframe(submitData);
@@ -1540,9 +1531,7 @@ document.getElementById('regSuccessRefCode').textContent = (userFound.referralco
 closeModal('registerModal');
 document.getElementById('registerSuccessModal').classList.add('active');
 } else {
-// User tidak ditemukan - kemungkinan GAS error. Simpan draft & kasih tahu user.
 showToast('Server sedang memproses. Data Anda disimpan, silakan coba login dalam 1-2 menit.', 'warning');
-// Simpan draft supaya user tidak perlu isi ulang
 var data = { name: name, email: email, phone: phone, bank: bank, bankAccount: bankAccount };
 localStorage.setItem('aff_register_draft', JSON.stringify(data));
 closeModal('registerModal');
@@ -1550,7 +1539,6 @@ closeModal('registerModal');
 } catch(err) {
 showToast('Error: ' + (err.message || 'Terjadi kesalahan'), 'error');
 Debug.log('REGISTER ERROR:', err.message || err);
-// Form TIDAK di-reset & draft tetap tersimpan supaya user bisa coba lagi
 } finally {
 btn.disabled = false;
 btn.innerHTML = origHTML;
@@ -1574,17 +1562,14 @@ document.getElementById('detailStatus').value = u.status || 'Pending';
 document.getElementById('detailBank').value = u.bank || '-';
 document.getElementById('detailJoined').value = formatDate(u.joined);
 
-// Sembunyikan tombol Simpan kalau bukan admin dan bukan profil sendiri
 var isMyProfile = currentUser && String(currentUser.id) === String(u.id);
 var canEdit = currentUser && (currentUser.isAdmin || isMyProfile);
 document.getElementById('btnSaveUserDetail').style.display = canEdit ? '' : 'none';
 
-// Tampilkan upload foto hanya untuk admin
 var isAdmin = currentUser && currentUser.isAdmin;
 document.getElementById('adminKtpUpload').style.display = isAdmin ? '' : 'none';
 document.getElementById('adminTabunganUpload').style.display = isAdmin ? '' : 'none';
 
-// Reset upload fields
 document.getElementById('adminRegKtp').value = '';
 document.getElementById('adminRegTabungan').value = '';
 document.getElementById('adminKtpPreview').style.display = 'none';
@@ -1618,15 +1603,14 @@ document.getElementById('detailTabunganMissing').style.display = '';
 document.getElementById('userDetailModal').classList.add('active');
 }
 
-// Buka modal profil user sendiri (untuk affiliator)
 function openMyProfileModal() {
 if (!currentUser || currentUser.isAdmin) return;
-// Cari data lengkap user dari DATA.users
 var u = DATA.users.find(function(user) { return String(user.id) === String(currentUser.id); });
 if (!u) { showToast('Data profil tidak ditemukan', 'error'); return; }
 openUserDetailModal(u.id);
 }
 
+// ==================== FIX: Resize admin upload juga ke 400px x 0.4 ====================
 async function saveUserDetail() {
 var userId = document.getElementById('detailUserId').value;
 var name = document.getElementById('detailName').value.trim();
@@ -1648,17 +1632,15 @@ try {
 var params = { action: 'updateUser', id: userId, name: name, email: email, phone: phone };
 if (password) params.password = password;
 
-// Proses foto KTP baru jika admin upload
 if (ktpFile) {
 showToast('Memproses foto KTP...', 'info');
-params.ktpBase64 = await resizeImage(ktpFile, 600, 0.6);
+params.ktpBase64 = await resizeImage(ktpFile, 400, 0.4);
 params.ktpMimeType = ktpFile.type || 'image/jpeg';
 }
 
-// Proses foto Tabungan baru jika admin upload
 if (tabunganFile) {
 showToast('Memproses foto Tabungan...', 'info');
-params.tabunganBase64 = await resizeImage(tabunganFile, 600, 0.6);
+params.tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4);
 params.tabunganMimeType = tabunganFile.type || 'image/jpeg';
 }
 
@@ -1670,7 +1652,7 @@ await syncAllData();
 } else {
 showToast((res && res.error) ? res.error : 'Gagal menyimpan', 'error');
 }
-} catch(err) {
+}catch(err) {
 showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
 } finally {
 btn.disabled = false;
@@ -1692,7 +1674,6 @@ var waLink = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(waMsg);
 
 if (!confirm('Aktifkan user ini? WhatsApp akan terbuka untuk kirim notifikasi.')) return;
 
-// Tampilkan toast WA link secara langsung
 var waToast = document.createElement('div');
 waToast.className = 'toast success';
 waToast.style.cssText = 'background:#25D366;color:white;cursor:pointer';
@@ -1711,7 +1692,7 @@ await syncAllData();
 } else {
 showToast((res && res.error) ? res.error : 'Gagal mengaktifkan', 'error');
 }
-} catch(err) {
+}catch(err) {
 showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
 } finally {
 if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHTML; }
@@ -1732,7 +1713,7 @@ await syncAllData();
 } else {
 showToast((res && res.error) ? res.error : 'Gagal menonaktifkan', 'error');
 }
-} catch(err) {
+}catch(err) {
 showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
 } finally {
 if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHTML; }
