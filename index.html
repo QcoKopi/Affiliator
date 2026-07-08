@@ -1319,7 +1319,7 @@ reader.readAsDataURL(file);
 });
 }
 
-async function submitRegisterToGAS(data) {
+async function submitRegisterViaIframe(data) {
 return new Promise(function(resolve) {
 var iframe = document.getElementById('gasFrame');
 var form = document.createElement('form');
@@ -1342,12 +1342,15 @@ form.appendChild(f);
 }
 }
 
-iframe.onload = function() { resolve(true); };
-setTimeout(function() { resolve(true); }, 6000);
+var resolved = false;
+function doResolve() { if (!resolved) { resolved = true; resolve(true); } }
+
+iframe.onload = doResolve;
+setTimeout(doResolve, 20000);
 
 document.body.appendChild(form);
 form.submit();
-setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 8000);
+setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); doResolve(); }, 25000);
 });
 }
 
@@ -1417,10 +1420,19 @@ ktpBase64: ktpBase64, ktpMimeType: ktpFile.type || 'image/jpeg',
 tabunganBase64: tabunganBase64, tabunganMimeType: tabunganFile.type || 'image/jpeg'
 };
 
-await submitRegisterToGAS(submitData);
+setStep('Mengirim data ke server...');
+var sendOk = await submitRegisterViaIframe(submitData);
+if (!sendOk) {
+showToast('Gagal terhubung ke server. Data Anda tersimpan, silakan coba lagi.', 'error');
+btn.disabled = false;
+btn.innerHTML = origHTML;
+var stepElRem2 = document.getElementById('regStepInfo');
+if (stepElRem2) stepElRem2.remove();
+return;
+}
 
-setStep('Menunggu konfirmasi server (10 detik)...');
-await new Promise(function(r) { setTimeout(r, 10000); });
+setStep('Menunggu konfirmasi server (20 detik)...');
+await new Promise(function(r) { setTimeout(r, 20000); });
 
 setStep('Memverifikasi pendaftaran...');
 var userFound = await verifyUserRegistered(email);
