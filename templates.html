@@ -77,7 +77,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <body>
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ADMIN BAR -->
 <div class="admin-bar" id="adminBar">
 <span><i class="fas fa-user-shield"></i> Admin Mode</span>
 <a href="index.html"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
@@ -94,7 +93,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 <div class="container">
 
-<!-- ADMIN PANEL (CRUD) -->
 <div class="admin-panel" id="adminPanel">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
 <h3 style="color:var(--primary-dark)"><i class="fas fa-cog"></i> Kelola Template</h3>
@@ -108,7 +106,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 </div>
 
-<!-- FILTER -->
 <div class="filter-bar">
 <div class="tabs">
 <button class="tab-btn active" onclick="filterTemplates('all')">Semua</button>
@@ -117,7 +114,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 </div>
 
-<!-- GALLERY -->
 <div class="gallery-grid" id="galleryGrid"></div>
 
 <div class="empty-state" id="emptyState" style="display:none">
@@ -127,7 +123,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 </div>
 
-<!-- UPLOAD MODAL -->
 <div class="modal-overlay" id="uploadModal">
 <div class="modal">
 <div class="modal-header"><h3><i class="fas fa-cloud-upload-alt"></i> Upload Template</h3><button class="modal-close" onclick="closeModal('uploadModal')">&times;</button></div>
@@ -151,13 +146,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </form>
 </div>
 <div class="modal-footer">
-<button class="btn btn-outline" onclick="closeModal('uploadModal')">Batal</button>
-<button class="btn btn-primary" onclick="document.getElementById('uploadForm').submit()"><i class="fas fa-upload"></i> Upload</button>
+<button class="btn btn-outline" type="button" onclick="closeModal('uploadModal')">Batal</button>
+<button class="btn btn-primary" type="submit" form="uploadForm"><i class="fas fa-upload"></i> Upload</button>
 </div>
 </div>
 </div>
 
-<!-- DOWNLOAD MODAL -->
 <div class="modal-overlay" id="downloadModal">
 <div class="modal" style="max-width:450px">
 <div class="modal-header"><h3><i class="fas fa-download"></i> Download Template</h3><button class="modal-close" onclick="closeModal('downloadModal')">&times;</button></div>
@@ -314,6 +308,7 @@ var params = { action: 'saveTemplate', name: name, category: category, type: typ
 var form = document.createElement('form');
 form.method = 'POST';
 form.action = CONFIG.GAS_URL;
+// CATATAN: Jika Anda sama sekali tidak ingin membuka tab putih baru setelah upload sukses, hilangkan baris form.target di bawah ini:
 form.target = '_blank';
 form.style.display = 'none';
 for(var k in params){
@@ -399,13 +394,11 @@ ctx.drawImage(img, 0, 0);
 var qrCanvas = document.createElement('canvas');
 qrCanvas.width = 150;
 qrCanvas.height = 150;
-// PERBAIKAN: Masukkan qrCanvas sebagai parameter pertama
 var qr = new QRCode(qrCanvas, {
     text: CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode),
     width: 150,
     height: 150
 });
-// Fallback: draw QR manually
 var qrData = generateQRDataUrl(CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode), 120);
 
 // Draw semi-transparent bar at bottom
@@ -503,17 +496,14 @@ setTimeout(function(){ t.remove(); }, 4000);
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function(){
-    // ----- TAMBAHKAN KODE INI UNTUK TESTING LOKAL -----
-  // Otomatis membuat cookie admin jika belum ada
   if (!document.cookie.includes('aff_portal_session')) {
     var dataAdminTiruan = {
-      name: "Ganjar Satyanagara", // Nama Anda selaku CEO/Admin
+      name: "Ganjar Satyanagara",
       isAdmin: true, 
       referralCode: "QCOADMIN"
     };
     document.cookie = "aff_portal_session=" + encodeURIComponent(JSON.stringify(dataAdminTiruan)) + "; path=/";
   }
-  // --------------------------------------------------
 loadSession();
 fetchTemplates();
 });
