@@ -86,7 +86,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 @media(max-width:768px){.hero h1{font-size:1.8rem}.form-row{grid-template-columns:1fr}.products-grid{grid-template-columns:1fr}}
 .debug-panel{position:fixed;bottom:10px;left:10px;background:#1a1a1a;color:#0f0;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;max-width:400px;max-height:150px;overflow-y:auto;z-index:9999;display:none}
 </style>
-<base target="_blank">
 </head>
 <body>
 <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
@@ -138,6 +137,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <script>
+// Force HTTPS
+if(window.location.protocol==='http:'&&window.location.hostname==='affiliate.qcoid.com'){
+window.location.href='https://'+window.location.host+window.location.pathname+window.location.search;
+}
+
 // ==================== CONFIG ====================
 const CONFIG={
 GAS_URL:'https://script.google.com/macros/s/AKfycbzXi0ZSoJAIqsF3J2rjR3B2G59jzdwvLDebjDXvh9m1XdFKu45qi8XeKrQ-lyszIT4/exec',
