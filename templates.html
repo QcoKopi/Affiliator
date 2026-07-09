@@ -503,6 +503,17 @@ setTimeout(function(){ t.remove(); }, 4000);
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function(){
+    // ----- TAMBAHKAN KODE INI UNTUK TESTING LOKAL -----
+  // Otomatis membuat cookie admin jika belum ada
+  if (!document.cookie.includes('aff_portal_session')) {
+    var dataAdminTiruan = {
+      name: "Ganjar Satyanagara", // Nama Anda selaku CEO/Admin
+      isAdmin: true, 
+      referralCode: "QCOADMIN"
+    };
+    document.cookie = "aff_portal_session=" + encodeURIComponent(JSON.stringify(dataAdminTiruan)) + "; path=/";
+  }
+  // --------------------------------------------------
 loadSession();
 fetchTemplates();
 });
