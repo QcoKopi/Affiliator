@@ -682,14 +682,20 @@ const SessionManager = {
 saveSession: function(data) {
 const json = encodeURIComponent(JSON.stringify(data));
 document.cookie = 'aff_portal_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
+// Simpan juga ke localStorage untuk cross-page (templates.html, dll)
+localStorage.setItem('aff_portal_session', JSON.stringify(data));
 },
 loadSession: function() {
 const match = document.cookie.match(/aff_portal_session=([^;]+)/);
 if (match) return JSON.parse(decodeURIComponent(match[1]));
+// Fallback: localStorage (lebih reliable untuk cross-page)
+var ls = localStorage.getItem('aff_portal_session');
+if(ls) return JSON.parse(ls);
 return null;
 },
 clearSession: function() {
 document.cookie = 'aff_portal_session=; path=/; max-age=0; path=/';
+localStorage.removeItem('aff_portal_session');
 }
 };
 
