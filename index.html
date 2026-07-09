@@ -98,7 +98,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .sidebar-overlay.active{display:block}
 @media(max-width:768px){.form-row{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.sidebar{transform:translateX(-100%);transition:transform 0.3s}.sidebar.open{transform:translateX(0);width:260px}.main{margin-left:0}.menu-toggle-btn{display:flex}.header{padding-left:4rem}}
 
-/* ===== TERMS & REGISTER MODAL ===== */
 .terms-scroll{max-height:55vh;overflow-y:auto;padding:0 0.5rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);font-size:0.85rem;line-height:1.7}
 .terms-scroll h4{color:var(--primary-dark);margin:1rem 0 0.5rem;font-size:0.95rem}
 .terms-scroll p{margin-bottom:0.5rem;color:var(--text)}
@@ -127,7 +126,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .register-link{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity 0.3s}
 .register-link:hover{opacity:0.8}
 
-/* ===== INVOICE MODAL ===== */
 .invoice-preview{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;font-family:'Courier New',monospace;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:300px;overflow-y:auto}
 .invoice-field{background:#f9f9f9;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0.5rem 0.75rem;font-size:0.85rem;width:100%;font-family:inherit}
 .invoice-field:focus{outline:none;border-color:var(--primary-light)}
@@ -143,7 +141,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-<!-- ==================== LOGIN OVERLAY ==================== -->
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
 <div style="font-size:3rem;color:var(--primary);margin-bottom:1rem"><i class="fas fa-coffee"></i></div>
@@ -157,8 +154,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <label class="form-label">Password</label>
 <input type="password" class="form-input" id="userPassword" placeholder="Masukkan password" onkeypress="if(event.key==='Enter')handleLogin()">
 </div>
-<button class="btn btn-primary" id="btnLogin" style="width:100%;margin-top:0.5rem" onclick="handleLogin()">
-<i class="fas fa-sign-in-alt"></i> Masuk
+<button class="btn btn-primary" id="btnLogin" style="width:100%;margin-top:0.5rem" onclick="handleLogin()" disabled>
+<i class="fas fa-spinner fa-spin" id="loginBtnIcon"></i> <span id="loginBtnText">Memuat Data...</span>
 </button>
 <p id="loginError" style="color:var(--danger);font-size:0.85rem;margin-top:1rem;display:none">
 <i class="fas fa-exclamation-circle"></i> Email atau Password salah!
@@ -169,7 +166,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ==================== SIDEBAR ==================== -->
 <aside class="sidebar" id="sidebar">
 <div class="sidebar-brand"><i class="fas fa-user-shield" id="roleIcon"></i><span id="roleText">Admin Portal</span></div>
 <ul class="sidebar-menu">
@@ -187,7 +183,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </ul>
 </aside>
 
-<!-- ==================== MAIN CONTENT ==================== -->
 <div class="main" id="mainContent" style="display:none">
 <div class="header">
 <h1 id="pageTitle">Dashboard</h1>
@@ -198,7 +193,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 
 <div class="content">
-<!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
@@ -208,7 +202,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
-<!-- REFERRAL LINK CARD (Affiliator Only) -->
+
 <div class="card" id="refLinkCard" style="display:none">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-link"></i> Link Referral Anda</div>
@@ -236,7 +230,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ORDERS AFFILIATOR -->
 <div class="card" id="affOrdersCard" style="display:none">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-shopping-bag" style="color:var(--primary-light)"></i> Pembelian dari Leads Anda</div>
@@ -244,7 +237,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-body"></div>
 </div>
 
-<!-- INFO KOMISI AFFILIATOR -->
 <div class="card" id="commInfoCard" style="display:none">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-info-circle" style="color:var(--info)"></i> Informasi Pembayaran Komisi</div>
@@ -279,7 +271,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- PRODUCTS (Admin Only) -->
 <div id="page-products" class="page">
 <div class="card">
 <div class="card-header">
@@ -296,7 +287,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- LIVE PREVIEW LANDING PAGE -->
 <div class="card">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-desktop"></i> Preview Landing Page (Live)</div>
@@ -312,7 +302,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- AFFILIATORS (Admin Only) -->
 <div id="page-affiliators" class="page">
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div><span style="font-size:0.85rem;color:var(--text-light)" id="affiliatorCount">0 affiliator</span></div>
@@ -327,7 +316,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- LEADS -->
 <div id="page-leads" class="page">
 <div class="card">
 <div class="card-header">
@@ -354,7 +342,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ORDERS (Admin Only) -->
 <div id="page-orders" class="page">
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-shopping-cart"></i> Riwayat Transaksi Penjualan (Orders)</div></div>
@@ -369,7 +356,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- COMMISSIONS -->
 <div id="page-commissions" class="page">
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-money-bill-wave"></i> Daftar Pencairan Komisi Affiliator</div></div>
@@ -386,7 +372,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ==================== PRODUCT MODAL ==================== -->
 <div class="modal-overlay" id="productModal">
 <div class="modal">
 <div class="modal-header"><h3 id="productModalTitle">Tambah Produk Baru</h3><button class="modal-close" onclick="closeModal('productModal')">&times;</button></div>
@@ -410,7 +395,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ==================== UPDATE LEAD MODAL ==================== -->
 <div class="modal-overlay" id="updateLeadModal">
 <div class="modal">
 <div class="modal-header"><h3><i class="fas fa-edit"></i> Update Status Lead</h3><button class="modal-close" onclick="closeModal('updateLeadModal')">&times;</button></div>
@@ -435,9 +419,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 
-<!-- ==================== LOGIC APPLICATION (JAVASCRIPT) ==================== -->
 <script>
-// Global Configurations & State
 var CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbz_9eW4M8pB3VdYI78X0gL1_L3uC_M_v9WqN_LpG4RzZ-w/exec'
 };
@@ -450,9 +432,8 @@ var LEADS = [];
 var ORDERS = [];
 var COMMISSIONS = [];
 
-// ==================== APP INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
-  // Langsung fetch data mentah di awal agar array AFFILIATORS terisi terlebih dahulu untuk validasi login lokal
+  // Ambil data mentah sheet dulu di awal agar array AFFILIATORS terisi sebelum login diizinkan
   initFetchData();
 });
 
@@ -468,27 +449,45 @@ function initFetchData() {
       ORDERS = data.orders || [];
       COMMISSIONS = data.commissions || [];
       
-      // Setelah data siap, baru cek apakah ada sesi tersimpan
+      // Data sudah siap, aktifkan tombol login ke kondisi normal
+      enableLoginButton();
+      
+      // Jalankan pengecekan sesi aktif browser
       checkSession();
     })
     .catch(function(e) {
       console.error(e);
-      // Jika gagal koneksi awal, tetap jalankan checkSession agar user tidak blank
+      // Jika internet bermasalah, paksa tombol tetap aktif agar login manual admin bawaan lokal masih bisa dicoba
+      enableLoginButton();
       checkSession();
     });
 }
 
-// ==================== SESSION & LOGIN MANAGEMENT ====================
+function enableLoginButton() {
+  var btn = document.getElementById('btnLogin');
+  var icon = document.getElementById('loginBtnIcon');
+  var text = document.getElementById('loginBtnText');
+  if (btn) {
+    btn.removeAttribute('disabled');
+    icon.className = 'fas fa-sign-in-alt';
+    text.innerText = 'Masuk';
+  }
+}
+
 function checkSession() {
   var json = null;
   
-  // 1. Ambil dari cookie
-  var match = document.cookie.match(/aff_portal_session=([^;]+)/);
-  if (match) { 
-    try { json = JSON.parse(decodeURIComponent(match[1])); } catch(e) {} 
+  // Baca cookie manual tanpa regex karakter garing
+  var cookies = document.cookie.split(';');
+  for (var i = 0; i < cookies.length; i++) {
+    var c = cookies[i].trim();
+    if (c.indexOf('aff_portal_session=') === 0) {
+      try {
+        json = JSON.parse(decodeURIComponent(c.substring('aff_portal_session='.length)));
+      } catch(e) {}
+    }
   }
   
-  // 2. Fallback ke localStorage
   if (!json) {
     var ls = localStorage.getItem('aff_portal_session');
     if (ls) { 
@@ -496,7 +495,6 @@ function checkSession() {
     }
   }
 
-  // Jika ada sesi aktif yang valid
   if (json && json.email) {
     currentUser = json;
     showAppLayout();
@@ -519,7 +517,7 @@ function handleLogin() {
 
   err.style.display = 'none';
 
-  // 1. CEK EMAIL ADMIN UTAMA (Bawaan Web)
+  // 1. EVALUASI LOGIN ADMIN UTAMA (Lokal Bawaan Portal)
   if (email === 'admin@kopi.com' && pass === 'admin123') {
     currentUser = {
       name: 'Super Admin',
@@ -531,17 +529,15 @@ function handleLogin() {
     return;
   }
 
-  // 2. CEK EMAIL DARI ARRAY AFFILIATORS YANG SUDAH TERLOAD
+  // 2. EVALUASI DATA DARI SHEET (Affiliator)
   var matchedAff = AFFILIATORS.find(function(x) {
     return String(x.email).toLowerCase() === email;
   });
 
-  // Catatan: Jika password di sheet default menggunakan nomor WhatsApp atau format tertentu, sesuaikan di sini. 
-  // Secara default, sistem mencocokkan password dengan nomor whatsapp atau string password jika kolom tersebut tersedia.
   if (matchedAff && (pass === matchedAff.whatsapp || pass === '123456' || pass === matchedAff.password)) {
     if (String(matchedAff.status).toLowerCase() !== 'active') {
       err.style.display = 'block';
-      err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Akun Anda ditangguhkan/belum aktif.';
+      err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Akun Anda ditangguhkan atau belum aktif.';
       return;
     }
     
@@ -557,7 +553,6 @@ function handleLogin() {
     return;
   }
 
-  // Jika tidak ada yang cocok
   err.style.display = 'block';
   err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email atau Password salah!';
   showToast('Login Gagal', 'error');
@@ -569,9 +564,10 @@ function saveSessionAndRedirect() {
   
   var d = new Date();
   d.setTime(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-  document.cookie = "aff_portal_session=" + encodeURIComponent(sessionString) + "; expires=" + d.toUTCString() + "; path=/;";
+  // Penulisan cookie tanpa menggunakan parameter path bersimbol karakter garing
+  document.cookie = "aff_portal_session=" + encodeURIComponent(sessionString) + "; expires=" + d.toUTCString() + ";";
 
-  showToast('Login Berhasil! Selamat Datang.', 'success');
+  showToast('Login Berhasil!', 'success');
   showAppLayout();
   renderAllUIComponents();
 }
@@ -580,17 +576,15 @@ function handleLogout() {
   if (!confirm('Apakah Anda yakin ingin keluar dari sistem?')) return;
 
   localStorage.removeItem('aff_portal_session');
-  document.cookie = "aff_portal_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  document.cookie = "aff_portal_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   currentUser = null;
 
   showToast('Berhasil keluar dari sistem', 'success');
-
   setTimeout(function() {
     window.location.reload();
   }, 500);
 }
 
-// ==================== LAYOUT UI TOGGLE ====================
 function showLoginLayout() {
   document.getElementById('loginOverlay').style.display = 'flex';
   document.getElementById('mainContent').style.display = 'none';
@@ -654,7 +648,6 @@ function showPage(pageId) {
   }
 }
 
-// ==================== RENDER RENDERING MANAGEMENT ====================
 function renderAllUIComponents() {
   var statusEl = document.getElementById('syncStatus');
   statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Terhubung';
@@ -705,7 +698,6 @@ function varProp(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-// ==================== TABLES RENDERERS ====================
 function renderDashboardStats() {
   if (currentUser.isAdmin) {
     document.getElementById('dashTotalAff').innerText = AFFILIATORS.length;
@@ -827,7 +819,7 @@ function renderLeads() {
   if (fSearch) filtered = filtered.filter(function(x){ return String(x.name).toLowerCase().includes(fSearch) || String(x.referralCode).toLowerCase().includes(fSearch); });
   
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Data leads tidak ditemukan / cocok dengan filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Data leads tidak ditemukan.</td></tr>';
     return;
   }
 
@@ -941,7 +933,6 @@ function renderAffiliatorSpecificUI() {
   cardBody.innerHTML = html;
 }
 
-// ==================== ACTIONS / OPERATIONS FOR ADMIN ====================
 function openProductModal() {
   document.getElementById('productForm').reset();
   document.getElementById('productId').value = '';
@@ -1044,7 +1035,7 @@ function toggleAffiliatorStatus(email, currentStatus) {
 }
 
 function markCommissionPaid(commId) {
-  if(!confirm('Apakah Anda yakin sudah mentransfer komisi ini dan ingin mengubah status menjadi PAID?')) return;
+  if(!confirm('Apakah Anda yakin ingin mengubah status menjadi PAID?')) return;
   showToast('Memproses pencairan...', 'info');
   fetch(CONFIG.GAS_URL + '?action=approveCommissionPayout&id='+encodeURIComponent(commId))
     .then(function(res){return res.json();})
@@ -1056,7 +1047,6 @@ function markCommissionPaid(commId) {
     });
 }
 
-// ==================== SHARE AND UTIL FUNCTIONS ====================
 function copyReferralLink() {
   var input = document.getElementById('refLinkInput');
   input.select();
@@ -1068,14 +1058,14 @@ function copyReferralLink() {
 
 function shareToSocial(platform) {
   var link = document.getElementById('refLinkInput').value;
-  var text = 'Yuk gabung bersama Kopi Affiliate dan dapatkan komisi melimpah setiap penjualan specialty roast beans premium!';
+  var text = 'Yuk gabung bersama Kopi Affiliate!';
   
   if (platform === 'facebook') {
     var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link) + '&quote=' + encodeURIComponent(text);
     window.open(fbUrl, '_blank', 'width=600,height=400');
   } else if (platform === 'instagram') {
     navigator.clipboard.writeText(text + ' ' + link).then(function() {
-      showToast('Teks disalin! Silakan buka Instagram untuk memposting.', 'success');
+      showToast('Teks disalin! Silakan tempel di Instagram.', 'success');
       setTimeout(function() { window.open('https://instagram.com', '_blank'); }, 1200);
     });
   } else if (platform === 'tiktok') {
@@ -1095,7 +1085,6 @@ function openModal(id) { document.getElementById(id).classList.add('active'); }
 document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ document.querySelectorAll('.modal-overlay').forEach(function(m){m.classList.remove('active');}); } });
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-// Formatting Utils
 function formatRupiah(num) {
   if (num === null || num === undefined || isNaN(num)) return 'Rp 0';
   return 'Rp ' + Number(num).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -1104,6 +1093,7 @@ function formatNumber(num) {
   if (!num || isNaN(num)) return '0';
   return Number(num).toLocaleString('id-ID');
 }
+var pembatasKarakter = '-';
 function formatDate(dStr) {
   if (!dStr) return '-';
   var d = new Date(dStr);
@@ -1130,7 +1120,6 @@ function showToast(msg, type) {
 }
 </script>
 
-<!-- Modals Tambahan (Order Status) -->
 <div class="modal-overlay" id="orderStatusModal">
   <div class="modal">
     <div class="modal-header"><h3>Update Status Pengiriman Order</h3><button class="modal-close" onclick="closeModal('orderStatusModal')">&times;</button></div>
@@ -1139,10 +1128,10 @@ function showToast(msg, type) {
       <div class="form-group">
         <label class="form-label">Status Logistik</label>
         <select class="form-select" id="updateOrderStatusSelect">
-          <option value="Pending">Pending (Menunggu Pembayaran/Verifikasi)</option>
-          <option value="Diproses">Diproses (Roasting & Packaging)</option>
-          <option value="Dikirim">Dikirim (Kurir / Resi Jalan)</option>
-          <option value="Diterima">Diterima (Selesai)</option>
+          <option value="Pending">Pending</option>
+          <option value="Diproses">Diproses</option>
+          <option value="Dikirim">Dikirim</option>
+          <option value="Diterima">Diterima</option>
         </select>
       </div>
     </div>
@@ -1171,7 +1160,7 @@ function saveOrderStatusUpdate() {
     .then(function(res){return res.json();})
     .then(function(data){
       if(data.success){
-        showToast('Status logistik order berhasil diubah', 'success');
+        showToast('Status order berhasil diubah', 'success');
         refreshAllData();
       } else { showToast('Gagal update logistik', 'error'); }
     }).catch(function(e){ showToast('Koneksi server bermasalah', 'error'); });
