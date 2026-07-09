@@ -133,8 +133,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .invoice-field:focus{outline:none;border-color:var(--primary-light)}
 .invoice-total-row{font-weight:700;font-size:1rem;color:var(--primary-dark);border-top:2px solid var(--border);padding-top:0.75rem;margin-top:0.75rem}
 </style>
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -180,10 +178,10 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
 <li class="admin-only"><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
 <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
-<li><a href="templates.html" target="_blank"><i class="fas fa-images"></i> Template Promosi</a></li>
+<li><a onclick="showPage('templates')" data-page="templates"><i class="fas fa-images"></i> Template Promosi</a></li>
 <li class="affiliator-only" style="display:none"><a onclick="openMyProfileModal()" style="cursor:pointer"><i class="fas fa-user-edit"></i> Edit Profil</a></li>
-<li class="admin-only" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1)"><a href="landing.html" target="_blank"><i class="fas fa-external-link-alt"></i> Landing Page</a></li>
-<li class="admin-only"><a href="qr.html" target="_blank"><i class="fas fa-qrcode"></i> QR Generator</a></li>
+<li class="admin-only" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1)"><a onclick="showPage('landing')" data-page="landing"><i class="fas fa-external-link-alt"></i> Landing Page</a></li>
+<li class="admin-only"><a onclick="showPage('qr')" data-page="qr"><i class="fas fa-qrcode"></i> QR Generator</a></li>
 <li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
 </ul>
 </aside>
@@ -222,8 +220,8 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <button class="btn btn-outline btn-sm" onclick="copyReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
 </div>
 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">
-<a id="refLinkOpen" href="landing.html" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing</a>
-<a id="refLinkQR" href="qr.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-qrcode"></i> Generate QR</a>
+<button onclick="showPage('landing')" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing</button>
+<button onclick="showPage('qr')" class="btn btn-outline btn-sm"><i class="fas fa-qrcode"></i> Generate QR</button>
 </div>
 <div style="border-top:1px solid var(--border);padding-top:0.75rem">
 <p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem"><i class="fas fa-share-alt"></i> Bagikan ke sosial media:</p>
@@ -304,7 +302,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div style="display:flex;gap:0.5rem;align-items:center">
 <span class="sync-status" id="previewStatus"><i class="fas fa-circle" style="color:var(--success)"></i> Live</span>
 <button class="btn btn-outline btn-sm" onclick="refreshLandingPreview()"><i class="fas fa-sync-alt"></i> Refresh</button>
-<a href="landing.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i> Buka Full</a>
 </div>
 </div>
 <div class="card-body" style="padding:0">
@@ -384,6 +381,35 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 </div>
+
+<!-- EMBEDDED PAGES VIA IFRAME WITHIN THE AREA -->
+<div id="page-templates" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title"><i class="fas fa-images"></i> Template Promosi</div></div>
+<div class="card-body" style="padding:0">
+<iframe src="templates.html" style="width:100%;height:80vh;border:none;"></iframe>
+</div>
+</div>
+</div>
+
+<div id="page-landing" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title"><i class="fas fa-external-link-alt"></i> Landing Page</div></div>
+<div class="card-body" style="padding:0">
+<iframe id="mainLandingFrame" src="landing.html" style="width:100%;height:80vh;border:none;"></iframe>
+</div>
+</div>
+</div>
+
+<div id="page-qr" class="page">
+<div class="card">
+<div class="card-header"><div class="card-title"><i class="fas fa-qrcode"></i> QR Generator</div></div>
+<div class="card-body" style="padding:0">
+<iframe id="mainQrFrame" src="qr.html" style="width:100%;height:80vh;border:none;"></iframe>
+</div>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -448,7 +474,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 
 <span class="pasal-title">PASAL 1: VERIFIKASI IDENTITAS DAN ANALISIS RISIKO (KYC)</span>
 <ul>
-<li><strong>Kewajiban Dokumen:</strong> Wajib mengunggah KTP (NIK) yang sah dan foto halaman depan Cover Buku Tabungan yang memuat Nama Pemilik, Nomor Rekening, dan Nama Bank.</li>
+<li><strong>Kewajiban Dokumen:</strong> Wajib mengunggah KTP (NIK) yang sah and foto halaman depan Cover Buku Tabungan yang memuat Nama Pemilik, Nomor Rekening, dan Nama Bank.</li>
 <li><strong>Kesesuaian Data (Anti-Fraud):</strong> Nama pada KTP <strong>wajib sama persis</strong> dengan nama pemilik rekening bank. Pihak Pertama berhak menolak pendaftaran jika ditemukan ketidaksesuaian data.</li>
 <li><strong>Keamanan Data:</strong> Pihak Pertama berkomitmen menjaga kerahasiaan data sesuai UU Perlindungan Data Pribadi (UU PDP) Indonesia.</li>
 </ul>
@@ -682,13 +708,11 @@ const SessionManager = {
 saveSession: function(data) {
 const json = encodeURIComponent(JSON.stringify(data));
 document.cookie = 'aff_portal_session=' + json + '; path=/; max-age=86400; SameSite=Lax';
-// Simpan juga ke localStorage untuk cross-page (templates.html, dll)
 localStorage.setItem('aff_portal_session', JSON.stringify(data));
 },
 loadSession: function() {
 const match = document.cookie.match(/aff_portal_session=([^;]+)/);
 if (match) return JSON.parse(decodeURIComponent(match[1]));
-// Fallback: localStorage (lebih reliable untuk cross-page)
 var ls = localStorage.getItem('aff_portal_session');
 if(ls) return JSON.parse(ls);
 return null;
@@ -920,23 +944,11 @@ document.getElementById('refLinkCard').style.display = '';
 document.getElementById('refCodeBadge').textContent = currentUser.referralCode;
 var fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
 document.getElementById('refLinkInput').value = fullLink;
-document.getElementById('refLinkOpen').href = 'landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
-document.getElementById('refLinkQR').href = 'qr.html?ref=' + encodeURIComponent(currentUser.referralCode);
-
-// Isi info card komisi
-var myComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === currentUser.id; });
-var myPaid = myComm.filter(function(c) { return String(c.paid).toLowerCase().trim() === 'true' || c.paid === true; }).reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
-var myUnpaid = myComm.filter(function(c) { return !(String(c.paid).toLowerCase().trim() === 'true' || c.paid === true); }).reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
-document.getElementById('commInfoCard').style.display = '';
-document.getElementById('commInfoAmount').textContent = formatNumber(myPaid + myUnpaid);
-document.getElementById('commInfoPaid').textContent = 'Dibayar: Rp ' + formatNumber(myPaid);
-document.getElementById('commInfoUnpaid').textContent = 'Belum dibayar: Rp ' + formatNumber(myUnpaid);
 } else {
 document.getElementById('refLinkCard').style.display = 'none';
 document.getElementById('commInfoCard').style.display = 'none';
 }
 
-// AFFILIATOR: Tampilkan produk yang dibeli leads (dari orders)
 if (currentUser && !currentUser.isAdmin) {
 var myOrders = DATA.orders.filter(function(o) {
 var orderRef = String(o.referralcode || o.referralCode || '').toUpperCase();
@@ -982,10 +994,7 @@ return;
 }
 body.innerHTML = DATA.products.map(p => {
 const pId = p.id || '';
-const hasActiveCol = p.active !== undefined && p.active !== '' && p.active !== null;
-const hasStatusCol = p.status !== undefined && p.status !== '' && p.status !== null;
 const isAct = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
-const isInactive = String(p.active).toLowerCase() === 'false' || String(p.active).toLowerCase() === 'no' || String(p.status).toLowerCase() === 'inactive';
 const imgTag = p.img ? '<div class="product-img-preview"><img src="' + p.img + '" onerror="this.src=\'https://placehold.co/50?text=Kopi\'"></div>' : '<div class="product-img-preview"><i class="fas fa-coffee"></i></div>';
 const toggleTitle = isAct ? 'Nonaktifkan' : 'Aktifkan';
 const toggleIcon = isAct ? 'fa-toggle-on' : 'fa-toggle-off';
@@ -1124,20 +1133,17 @@ function renderAffiliators() {
 if (!currentUser || !currentUser.isAdmin) return;
 document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
 
-// Hitung statistik per affiliator dan sort by total penjualan (valid+converted) tertinggi
 var affStats = DATA.users.map(function(u) {
 var ref = u.referralcode || u.referralCode;
 var affLeads = DATA.leads.filter(function(l) { return (l.referralcode || l.referralCode) === ref; });
 var affComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === u.id; });
 var totalComm = affComm.reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
-// Hitung penjualan (valid + converted)
 var totalSales = affLeads.filter(function(l) { var s = (l.status || '').toLowerCase(); return s === 'valid' || s === 'converted'; }).length;
 var totalPending = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'pending'; }).length;
 var totalReject = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'rejected'; }).length;
 return { user: u, ref: ref, affLeads: affLeads, totalComm: totalComm, totalSales: totalSales, totalPending: totalPending, totalReject: totalReject };
 });
 
-// Sort by total penjualan tertinggi
 affStats.sort(function(a, b) { return b.totalSales - a.totalSales; });
 
 document.getElementById('affiliatorsBody').innerHTML = affStats.map(function(item) {
@@ -1194,7 +1200,6 @@ statusBtns = '<button class="btn btn-sm btn-success" onclick="updateLeadStatus(\
 } else if (stat === 'valid') {
 statusBtns = '<button class="btn btn-sm btn-primary" onclick="updateLeadStatus(\'' + leadId + '\',\'converted\')" title="Convert"><i class="fas fa-exchange-alt"></i></button>';
 }
-// Tombol Invoice: hanya muncul kalau lead punya order
 var hasOrder = DATA.orders.some(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
 var invoiceBtn = hasOrder ? ' <button class="btn btn-sm btn-outline" onclick="openInvoiceModal(\'' + leadId + '\')" title="Invoice" style="color:var(--info);border-color:var(--info)"><i class="fas fa-file-invoice"></i></button>' : '';
 actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal(\'' + leadId + '\')" title="Edit"><i class="fas fa-edit"></i></button>' + (statusBtns ? ' ' + statusBtns : '') + invoiceBtn;
@@ -1237,7 +1242,6 @@ if (!currentUser || !currentUser.isAdmin) return;
 var select = document.getElementById('updateLeadSelect');
 select.innerHTML = DATA.leads.map(l => '<option value="' + l.id + '">' + (l.name || '-') + ' (' + (l.status || 'Pending') + ')</option>').join('');
 if (leadId) select.value = leadId;
-// Prefill kontak dari lead yang dipilih
 var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
 document.getElementById('updateLeadContact').value = lead ? (lead.contact || lead.whatsapp || '') : '';
 document.getElementById('updateTransValue').value = '';
@@ -1292,7 +1296,6 @@ else if (shipStatus === 'Dikirim') statusClass = 'badge-dikirim';
 else if (shipStatus === 'Diterima') statusClass = 'badge-diterima';
 else if (shipStatus === 'Pending') statusClass = 'badge-pending';
 var orderId = o.id || '';
-// Inline status update dropdown
 var statusOptions = ['Pending','Diproses','Dikirim','Diterima'];
 var statusSelect = '<select id="orderStatus_' + orderId + '" onchange="quickUpdateOrderStatus(\'' + orderId + '\')" style="font-size:0.75rem;padding:0.25rem;border-radius:4px;border:1px solid var(--border);font-family:inherit">';
 for (var si = 0; si < statusOptions.length; si++) {
@@ -1308,7 +1311,6 @@ return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.produ
 function renderCommissions() {
 if (!currentUser) return;
 
-// ADMIN: Tampilkan summary per affiliator di atas tabel
 if (currentUser.isAdmin && DATA.commissions.length > 0) {
 var affSummary = {};
 for (var i = 0; i < DATA.commissions.length; i++) {
@@ -1322,7 +1324,6 @@ affSummary[affId] = { name: aff ? aff.name : affId, paid: 0, unpaid: 0 };
 }
 if (isPaid) { affSummary[affId].paid += amt; } else { affSummary[affId].unpaid += amt; }
 }
-// Convert ke array dan sort by total tertinggi
 var summaryArr = Object.keys(affSummary).map(function(k) {
 var a = affSummary[k];
 a.total = a.paid + a.unpaid;
@@ -1345,7 +1346,6 @@ summaryHTML += '</div>';
 }
 summaryHTML += '</div></div>';
 
-// Insert summary sebelum tabel commissions
 var commCard = document.getElementById('commissionsBody');
 if (commCard) {
 var existingSummary = document.getElementById('commSummaryPanel');
@@ -1414,9 +1414,22 @@ products: 'Manage Products',
 affiliators: 'Affiliators',
 leads: 'Leads Management',
 orders: 'Orders History',
-commissions: 'Komisi'
+commissions: 'Komisi',
+templates: 'Template Promosi',
+landing: 'Landing Page',
+qr: 'QR Generator'
 };
 document.getElementById('pageTitle').innerText = titles[pageId] || 'Admin';
+
+// Update iframe refs based on current user referral code
+if((pageId === 'landing' || pageId === 'qr') && currentUser && currentUser.referralCode) {
+const iframeId = pageId === 'landing' ? 'mainLandingFrame' : 'mainQrFrame';
+const iframe = document.getElementById(iframeId);
+if(iframe) {
+iframe.src = pageId + '.html?ref=' + encodeURIComponent(currentUser.referralCode);
+}
+}
+
 renderCurrentPage();
 }
 
@@ -1578,641 +1591,36 @@ if (label) label.textContent = 'Kuat - password aman';
 function handleFileSelect(input, previewId, wrapId) {
 var file = input.files[0];
 if (!file) return;
-if (file.size > 2 * 1024 * 1024) { showToast('File maksimal 2MB', 'error'); input.value = ''; return; }
-var preview = document.getElementById(previewId);
-var wrap = document.getElementById(wrapId);
-var nameEl = document.getElementById(previewId.replace('Preview','FileName'));
+if (file.size > 2 * 1024 * 1024) {
+showToast('Ukuran file maksimal 2MB!', 'error');
+input.value = '';
+return;
+}
 var reader = new FileReader();
 reader.onload = function(e) {
+var preview = document.getElementById(previewId);
+if(preview) {
 preview.src = e.target.result;
 preview.style.display = 'block';
-wrap.classList.add('has-file');
-if (nameEl) nameEl.textContent = file.name;
+}
+var wrap = document.getElementById(wrapId);
+if(wrap) wrap.classList.add('has-file');
+var nameEl = document.getElementById(previewId.replace('Preview', 'FileName'));
+if(nameEl) nameEl.textContent = file.name;
 };
 reader.readAsDataURL(file);
 }
 
-function fileToBase64(file) {
-return new Promise(function(resolve, reject) {
-var reader = new FileReader();
-reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
-reader.onerror = reject;
-reader.readAsDataURL(file);
-});
+function toggleSidebar() {
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+sidebar.classList.toggle('open');
+overlay.classList.toggle('active');
 }
 
-// ==================== FIX: Resize image lebih kecil untuk menghindari batas POST ====================
-function resizeImage(file, maxWidth, quality) {
-return new Promise(function(resolve, reject) {
-var timeout = setTimeout(function() { reject(new Error('Timeout memproses foto')); }, 15000);
-var img = new Image();
-var reader = new FileReader();
-reader.onload = function(e) {
-img.onload = function() {
-clearTimeout(timeout);
-var canvas = document.createElement('canvas');
-var w = img.width, h = img.height;
-if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-canvas.width = w;
-canvas.height = h;
-var ctx = canvas.getContext('2d');
-ctx.fillStyle = '#FFFFFF';
-ctx.fillRect(0, 0, w, h);
-ctx.drawImage(img, 0, 0, w, h);
-var dataUrl = canvas.toDataURL('image/jpeg', quality);
-resolve(dataUrl.split(',')[1]);
-};
-img.onerror = function() { clearTimeout(timeout); reject(new Error('Gagal membaca gambar')); };
-img.src = e.target.result;
-};
-reader.onerror = function() { clearTimeout(timeout); reject(new Error('Gagal membaca file')); };
-reader.readAsDataURL(file);
-});
-}
-
-async function submitRegisterViaIframe(data) {
-return new Promise(function(resolve) {
-var iframe = document.getElementById('gasFrame');
-var form = document.createElement('form');
-form.method = 'POST';
-form.action = CONFIG.GAS_URL;
-form.target = 'gasFrame';
-form.style.display = 'none';
-
-var af = document.createElement('input');
-af.name = 'action';
-af.value = 'registerAffiliator';
-form.appendChild(af);
-
-for (var key in data) {
-if (data[key] !== undefined && data[key] !== null) {
-var f = document.createElement('input');
-f.name = key;
-f.value = String(data[key] || '');
-form.appendChild(f);
-}
-}
-
-var resolved = false;
-function doResolve() { if (!resolved) { resolved = true; resolve(true); } }
-
-iframe.onload = doResolve;
-setTimeout(doResolve, 20000);
-
-document.body.appendChild(form);
-form.submit();
-setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); doResolve(); }, 25000);
-});
-}
-
-async function verifyUserRegistered(email) {
-try {
-var res = await fetchFromGAS('getUsers');
-if (res.success && Array.isArray(res.data)) {
-var found = res.data.find(function(u) { return String(u.email).toLowerCase() === email.toLowerCase(); });
-return found ? found : null;
-}
-}catch(e) {}
-return null;
-}
-
-// ==================== FIX: Resize image ke 400px x 0.4 quality (lebih kecil = base64 lebih pendek) ====================
-async function handleRegisterSubmit(e) {
-e.preventDefault();
-var name = document.getElementById('regName').value.trim();
-var email = document.getElementById('regEmail').value.trim();
-var phone = document.getElementById('regPhone').value.trim();
-var password = document.getElementById('regPassword').value;
-var bank = document.getElementById('regBank').value;
-var bankAccount = document.getElementById('regBankAccount').value.trim();
-var ktpFile = document.getElementById('regKtp').files[0];
-var tabunganFile = document.getElementById('regTabungan').files[0];
-
-if (!name || !email || !phone || !password || !bank || !bankAccount) {
-showToast('Semua field wajib diisi', 'error'); return;
-}
-if (!email.includes('@') || !email.includes('.')) {
-showToast('Format email tidak valid', 'error'); return;
-}
-if (password.length < 6) {
-showToast('Password minimal 6 karakter', 'error'); return;
-}
-if (!ktpFile) { showToast('Foto KTP wajib diunggah', 'error'); return; }
-if (!tabunganFile) { showToast('Foto Cover Buku Tabungan wajib diunggah', 'error'); return; }
-
-if (window._registerAutoSave) { clearInterval(window._registerAutoSave); window._registerAutoSave = null; }
-
-var btn = document.getElementById('btnRegisterSubmit');
-var origHTML = btn.innerHTML;
-btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-
-var stepEl = document.createElement('div');
-stepEl.id = 'regStepInfo';
-stepEl.style.cssText = 'text-align:center;font-size:0.85rem;color:var(--text-light);margin-top:0.5rem';
-btn.parentNode.insertBefore(stepEl, btn.nextSibling);
-
-function setStep(msg) {
-var el = document.getElementById('regStepInfo');
-if (el) el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ' + msg;
-}
-
-// Validasi ukuran file sebelum resize
-if (ktpFile.size > 5 * 1024 * 1024) {
-showToast('Foto KTP terlalu besar (max 5MB). Silakan kecilkan ukuran foto.', 'error');
-btn.disabled = false;
-btn.innerHTML = origHTML;
-var stepElRemSize = document.getElementById('regStepInfo');
-if (stepElRemSize) stepElRemSize.remove();
-return;
-}
-if (tabunganFile.size > 5 * 1024 * 1024) {
-showToast('Foto Tabungan terlalu besar (max 5MB). Silakan kecilkan ukuran foto.', 'error');
-btn.disabled = false;
-btn.innerHTML = origHTML;
-var stepElRemSize2 = document.getElementById('regStepInfo');
-if (stepElRemSize2) stepElRemSize2.remove();
-return;
-}
-
-try {
-// FIX: Resize ke 400px width, quality 0.4
-setStep('Mengecilkan foto KTP...');
-var ktpBase64;
-try { ktpBase64 = await resizeImage(ktpFile, 400, 0.4); }
-catch(imgErr) {
-showToast('Gagal memproses foto KTP: ' + (imgErr.message || 'Format gambar tidak didukung'), 'error');
-throw imgErr;
-}
-
-setStep('Mengecilkan foto tabungan...');
-var tabunganBase64;
-try { tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4); }
-catch(imgErr) {
-showToast('Gagal memproses foto Tabungan: ' + (imgErr.message || 'Format gambar tidak didukung'), 'error');
-throw imgErr;
-}
-
-if (!ktpBase64 || ktpBase64.length < 50) {
-showToast('Foto KTP gagal diproses. Coba foto lain atau kompres dulu.', 'error');
-throw new Error('KTP base64 invalid');
-}
-if (!tabunganBase64 || tabunganBase64.length < 50) {
-showToast('Foto Tabungan gagal diproses. Coba foto lain atau kompres dulu.', 'error');
-throw new Error('Tabungan base64 invalid');
-}
-
-setStep('Mengirim data ke server...');
-var submitData = {
-name: name, email: email, phone: phone, password: password,
-bank: bank, bankAccount: bankAccount,
-ktpBase64: ktpBase64, ktpMimeType: ktpFile.type || 'image/jpeg',
-tabunganBase64: tabunganBase64, tabunganMimeType: tabunganFile.type || 'image/jpeg'
-};
-
-Debug.log('REGISTER: ktpBase64 length=' + ktpBase64.length + ', tabunganBase64 length=' + tabunganBase64.length);
-
-setStep('Mengirim data ke server...');
-var sendOk;
-try { sendOk = await submitRegisterViaIframe(submitData); }
-catch(sendErr) {
-showToast('Gagal mengirim data ke server: ' + (sendErr.message || 'Koneksi terputus'), 'error');
-throw sendErr;
-}
-
-if (!sendOk) {
-showToast('Gagal terhubung ke server. Data Anda tersimpan, silakan coba lagi.', 'error');
-btn.disabled = false;
-btn.innerHTML = origHTML;
-var stepElRem2 = document.getElementById('regStepInfo');
-if (stepElRem2) stepElRem2.remove();
-return;
-}
-
-setStep('Menunggu konfirmasi server (20 detik)...');
-await new Promise(function(r) { setTimeout(r, 20000); });
-
-setStep('Memverifikasi pendaftaran...');
-var userFound;
-try { userFound = await verifyUserRegistered(email); }
-catch(verErr) {
-showToast('Server sedang sibuk. Silakan coba login dalam 1-2 menit.', 'warning');
-userFound = null;
-}
-
-if (userFound) {
-clearRegisterDraft();
-document.getElementById('regSuccessName').textContent = name;
-document.getElementById('regSuccessRefCode').textContent = (userFound.referralcode || userFound.referralCode || '-');
-closeModal('registerModal');
-document.getElementById('registerSuccessModal').classList.add('active');
-} else {
-showToast('Server sedang memproses. Data Anda disimpan, silakan coba login dalam 1-2 menit.', 'warning');
-var data = { name: name, email: email, phone: phone, bank: bank, bankAccount: bankAccount };
-localStorage.setItem('aff_register_draft', JSON.stringify(data));
-closeModal('registerModal');
-}
-} catch(err) {
-showToast('Error: ' + (err.message || 'Terjadi kesalahan'), 'error');
-Debug.log('REGISTER ERROR:', err.message || err);
-} finally {
-btn.disabled = false;
-btn.innerHTML = origHTML;
-var stepElRem = document.getElementById('regStepInfo');
-if (stepElRem) stepElRem.remove();
-}
-}
-
-// ==================== USER DETAIL & ACTIVATION ====================
-function openUserDetailModal(userId) {
-var u = DATA.users.find(function(user) { return String(user.id) === String(userId); });
-if (!u) { showToast('User tidak ditemukan', 'error'); return; }
-
-document.getElementById('detailUserId').value = u.id || '';
-document.getElementById('detailName').value = u.name || '';
-document.getElementById('detailEmail').value = u.email || '';
-document.getElementById('detailPhone').value = u.phone || u.whatsapp || '';
-document.getElementById('detailPassword').value = '';
-document.getElementById('detailRefCode').value = u.referralcode || u.referralCode || '';
-document.getElementById('detailStatus').value = u.status || 'Pending';
-document.getElementById('detailBank').value = u.bank || '-';
-document.getElementById('detailJoined').value = formatDate(u.joined);
-
-var isMyProfile = currentUser && String(currentUser.id) === String(u.id);
-var canEdit = currentUser && (currentUser.isAdmin || isMyProfile);
-document.getElementById('btnSaveUserDetail').style.display = canEdit ? '' : 'none';
-
-var isAdmin = currentUser && currentUser.isAdmin;
-document.getElementById('adminKtpUpload').style.display = isAdmin ? '' : 'none';
-document.getElementById('adminTabunganUpload').style.display = isAdmin ? '' : 'none';
-
-document.getElementById('adminRegKtp').value = '';
-document.getElementById('adminRegTabungan').value = '';
-document.getElementById('adminKtpPreview').style.display = 'none';
-document.getElementById('adminTabunganPreview').style.display = 'none';
-document.getElementById('adminKtpFileName').textContent = '';
-document.getElementById('adminTabunganFileName').textContent = '';
-document.getElementById('adminKtpUploadWrap').classList.remove('has-file');
-document.getElementById('adminTabunganUploadWrap').classList.remove('has-file');
-
-var ktpUrl = u.ktpurl || u.ktpUrl || '';
-var tabunganUrl = u.tabunganurl || u.tabunganUrl || '';
-
-if (ktpUrl) {
-document.getElementById('detailKtpSection').style.display = '';
-document.getElementById('detailKtpLink').href = ktpUrl;
-document.getElementById('detailKtpMissing').style.display = 'none';
-} else {
-document.getElementById('detailKtpSection').style.display = 'none';
-document.getElementById('detailKtpMissing').style.display = '';
-}
-
-if (tabunganUrl) {
-document.getElementById('detailTabunganSection').style.display = '';
-document.getElementById('detailTabunganLink').href = tabunganUrl;
-document.getElementById('detailTabunganMissing').style.display = 'none';
-} else {
-document.getElementById('detailTabunganSection').style.display = 'none';
-document.getElementById('detailTabunganMissing').style.display = '';
-}
-
-document.getElementById('userDetailModal').classList.add('active');
-}
-
-function openMyProfileModal() {
-if (!currentUser || currentUser.isAdmin) return;
-var u = DATA.users.find(function(user) { return String(user.id) === String(currentUser.id); });
-if (!u) { showToast('Data profil tidak ditemukan', 'error'); return; }
-openUserDetailModal(u.id);
-}
-
-// ==================== FIX: Pakai POST iframe kalau ada foto base64, GET kalau tidak ====================
-async function saveUserDetail() {
-var userId = document.getElementById('detailUserId').value;
-var name = document.getElementById('detailName').value.trim();
-var email = document.getElementById('detailEmail').value.trim();
-var phone = document.getElementById('detailPhone').value.trim();
-var password = document.getElementById('detailPassword').value;
-var ktpFile = document.getElementById('adminRegKtp').files[0];
-var tabunganFile = document.getElementById('adminRegTabungan').files[0];
-
-if (!name || !email || !phone) {
-showToast('Nama, Email, dan Phone wajib diisi', 'error'); return;
-}
-
-var btn = document.getElementById('btnSaveUserDetail');
-btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-try {
-var hasPhoto = !!(ktpFile || tabunganFile);
-var params = { action: 'updateUser', id: userId, name: name, email: email, phone: phone };
-if (password) params.password = password;
-
-if (ktpFile) {
-showToast('Memproses foto KTP...', 'info');
-params.ktpBase64 = await resizeImage(ktpFile, 400, 0.4);
-params.ktpMimeType = ktpFile.type || 'image/jpeg';
-}
-
-if (tabunganFile) {
-showToast('Memproses foto Tabungan...', 'info');
-params.tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4);
-params.tabunganMimeType = tabunganFile.type || 'image/jpeg';
-}
-
-// FIX: Kalau ada foto, pakai POST iframe (base64 tidak masuk URL)
-// Kalau tidak ada foto, pakai GET (lebih cepat)
-var res;
-if (hasPhoto) {
-Debug.log('UPDATE USER: using POST iframe (has photo)');
-res = await callGASPostIframe('updateUser', params);
-} else {
-Debug.log('UPDATE USER: using GET (no photo)');
-res = await callGASGet('updateUser', params);
-}
-
-if (res && res.success) {
-showToast('Data user berhasil diperbarui!', 'success');
-closeModal('userDetailModal');
-await syncAllData();
-} else {
-showToast((res && res.error) ? res.error : 'Gagal menyimpan', 'error');
-}
-}catch(err) {
-showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
-Debug.log('UPDATE USER ERROR:', err.message || err);
-} finally {
-btn.disabled = false;
-btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
-}
-}
-
-// Helper: Kirim POST via iframe (untuk data besar seperti base64 foto)
-async function callGASPostIframe(action, data) {
-return new Promise(function(resolve) {
-var iframe = document.getElementById('gasFrame');
-var form = document.createElement('form');
-form.method = 'POST';
-form.action = CONFIG.GAS_URL;
-form.target = 'gasFrame';
-form.style.display = 'none';
-
-var af = document.createElement('input');
-af.name = 'action';
-af.value = action;
-form.appendChild(af);
-
-for (var key in data) {
-if (data[key] !== undefined && data[key] !== null) {
-var f = document.createElement('input');
-f.name = key;
-f.value = String(data[key] || '');
-form.appendChild(f);
-}
-}
-
-var resolved = false;
-function doResolve(result) {
-if (!resolved) {
-resolved = true;
-resolve(result || { success: true, message: 'Data terkirim via POST' });
-}
-}
-
-// Coba baca response dari iframe
-iframe.onload = function() {
-try {
-var doc = iframe.contentDocument || iframe.contentWindow.document;
-var body = doc.body ? doc.body.textContent : '';
-if (body) {
-var json = JSON.parse(body);
-doResolve(json);
-return;
-}
-}catch(e) {}
-doResolve({ success: true, message: 'Data terkirim' });
-};
-
-// Timeout fallback
-setTimeout(function() { doResolve({ success: true, message: 'Data terkirim (timeout)' }); }, 15000);
-
-document.body.appendChild(form);
-form.submit();
-setTimeout(function() { if (form.parentNode) form.parentNode.removeChild(form); }, 25000);
-});
-}
-
-async function activateUser(userId, btnEl) {
-var u = DATA.users.find(function(user) { return String(user.id) === String(userId); });
-if (!u) { showToast('User tidak ditemukan', 'error'); return; }
-
-var phone = String(u.phone || '').replace(/\D/g, '');
-if (!phone) { showToast('User tidak punya nomor WhatsApp', 'error'); return; }
-
-var refCode = u.referralcode || u.referralCode || '';
-var name = u.name || 'Affiliator';
-var waMsg = 'Halo ' + name + ', selamat! Akun affiliator Anda sudah aktif. Silahkan login Link: https://affiliate.qcoid.com . dan mulai promosikan produk kami. Komisi 5% per transaksi. - Tim Kopi Affiliate';
-var waLink = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(waMsg);
-
-if (!confirm('Aktifkan user ini? WhatsApp akan terbuka untuk kirim notifikasi.')) return;
-
-var waToast = document.createElement('div');
-waToast.className = 'toast success';
-waToast.style.cssText = 'background:#25D366;color:white;cursor:pointer';
-waToast.innerHTML = '<i class="fab fa-whatsapp"></i> <span><a href="' + waLink + '" style="color:white;text-decoration:underline;font-weight:600">Klik untuk kirim WA notifikasi</a></span>';
-document.getElementById('toastContainer').appendChild(waToast);
-setTimeout(function() { waToast.remove(); }, 15000);
-
-var origHTML = '';
-if (btnEl) { origHTML = btnEl.innerHTML; btnEl.disabled = true; btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
-
-try {
-var res = await callGASGet('updateUser', { action: 'updateUser', id: userId, status: 'Active' });
-if (res && res.success) {
-showToast('User berhasil diaktifkan!', 'success');
-await syncAllData();
-} else {
-showToast((res && res.error) ? res.error : 'Gagal mengaktifkan', 'error');
-}
-}catch(err) {
-showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
-} finally {
-if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHTML; }
-}
-}
-
-async function deactivateUser(userId, btnEl) {
-if (!confirm('Nonaktifkan user ini?')) return;
-
-var origHTML = '';
-if (btnEl) { origHTML = btnEl.innerHTML; btnEl.disabled = true; btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
-
-try {
-var res = await callGASGet('updateUser', { action: 'updateUser', id: userId, status: 'Inactive' });
-if (res && res.success) {
-showToast('User berhasil dinonaktifkan', 'success');
-await syncAllData();
-} else {
-showToast((res && res.error) ? res.error : 'Gagal menonaktifkan', 'error');
-}
-}catch(err) {
-showToast('Terjadi kesalahan: ' + (err.message || ''), 'error');
-} finally {
-if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = origHTML; }
-}
-}
-
-// ==================== INVOICE FUNCTIONS ====================
-function openInvoiceModal(leadId) {
-var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
-if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
-
-// Cari order yang terkait dengan lead ini
-var order = DATA.orders.find(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
-if (!order) { showToast('Order tidak ditemukan untuk lead ini', 'error'); return; }
-
-// Simpan orderId ke hidden field (untuk update status nanti)
-document.getElementById('invOrderId').value = order.id || '';
-document.getElementById('invLeadId').value = leadId;
-document.getElementById('invName').value = order.buyername || order.buyerName || lead.name || '';
-document.getElementById('invPhone').value = order.buyerphone || order.buyerPhone || lead.contact || '';
-document.getElementById('invEmail').value = order.buyeremail || order.buyerEmail || lead.email || '';
-
-var alamat = [order.namajalangedung || order.namaJalanGedung, order.kecamatan, order.kotakabupaten || order.kotaKabupaten, order.provinsi, order.kodepos || order.kodePos].filter(Boolean).join(', ');
-document.getElementById('invAddress').value = alamat;
-
-document.getElementById('invProduct').value = order.productname || order.productName || '';
-document.getElementById('invQty').value = order.qty || 1;
-document.getElementById('invPrice').value = order.price || 0;
-document.getElementById('invOngkir').value = order.ongkir || 0;
-
-calculateInvoiceTotal();
-document.getElementById('invoiceModal').classList.add('active');
-}
-
-function calculateInvoiceTotal() {
-var price = parseFloat(document.getElementById('invPrice').value) || 0;
-var qty = parseInt(document.getElementById('invQty').value) || 1;
-var ongkir = parseFloat(document.getElementById('invOngkir').value) || 0;
-var subtotal = price * qty;
-var total = subtotal + ongkir;
-
-document.getElementById('invTotal').textContent = 'Rp ' + formatNumber(total);
-
-// Generate preview text
-var name = document.getElementById('invName').value || '-';
-var phone = document.getElementById('invPhone').value || '-';
-var email = document.getElementById('invEmail').value || '';
-var address = document.getElementById('invAddress').value || '-';
-var product = document.getElementById('invProduct').value || '-';
-
-var preview = '*INVOICE - CV Kemari Sukses Makmur*\n\n';
-preview += 'Kepada: ' + name + '\n';
-preview += 'Alamat: ' + address + '\n';
-preview += 'No. HP: ' + phone + '\n';
-if (email) preview += 'Email: ' + email + '\n';
-preview += '\nProduk: ' + product + ' x' + qty + '\n';
-preview += 'Harga: Rp ' + formatNumber(price) + '\n';
-if (ongkir > 0) preview += 'Ongkir: Rp ' + formatNumber(ongkir) + '\n';
-preview += '-------------------\n';
-preview += '*Total: Rp ' + formatNumber(total) + '*\n\n';
-preview += 'Pembayaran via transfer:\n';
-preview += 'BCA - 1234567890\n';
-preview += 'a/n PT Kopi Affiliate\n\n';
-preview += 'Konfirmasi pembayaran ke WA ini.\nTerima kasih.';
-
-document.getElementById('invPreview').textContent = preview;
-}
-
-function sendInvoiceWA() {
-var phone = document.getElementById('invPhone').value.replace(/\D/g, '');
-if (!phone) { showToast('Nomor HP tidak valid', 'error'); return; }
-
-var preview = document.getElementById('invPreview').textContent;
-if (!preview) { showToast('Invoice kosong', 'error'); return; }
-
-var waLink = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(preview);
-window.location.href = waLink;
-closeModal('invoiceModal');
-}
-
-async function quickUpdateOrderStatus(orderId) {
-var sel = document.getElementById('orderStatus_' + orderId);
-if (!sel) return;
-var newStatus = sel.value;
-
-try {
-var res = await callGASGet('updateOrderStatus', { id: orderId, status: newStatus });
-if (res && res.success) {
-showToast('Status pengiriman: ' + newStatus, 'success');
-var localOrder = DATA.orders.find(function(o) { return String(o.id) === String(orderId); });
-if (localOrder) localOrder.status = newStatus;
-renderOrders();
-} else {
-showToast((res && res.error) ? res.error : 'Gagal update status', 'error');
-}
-} catch(err) {
-showToast('Error koneksi: ' + (err.message || ''), 'error');
-}
-}
-
-function toggleSidebar(){
-var sb = document.getElementById('sidebar');
-var ov = document.getElementById('sidebarOverlay');
-if(sb.classList.contains('open')){
-sb.classList.remove('open');
-ov.classList.remove('active');
-}else{
-sb.classList.add('open');
-ov.classList.add('active');
-}
-}
-
-function shareToSocial(platform){
-var link = document.getElementById('refLinkInput').value;
-if (!link) { showToast('Link referral tidak tersedia', 'error'); return; }
-var text = 'Yuk coba kopi lokal terbaik dari Nusantara! ☕ Dapatkan harga spesial melalui link referral saya: ' + link;
-
-if (platform === 'facebook') {
-var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link) + '&quote=' + encodeURIComponent(text);
-window.open(fbUrl, '_blank', 'width=600,height=400');
-} else if (platform === 'instagram') {
-// IG tidak support direct share via web → copy text + buka IG
-navigator.clipboard.writeText(text).then(function() {
-showToast('Teks disalin! Buka Instagram dan paste di story/caption.', 'success');
-setTimeout(function() { window.open('https://instagram.com', '_blank'); }, 1500);
-}).catch(function() {
-// Fallback: select text manual
-var ta = document.createElement('textarea');
-ta.value = text;
-document.body.appendChild(ta);
-ta.select();
-document.execCommand('copy');
-document.body.removeChild(ta);
-showToast('Teks disalin! Buka Instagram dan paste.', 'success');
-});
-} else if (platform === 'tiktok') {
-// TikTok tidak support direct share → copy + buka TikTok
-navigator.clipboard.writeText(text).then(function() {
-showToast('Teks disalin! Buka TikTok dan paste di caption.', 'success');
-setTimeout(function() { window.open('https://tiktok.com', '_blank'); }, 1500);
-}).catch(function() {
-var ta = document.createElement('textarea');
-ta.value = text;
-document.body.appendChild(ta);
-ta.select();
-document.execCommand('copy');
-document.body.removeChild(ta);
-showToast('Teks disalin! Buka TikTok dan paste.', 'success');
-});
-}
-}
-
-// ==================== INIT ====================
-document.addEventListener('DOMContentLoaded', function() {
+window.onload = function() {
 checkAccess();
-});
+};
 </script>
 </body>
 </html>
