@@ -361,7 +361,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-body">
 <div class="table-container">
 <table class="data-table">
-<thead><tr><th>Tanggal</th><th>Produk</th><th>Pembeli</th><th>Kontak</th><th>Alamat</th><th>Harga</th><th>Referral</th><th>Status</th></tr></thead>
+<thead><tr><th>Tanggal</th><th>Produk</th><th>Pembeli</th><th>Kontak</th><th>Alamat</th><th>Harga</th><th>Referral</th><th>Status</th><th>Aksi</th></tr></thead>
 <tbody id="ordersBody"></tbody>
 </table>
 </div>
@@ -637,9 +637,12 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <input type="hidden" id="invLeadId">
 <div class="form-row">
 <div class="form-group"><label class="form-label">Nama Penerima</label><input type="text" class="invoice-field" id="invName" readonly></div>
-<div class="form-group"><label class="form-label">No. HP</label><input type="text" class="invoice-field" id="invPhone" readonly></div>
+<div class="form-group"><label class="form-label">No. HP <small style="color:var(--danger)">*editable</small></label><input type="text" class="form-input" id="invPhone" placeholder="08123456789"></div>
 </div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Email <small style="color:var(--danger)">*editable</small></label><input type="email" class="form-input" id="invEmail" placeholder="email@contoh.com"></div>
 <div class="form-group"><label class="form-label">Alamat Lengkap</label><textarea class="invoice-field" id="invAddress" rows="2" readonly></textarea></div>
+</div>
 <div class="form-row">
 <div class="form-group"><label class="form-label">Produk</label><input type="text" class="invoice-field" id="invProduct" readonly></div>
 <div class="form-group"><label class="form-label">Qty</label><input type="number" class="invoice-field" id="invQty" readonly style="width:80px"></div>
@@ -649,20 +652,10 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="form-group"><label class="form-label">Ongkir (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invOngkir" value="0" oninput="calculateInvoiceTotal()"></div>
 </div>
 <div class="invoice-total-row" style="text-align:right">Total: <span id="invTotal">Rp 0</span></div>
-<div class="form-group" style="margin-top:1rem">
-<label class="form-label">Status Pengiriman <small style="color:var(--danger)">*admin only</small></label>
-<select class="form-select" id="invOrderStatus" onchange="updateOrderStatusUI()">
-<option value="Pending">Pending - Pesanan masuk</option>
-<option value="Diproses">Diproses - Sedang dipacking</option>
-<option value="Dikirim">Dikirim - Dalam perjalanan</option>
-<option value="Diterima">Diterima - Pesanan diterima</option>
-</select>
-</div>
 <div class="form-group" style="margin-top:1rem"><label class="form-label">Preview Invoice (WhatsApp)</label><div class="invoice-preview" id="invPreview"></div></div>
 </div>
 <div class="modal-footer" style="flex-wrap:wrap;gap:0.5rem">
 <button class="btn btn-outline" onclick="closeModal('invoiceModal')">Tutup</button>
-<button class="btn btn-primary" id="btnUpdateOrderStatus" onclick="saveOrderStatus()"><i class="fas fa-save"></i> Update Status</button>
 <button class="btn btn-success" id="btnSendInvoice" onclick="sendInvoiceWA()"><i class="fab fa-whatsapp"></i> Kirim Invoice</button>
 </div>
 </div>
@@ -1291,8 +1284,17 @@ if (shipStatus === 'Diproses') statusClass = 'badge-diproses';
 else if (shipStatus === 'Dikirim') statusClass = 'badge-dikirim';
 else if (shipStatus === 'Diterima') statusClass = 'badge-diterima';
 else if (shipStatus === 'Pending') statusClass = 'badge-pending';
-return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + o.qty : '') + '</td><td><strong>' + (o.buyername || o.buyerName || '-') + '</strong></td><td>' + (o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + (o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + (alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + (o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + shipStatus + '</span></td></tr>';
-}).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada orders</td></tr>';
+var orderId = o.id || '';
+// Inline status update dropdown
+var statusOptions = ['Pending','Diproses','Dikirim','Diterima'];
+var statusSelect = '<select id="orderStatus_' + orderId + '" onchange="quickUpdateOrderStatus(\'' + orderId + '\')" style="font-size:0.75rem;padding:0.25rem;border-radius:4px;border:1px solid var(--border);font-family:inherit">';
+for (var si = 0; si < statusOptions.length; si++) {
+var sel = statusOptions[si] === shipStatus ? ' selected' : '';
+statusSelect += '<option value="' + statusOptions[si] + '"' + sel + '>' + statusOptions[si] + '</option>';
+}
+statusSelect += '</select>';
+return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + o.qty : '') + '</td><td><strong>' + (o.buyername || o.buyerName || '-') + '</strong></td><td>' + (o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + (o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + (alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + (o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + shipStatus + '</span></td><td>' + statusSelect + '</td></tr>';
+}).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Belum ada orders</td></tr>';
 }
 
 // ==================== COMMISSIONS ====================
@@ -2068,6 +2070,7 @@ document.getElementById('invOrderId').value = order.id || '';
 document.getElementById('invLeadId').value = leadId;
 document.getElementById('invName').value = order.buyername || order.buyerName || lead.name || '';
 document.getElementById('invPhone').value = order.buyerphone || order.buyerPhone || lead.contact || '';
+document.getElementById('invEmail').value = order.buyeremail || order.buyerEmail || lead.email || '';
 
 var alamat = [order.namajalangedung || order.namaJalanGedung, order.kecamatan, order.kotakabupaten || order.kotaKabupaten, order.provinsi, order.kodepos || order.kodePos].filter(Boolean).join(', ');
 document.getElementById('invAddress').value = alamat;
@@ -2077,18 +2080,8 @@ document.getElementById('invQty').value = order.qty || 1;
 document.getElementById('invPrice').value = order.price || 0;
 document.getElementById('invOngkir').value = order.ongkir || 0;
 
-// Prefill status pengiriman dari order
-var orderStatus = order.status || 'Pending';
-var statusSel = document.getElementById('invOrderStatus');
-statusSel.value = orderStatus;
-
 calculateInvoiceTotal();
 document.getElementById('invoiceModal').classList.add('active');
-}
-
-function updateOrderStatusUI() {
-// Trigger recalculate preview (status tidak masuk preview dasar, hanya di WA text)
-calculateInvoiceTotal();
 }
 
 function calculateInvoiceTotal() {
@@ -2103,14 +2096,16 @@ document.getElementById('invTotal').textContent = 'Rp ' + formatNumber(total);
 // Generate preview text
 var name = document.getElementById('invName').value || '-';
 var phone = document.getElementById('invPhone').value || '-';
+var email = document.getElementById('invEmail').value || '';
 var address = document.getElementById('invAddress').value || '-';
 var product = document.getElementById('invProduct').value || '-';
 
 var preview = '*INVOICE - CV Kemari Sukses Makmur*\n\n';
 preview += 'Kepada: ' + name + '\n';
 preview += 'Alamat: ' + address + '\n';
-preview += 'No. HP: ' + phone + '\n\n';
-preview += 'Produk: ' + product + ' x' + qty + '\n';
+preview += 'No. HP: ' + phone + '\n';
+if (email) preview += 'Email: ' + email + '\n';
+preview += '\nProduk: ' + product + ' x' + qty + '\n';
 preview += 'Harga: Rp ' + formatNumber(price) + '\n';
 if (ongkir > 0) preview += 'Ongkir: Rp ' + formatNumber(ongkir) + '\n';
 preview += '-------------------\n';
@@ -2130,42 +2125,28 @@ if (!phone) { showToast('Nomor HP tidak valid', 'error'); return; }
 var preview = document.getElementById('invPreview').textContent;
 if (!preview) { showToast('Invoice kosong', 'error'); return; }
 
-// Tambah status pengiriman ke invoice text
-var shipStatus = document.getElementById('invOrderStatus').value;
-var statusText = shipStatus === 'Diterima' ? 'Sudah diterima' : shipStatus;
-preview += '\n\n*Status Pengiriman: ' + statusText + '*\n';
-if (shipStatus === 'Pending') preview += '_Pesanan akan segera diproses._';
-else if (shipStatus === 'Diproses') preview += '_Sedang dipacking & disiapkan._';
-else if (shipStatus === 'Dikirim') preview += '_Pesanan dalam perjalanan._';
-else if (shipStatus === 'Diterima') preview += '_Terima kasih telah berbelanja!_';
-
 var waLink = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(preview);
 window.location.href = waLink;
 closeModal('invoiceModal');
 }
 
-async function saveOrderStatus() {
-var orderId = document.getElementById('invOrderId').value;
-var newStatus = document.getElementById('invOrderStatus').value;
-if (!orderId) { showToast('ID Order tidak ditemukan', 'error'); return; }
-
-var btn = document.getElementById('btnUpdateOrderStatus');
-btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+async function quickUpdateOrderStatus(orderId) {
+var sel = document.getElementById('orderStatus_' + orderId);
+if (!sel) return;
+var newStatus = sel.value;
 
 try {
 var res = await callGASGet('updateOrderStatus', { id: orderId, status: newStatus });
 if (res && res.success) {
-showToast('Status pengiriman diperbarui: ' + newStatus, 'success');
-await syncAllData();
+showToast('Status pengiriman: ' + newStatus, 'success');
+var localOrder = DATA.orders.find(function(o) { return String(o.id) === String(orderId); });
+if (localOrder) localOrder.status = newStatus;
+renderOrders();
 } else {
 showToast((res && res.error) ? res.error : 'Gagal update status', 'error');
 }
 } catch(err) {
-showToast('Error: ' + (err.message || ''), 'error');
-} finally {
-btn.disabled = false;
-btn.innerHTML = '<i class="fas fa-save"></i> Update Status';
+showToast('Error koneksi: ' + (err.message || ''), 'error');
 }
 }
 
