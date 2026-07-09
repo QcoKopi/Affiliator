@@ -397,10 +397,11 @@ ctx.drawImage(img, 0, 0);
 var qrCanvas = document.createElement('canvas');
 qrCanvas.width = 150;
 qrCanvas.height = 150;
-var qr = new QRCode({
-content: CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode),
-width: 150,
-height: 150
+// PERBAIKAN: Masukkan qrCanvas sebagai parameter pertama
+var qr = new QRCode(qrCanvas, {
+    text: CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode),
+    width: 150,
+    height: 150
 });
 // Fallback: draw QR manually
 var qrData = generateQRDataUrl(CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode), 120);
