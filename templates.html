@@ -189,17 +189,22 @@ var selectedTemplate = null;
 
 // ==================== SESSION ====================
 function loadSession(){
+var json = null;
+// Coba dari cookie dulu
 var match = document.cookie.match(/aff_portal_session=([^;]+)/);
-if(match){
-try{
-var s = JSON.parse(decodeURIComponent(match[1]));
-currentUser = s;
-if(s.isAdmin){
-document.getElementById('adminBar').classList.add('show');
-document.getElementById('adminToggleBtn').style.display = '';
+if(match){ try{ json = JSON.parse(decodeURIComponent(match[1])); }catch(e){} }
+// Fallback: localStorage (lebih reliable cross-page)
+if(!json){
+var ls = localStorage.getItem('aff_portal_session');
+if(ls){ try{ json = JSON.parse(ls); }catch(e){} }
 }
-document.getElementById('userInfo').textContent = s.name || '';
-}catch(e){}
+if(json && json.email){
+currentUser = json;
+if(json.isAdmin){
+document.getElementById('adminBar').classList.add('show');
+document.getElementById('adminToggleBtn').style.display = 'inline-flex';
+}
+document.getElementById('userInfo').textContent = json.name || json.email || '';
 }
 }
 
