@@ -184,10 +184,8 @@ var selectedTemplate = null;
 // ==================== SESSION ====================
 function loadSession(){
 var json = null;
-// Coba dari cookie dulu
 var match = document.cookie.match(/aff_portal_session=([^;]+)/);
 if(match){ try{ json = JSON.parse(decodeURIComponent(match[1])); }catch(e){} }
-// Fallback: localStorage (lebih reliable cross-page)
 if(!json){
 var ls = localStorage.getItem('aff_portal_session');
 if(ls){ try{ json = JSON.parse(ls); }catch(e){} }
@@ -308,7 +306,6 @@ var params = { action: 'saveTemplate', name: name, category: category, type: typ
 var form = document.createElement('form');
 form.method = 'POST';
 form.action = CONFIG.GAS_URL;
-// CATATAN: Jika Anda sama sekali tidak ingin membuka tab putih baru setelah upload sukses, hilangkan baris form.target di bawah ini:
 form.target = '_blank';
 form.style.display = 'none';
 for(var k in params){
@@ -340,7 +337,6 @@ var link = CONFIG.BASE_URL + (ref ? '?ref=' + encodeURIComponent(ref) : '');
 var isImg = (t.type || '').toLowerCase() === 'image';
 document.getElementById('dlPreview').innerHTML = isImg ? '<img src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' : '<video src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
 
-// Generate QR Code
 document.getElementById('dlQR').innerHTML = '';
 if(ref){
 new QRCode(document.getElementById('dlQR'), { text: link, width: 120, height: 120 });
@@ -359,7 +355,6 @@ var ref = getRefCode();
 var isImg = (selectedTemplate.type || '').toLowerCase() === 'image';
 
 if(isImg && ref){
-// Download dengan watermark QR + link
 showToast('Menyiapkan gambar dengan watermark...', 'info');
 try{
 var canvas = await addWatermarkToImage(selectedTemplate.url || selectedTemplate.driveurl || '', ref);
@@ -369,11 +364,9 @@ a.href = canvas.toDataURL('image/jpeg', 0.9);
 a.click();
 showToast('Download dimulai!', 'success');
 }catch(e){
-// Fallback: download as-is
 window.open(selectedTemplate.url || selectedTemplate.driveurl || '', '_blank');
 }
 } else {
-// Video atau tanpa ref: download as-is
 window.open(selectedTemplate.url || selectedTemplate.driveurl || '', '_blank');
 }
 closeModal('downloadModal');
@@ -390,23 +383,10 @@ canvas.height = img.height;
 var ctx = canvas.getContext('2d');
 ctx.drawImage(img, 0, 0);
 
-// QR Code canvas
-var qrCanvas = document.createElement('canvas');
-qrCanvas.width = 150;
-qrCanvas.height = 150;
-var qr = new QRCode(qrCanvas, {
-    text: CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode),
-    width: 150,
-    height: 150
-});
-var qrData = generateQRDataUrl(CONFIG.BASE_URL + '?ref=' + encodeURIComponent(refCode), 120);
-
-// Draw semi-transparent bar at bottom
 var barHeight = Math.max(60, img.height * 0.08);
 ctx.fillStyle = 'rgba(93, 64, 55, 0.85)';
 ctx.fillRect(0, img.height - barHeight, img.width, barHeight);
 
-// Draw text
 ctx.fillStyle = 'white';
 ctx.font = 'bold ' + Math.max(14, img.width * 0.015) + 'px Inter, sans-serif';
 ctx.textBaseline = 'middle';
@@ -417,22 +397,6 @@ resolve(canvas);
 img.onerror = reject;
 img.src = imgUrl;
 });
-}
-
-function generateQRDataUrl(text, size){
-var c = document.createElement('canvas');
-c.width = size; c.height = size;
-var ctx = c.getContext('2d');
-ctx.fillStyle = 'white';
-ctx.fillRect(0, 0, size, size);
-ctx.fillStyle = 'black';
-var cellSize = size / 25;
-for(var i = 0; i < 25; i++){
-for(var j = 0; j < 25; j++){
-if(Math.random() > 0.5) ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
-}
-}
-return c.toDataURL();
 }
 
 // ==================== ADMIN ACTIONS ====================
@@ -489,21 +453,13 @@ var c = document.getElementById('toastContainer');
 var t = document.createElement('div');
 t.className = 'toast ' + (type || '');
 var icons = {success:'check-circle', error:'times-circle', info:'info-circle'};
-t.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '"></i><span>' + msg + '</span>';
+t.innerHTML = '<i class="fas fa-' + (icons[type] || 'info-circle') + '\"></i><span>' + msg + '</span>';
 c.appendChild(t);
 setTimeout(function(){ t.remove(); }, 4000);
 }
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function(){
-  if (!document.cookie.includes('aff_portal_session')) {
-    var dataAdminTiruan = {
-      name: "Ganjar Satyanagara",
-      isAdmin: true, 
-      referralCode: "QCOADMIN"
-    };
-    document.cookie = "aff_portal_session=" + encodeURIComponent(JSON.stringify(dataAdminTiruan)) + "; path=/";
-  }
 loadSession();
 fetchTemplates();
 });
