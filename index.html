@@ -45,6 +45,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .badge-rejected{background:#FFEBEE;color:var(--danger)}
 .badge-active{background:#E8F5E9;color:var(--success)}
 .badge-inactive{background:#FFEBEE;color:var(--danger)}
+.badge-diproses{background:#FFF8E1;color:#F57F17}
+.badge-dikirim{background:#E0F2F1;color:#00695C}
+.badge-diterima{background:#F3E5F5;color:#6A1B9A}
 .btn{padding:0.5rem 1rem;border-radius:var(--radius-sm);border:none;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:inherit;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem}
 .btn-sm{padding:0.35rem 0.75rem;font-size:0.8rem}
 .btn-primary{background:var(--primary);color:white}
@@ -630,6 +633,7 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="modal" style="max-width:500px">
 <div class="modal-header"><h3><i class="fas fa-file-invoice" style="color:var(--info)"></i> Buat Invoice</h3><button class="modal-close" onclick="closeModal('invoiceModal')">&times;</button></div>
 <div class="modal-body">
+<input type="hidden" id="invOrderId">
 <input type="hidden" id="invLeadId">
 <div class="form-row">
 <div class="form-group"><label class="form-label">Nama Penerima</label><input type="text" class="invoice-field" id="invName" readonly></div>
@@ -645,11 +649,21 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="form-group"><label class="form-label">Ongkir (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invOngkir" value="0" oninput="calculateInvoiceTotal()"></div>
 </div>
 <div class="invoice-total-row" style="text-align:right">Total: <span id="invTotal">Rp 0</span></div>
+<div class="form-group" style="margin-top:1rem">
+<label class="form-label">Status Pengiriman <small style="color:var(--danger)">*admin only</small></label>
+<select class="form-select" id="invOrderStatus" onchange="updateOrderStatusUI()">
+<option value="Pending">Pending - Pesanan masuk</option>
+<option value="Diproses">Diproses - Sedang dipacking</option>
+<option value="Dikirim">Dikirim - Dalam perjalanan</option>
+<option value="Diterima">Diterima - Pesanan diterima</option>
+</select>
+</div>
 <div class="form-group" style="margin-top:1rem"><label class="form-label">Preview Invoice (WhatsApp)</label><div class="invoice-preview" id="invPreview"></div></div>
 </div>
-<div class="modal-footer">
-<button class="btn btn-outline" onclick="closeModal('invoiceModal')">Batal</button>
-<button class="btn btn-success" id="btnSendInvoice" onclick="sendInvoiceWA()"><i class="fab fa-whatsapp"></i> Kirim via WhatsApp</button>
+<div class="modal-footer" style="flex-wrap:wrap;gap:0.5rem">
+<button class="btn btn-outline" onclick="closeModal('invoiceModal')">Tutup</button>
+<button class="btn btn-primary" id="btnUpdateOrderStatus" onclick="saveOrderStatus()"><i class="fas fa-save"></i> Update Status</button>
+<button class="btn btn-success" id="btnSendInvoice" onclick="sendInvoiceWA()"><i class="fab fa-whatsapp"></i> Kirim Invoice</button>
 </div>
 </div>
 </div>
@@ -1270,8 +1284,14 @@ btn.innerHTML = '<i class="fas fa-save"></i> Update';
 function renderOrders() {
 if (!currentUser || !currentUser.isAdmin) return;
 document.getElementById('ordersBody').innerHTML = DATA.orders.map(o => {
-const alamat = [o.namajalangedung || o.namaJalanGedung, o.kecamatan, o.kotakabupaten || o.kotaKabupaten, o.provinsi, o.kodepos || o.kodePos].filter(Boolean).join(', ');
-return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + o.qty : '') + '</td><td><strong>' + (o.buyername || o.buyerName || '-') + '</strong></td><td>' + (o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + (o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + (alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + (o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge badge-' + (o.status || 'pending').toLowerCase() + '">' + (o.status || 'Pending') + '</span></td></tr>';
+var alamat = [o.namajalangedung || o.namaJalanGedung, o.kecamatan, o.kotakabupaten || o.kotaKabupaten, o.provinsi, o.kodepos || o.kodePos].filter(Boolean).join(', ');
+var shipStatus = o.status || 'Pending';
+var statusClass = 'badge-' + shipStatus.toLowerCase();
+if (shipStatus === 'Diproses') statusClass = 'badge-diproses';
+else if (shipStatus === 'Dikirim') statusClass = 'badge-dikirim';
+else if (shipStatus === 'Diterima') statusClass = 'badge-diterima';
+else if (shipStatus === 'Pending') statusClass = 'badge-pending';
+return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + o.qty : '') + '</td><td><strong>' + (o.buyername || o.buyerName || '-') + '</strong></td><td>' + (o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + (o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + (alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + (o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + shipStatus + '</span></td></tr>';
 }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-light)">Belum ada orders</td></tr>';
 }
 
@@ -2043,6 +2063,8 @@ if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
 var order = DATA.orders.find(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
 if (!order) { showToast('Order tidak ditemukan untuk lead ini', 'error'); return; }
 
+// Simpan orderId ke hidden field (untuk update status nanti)
+document.getElementById('invOrderId').value = order.id || '';
 document.getElementById('invLeadId').value = leadId;
 document.getElementById('invName').value = order.buyername || order.buyerName || lead.name || '';
 document.getElementById('invPhone').value = order.buyerphone || order.buyerPhone || lead.contact || '';
@@ -2055,8 +2077,18 @@ document.getElementById('invQty').value = order.qty || 1;
 document.getElementById('invPrice').value = order.price || 0;
 document.getElementById('invOngkir').value = order.ongkir || 0;
 
+// Prefill status pengiriman dari order
+var orderStatus = order.status || 'Pending';
+var statusSel = document.getElementById('invOrderStatus');
+statusSel.value = orderStatus;
+
 calculateInvoiceTotal();
 document.getElementById('invoiceModal').classList.add('active');
+}
+
+function updateOrderStatusUI() {
+// Trigger recalculate preview (status tidak masuk preview dasar, hanya di WA text)
+calculateInvoiceTotal();
 }
 
 function calculateInvoiceTotal() {
@@ -2098,9 +2130,43 @@ if (!phone) { showToast('Nomor HP tidak valid', 'error'); return; }
 var preview = document.getElementById('invPreview').textContent;
 if (!preview) { showToast('Invoice kosong', 'error'); return; }
 
+// Tambah status pengiriman ke invoice text
+var shipStatus = document.getElementById('invOrderStatus').value;
+var statusText = shipStatus === 'Diterima' ? 'Sudah diterima' : shipStatus;
+preview += '\n\n*Status Pengiriman: ' + statusText + '*\n';
+if (shipStatus === 'Pending') preview += '_Pesanan akan segera diproses._';
+else if (shipStatus === 'Diproses') preview += '_Sedang dipacking & disiapkan._';
+else if (shipStatus === 'Dikirim') preview += '_Pesanan dalam perjalanan._';
+else if (shipStatus === 'Diterima') preview += '_Terima kasih telah berbelanja!_';
+
 var waLink = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(preview);
 window.location.href = waLink;
 closeModal('invoiceModal');
+}
+
+async function saveOrderStatus() {
+var orderId = document.getElementById('invOrderId').value;
+var newStatus = document.getElementById('invOrderStatus').value;
+if (!orderId) { showToast('ID Order tidak ditemukan', 'error'); return; }
+
+var btn = document.getElementById('btnUpdateOrderStatus');
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+try {
+var res = await callGASGet('updateOrderStatus', { id: orderId, status: newStatus });
+if (res && res.success) {
+showToast('Status pengiriman diperbarui: ' + newStatus, 'success');
+await syncAllData();
+} else {
+showToast((res && res.error) ? res.error : 'Gagal update status', 'error');
+}
+} catch(err) {
+showToast('Error: ' + (err.message || ''), 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = '<i class="fas fa-save"></i> Update Status';
+}
 }
 
 function toggleSidebar(){
