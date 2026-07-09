@@ -131,6 +131,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .invoice-total-row{font-weight:700;font-size:1rem;color:var(--primary-dark);border-top:2px solid var(--border);padding-top:0.75rem;margin-top:0.75rem}
 </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -216,9 +217,48 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <input type="text" id="refLinkInput" readonly style="flex:1;border:none;background:transparent;font-family:inherit;font-size:0.9rem;color:var(--text);outline:none">
 <button class="btn btn-outline btn-sm" onclick="copyReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
 </div>
-<div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">
 <a id="refLinkOpen" href="landing.html" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing</a>
 <a id="refLinkQR" href="qr.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-qrcode"></i> Generate QR</a>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:0.75rem">
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem"><i class="fas fa-share-alt"></i> Bagikan ke sosial media:</p>
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+<button class="btn btn-sm" onclick="shareToSocial('instagram')" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:white;border:none"><i class="fab fa-instagram"></i> IG</button>
+<button class="btn btn-sm" onclick="shareToSocial('facebook')" style="background:#1877F2;color:white;border:none"><i class="fab fa-facebook-f"></i> FB</button>
+<button class="btn btn-sm" onclick="shareToSocial('tiktok')" style="background:#000;color:white;border:none"><i class="fab fa-tiktok"></i> TikTok</button>
+<button class="btn btn-outline btn-sm" onclick="copyReferralLink()"><i class="fas fa-copy"></i> Salin Link</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ORDERS AFFILIATOR -->
+<div class="card" id="affOrdersCard" style="display:none">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-shopping-bag" style="color:var(--primary-light)"></i> Pembelian dari Leads Anda</div>
+</div>
+<div class="card-body"></div>
+</div>
+
+<!-- INFO KOMISI AFFILIATOR -->
+<div class="card" id="commInfoCard" style="display:none">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-info-circle" style="color:var(--info)"></i> Informasi Pembayaran Komisi</div>
+</div>
+<div class="card-body" style="font-size:0.9rem">
+<div style="background:#E3F2FD;border-radius:var(--radius-sm);padding:1rem;margin-bottom:0.75rem;border-left:4px solid var(--info)">
+<p style="margin:0"><i class="fas fa-money-check-alt"></i> Komisi Anda saat ini:</p>
+<p style="font-size:1.3rem;font-weight:700;color:var(--primary-dark);margin:0.25rem 0">Rp <span id="commInfoAmount">0</span></p>
+<p style="font-size:0.8rem;color:var(--text-light);margin:0"><span id="commInfoPaid">Dibayar: Rp 0</span> | <span id="commInfoUnpaid">Belum dibayar: Rp 0</span></p>
+</div>
+<div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.75rem;border:1.5px solid var(--border)">
+<p style="margin:0 0 0.5rem 0;font-size:0.85rem"><i class="fas fa-calendar-alt" style="color:var(--primary-light)"></i> <strong>Jadwal Transfer:</strong></p>
+<ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:var(--text-light)">
+<li>Setiap hari <strong>Jumat</strong></li>
+<li>Minimal akumulasi <strong>Rp 100.000</strong></li>
+<li>Transfer ke rekening bank yang terdaftar</li>
+</ul>
 </div>
 </div>
 </div>
@@ -276,7 +316,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-body">
 <div class="table-container">
 <table class="data-table">
-<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Leads</th><th>Komisi</th><th>Aksi</th></tr></thead>
+<thead><tr><th>Nama</th><th>Email</th><th>WhatsApp</th><th>Referral Code</th><th>Bank</th><th>Status</th><th>Penjualan</th><th>Pending</th><th>Reject</th><th>Komisi</th><th>Aksi</th></tr></thead>
 <tbody id="affiliatorsBody"></tbody>
 </table>
 </div>
@@ -383,6 +423,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <label class="form-label">Nilai Transaksi (Rp)</label>
 <input type="number" class="form-input" id="updateTransValue" placeholder="0">
 </div>
+<div class="form-group"><label class="form-label">No. HP / Kontak <small style="color:var(--danger)">*editable</small></label><input type="text" class="form-input" id="updateLeadContact" placeholder="08123456789"></div>
 </div>
 <div class="modal-footer">
 <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
@@ -863,12 +904,50 @@ document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(tota
 if (currentUser && !currentUser.isAdmin && currentUser.referralCode) {
 document.getElementById('refLinkCard').style.display = '';
 document.getElementById('refCodeBadge').textContent = currentUser.referralCode;
-const fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
+var fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
 document.getElementById('refLinkInput').value = fullLink;
 document.getElementById('refLinkOpen').href = 'landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
 document.getElementById('refLinkQR').href = 'qr.html?ref=' + encodeURIComponent(currentUser.referralCode);
+
+// Isi info card komisi
+var myComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === currentUser.id; });
+var myPaid = myComm.filter(function(c) { return String(c.paid).toLowerCase().trim() === 'true' || c.paid === true; }).reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
+var myUnpaid = myComm.filter(function(c) { return !(String(c.paid).toLowerCase().trim() === 'true' || c.paid === true); }).reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
+document.getElementById('commInfoCard').style.display = '';
+document.getElementById('commInfoAmount').textContent = formatNumber(myPaid + myUnpaid);
+document.getElementById('commInfoPaid').textContent = 'Dibayar: Rp ' + formatNumber(myPaid);
+document.getElementById('commInfoUnpaid').textContent = 'Belum dibayar: Rp ' + formatNumber(myUnpaid);
 } else {
 document.getElementById('refLinkCard').style.display = 'none';
+document.getElementById('commInfoCard').style.display = 'none';
+}
+
+// AFFILIATOR: Tampilkan produk yang dibeli leads (dari orders)
+if (currentUser && !currentUser.isAdmin) {
+var myOrders = DATA.orders.filter(function(o) {
+var orderRef = String(o.referralcode || o.referralCode || '').toUpperCase();
+var myRef = String(currentUser.referralCode || currentUser.referralcode || '').toUpperCase();
+return orderRef === myRef;
+});
+var ordersCard = document.getElementById('affOrdersCard');
+if (ordersCard) {
+ordersCard.style.display = '';
+if (myOrders.length === 0) {
+ordersCard.querySelector('.card-body').innerHTML = '<p style="text-align:center;color:var(--text-light);padding:1rem"><i class="fas fa-shopping-bag" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3"></i>Belum ada pembelian dari leads Anda</p>';
+} else {
+var ordersHTML = '<div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Pembeli</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Total</th></tr></thead><tbody>';
+for (var oi = 0; oi < myOrders.length; oi++) {
+var mo = myOrders[oi];
+var itemTotal = (parseFloat(mo.price) || 0) * (parseInt(mo.qty) || 1);
+ordersHTML += '<tr><td>' + formatDate(mo.date) + '</td><td>' + (mo.buyername || mo.buyerName || '-') + '</td><td>' + (mo.productname || mo.productName || '-') + '</td><td>Rp ' + formatNumber(mo.price) + '</td><td>' + (mo.qty || 1) + '</td><td>Rp ' + formatNumber(itemTotal) + '</td></tr>';
+}
+ordersHTML += '</tbody></table></div>';
+ordersCard.querySelector('.card-body').innerHTML = ordersHTML;
+}
+}
+} else {
+var hideOrders = document.getElementById('affOrdersCard');
+if (hideOrders) hideOrders.style.display = 'none';
 }
 
 const recent = filteredLeads.slice(-5).reverse();
@@ -1030,11 +1109,26 @@ document.getElementById('previewStatus').innerHTML = '<i class="fas fa-circle" s
 function renderAffiliators() {
 if (!currentUser || !currentUser.isAdmin) return;
 document.getElementById('affiliatorCount').textContent = DATA.users.length + ' affiliator';
-document.getElementById('affiliatorsBody').innerHTML = DATA.users.map(u => {
+
+// Hitung statistik per affiliator dan sort by total penjualan (valid+converted) tertinggi
+var affStats = DATA.users.map(function(u) {
 var ref = u.referralcode || u.referralCode;
 var affLeads = DATA.leads.filter(function(l) { return (l.referralcode || l.referralCode) === ref; });
 var affComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === u.id; });
 var totalComm = affComm.reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
+// Hitung penjualan (valid + converted)
+var totalSales = affLeads.filter(function(l) { var s = (l.status || '').toLowerCase(); return s === 'valid' || s === 'converted'; }).length;
+var totalPending = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'pending'; }).length;
+var totalReject = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'rejected'; }).length;
+return { user: u, ref: ref, affLeads: affLeads, totalComm: totalComm, totalSales: totalSales, totalPending: totalPending, totalReject: totalReject };
+});
+
+// Sort by total penjualan tertinggi
+affStats.sort(function(a, b) { return b.totalSales - a.totalSales; });
+
+document.getElementById('affiliatorsBody').innerHTML = affStats.map(function(item) {
+var u = item.user;
+var ref = item.ref;
 var isPending = (u.status === 'Pending');
 var isActive = (u.status === 'Active');
 var statusBadge = '<span class="badge badge-' + (isActive ? 'active' : (isPending ? 'pending' : 'inactive')) + '">' + (u.status || 'Active') + '</span>';
@@ -1050,8 +1144,8 @@ actionBtns += ' <button class="btn btn-sm btn-warning" onclick="deactivateUser(\
 
 actionBtns += '</div>';
 
-return '<tr><td><strong>' + (u.name || '-') + '</strong></td><td>' + (u.email || '-') + '</td><td>' + (u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + (ref || '-') + '</code></td><td>' + (u.bank || '-') + '</td><td>' + statusBadge + '</td><td>' + affLeads.length + '</td><td>Rp ' + formatNumber(totalComm) + '</td><td>' + actionBtns + '</td></tr>';
-}).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
+return '<tr><td><strong>' + (u.name || '-') + '</strong></td><td>' + (u.email || '-') + '</td><td>' + (u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + (ref || '-') + '</code></td><td>' + (u.bank || '-') + '</td><td>' + statusBadge + '</td><td><span style="color:var(--success);font-weight:600">' + item.totalSales + '</span></td><td><span style="color:var(--warning)">' + item.totalPending + '</span></td><td><span style="color:var(--danger)">' + item.totalReject + '</span></td><td>Rp ' + formatNumber(item.totalComm) + '</td><td>' + actionBtns + '</td></tr>';
+}).join('') || '<tr><td colspan="12" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
 }
 
 // ==================== LEADS ====================
@@ -1126,9 +1220,12 @@ alert(detail);
 
 function openUpdateLeadModal(leadId) {
 if (!currentUser || !currentUser.isAdmin) return;
-const select = document.getElementById('updateLeadSelect');
+var select = document.getElementById('updateLeadSelect');
 select.innerHTML = DATA.leads.map(l => '<option value="' + l.id + '">' + (l.name || '-') + ' (' + (l.status || 'Pending') + ')</option>').join('');
 if (leadId) select.value = leadId;
+// Prefill kontak dari lead yang dipilih
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+document.getElementById('updateLeadContact').value = lead ? (lead.contact || lead.whatsapp || '') : '';
 document.getElementById('updateTransValue').value = '';
 document.getElementById('transValueGroup').style.display = 'none';
 document.getElementById('updateLeadModal').classList.add('active');
@@ -1142,6 +1239,7 @@ async function saveLeadUpdate() {
 const leadId = document.getElementById('updateLeadSelect').value;
 const newStatus = document.getElementById('updateLeadStatus').value;
 const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
+const newContact = document.getElementById('updateLeadContact').value.trim();
 const btn = document.getElementById('btnUpdateLead');
 
 const lead = DATA.leads.find(l => l.id === leadId);
@@ -1152,12 +1250,13 @@ btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
 const params = { id: leadId, status: newStatus };
 if (transValue > 0) params.transactionValue = transValue;
+if (newContact) params.contact = newContact;
 
 const res = await callGASGet('updateLead', params);
 
 if (res && res.success) {
 closeModal('updateLeadModal');
-showToast('Status lead berhasil diperbarui!', 'success');
+showToast('Lead berhasil diperbarui!', 'success');
 setTimeout(() => syncAllData(), 1500);
 } else {
 showToast(res.error || 'Gagal simpan ke server', 'error');
@@ -1179,6 +1278,56 @@ return '<tr><td>' + formatDate(o.date) + '</td><td>' + (o.productname || o.produ
 // ==================== COMMISSIONS ====================
 function renderCommissions() {
 if (!currentUser) return;
+
+// ADMIN: Tampilkan summary per affiliator di atas tabel
+if (currentUser.isAdmin && DATA.commissions.length > 0) {
+var affSummary = {};
+for (var i = 0; i < DATA.commissions.length; i++) {
+var c = DATA.commissions[i];
+var affId = c.affiliatorid || c.affiliatorId || '';
+var isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
+var amt = parseFloat(c.amount) || 0;
+if (!affSummary[affId]) {
+var aff = DATA.users.find(function(u) { return String(u.id).trim() === String(affId).trim(); });
+affSummary[affId] = { name: aff ? aff.name : affId, paid: 0, unpaid: 0 };
+}
+if (isPaid) { affSummary[affId].paid += amt; } else { affSummary[affId].unpaid += amt; }
+}
+// Convert ke array dan sort by total tertinggi
+var summaryArr = Object.keys(affSummary).map(function(k) {
+var a = affSummary[k];
+a.total = a.paid + a.unpaid;
+a.affId = k;
+return a;
+});
+summaryArr.sort(function(a, b) { return b.total - a.total; });
+
+var summaryHTML = '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;border:1.5px solid var(--border)">';
+summaryHTML += '<p style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Ringkasan Komisi per Affiliator</p>';
+summaryHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">';
+for (var j = 0; j < summaryArr.length; j++) {
+var s = summaryArr[j];
+summaryHTML += '<div style="background:var(--card-bg);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border)">';
+summaryHTML += '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.25rem">' + s.name + '</div>';
+summaryHTML += '<div style="font-size:0.8rem;color:var(--success)"><i class="fas fa-check-circle"></i> Dibayar: Rp ' + formatNumber(s.paid) + '</div>';
+summaryHTML += '<div style="font-size:0.8rem;color:var(--warning)"><i class="fas fa-clock"></i> Belum: Rp ' + formatNumber(s.unpaid) + '</div>';
+summaryHTML += '<div style="font-size:0.85rem;font-weight:600;color:var(--primary-dark);margin-top:0.25rem">Total: Rp ' + formatNumber(s.total) + '</div>';
+summaryHTML += '</div>';
+}
+summaryHTML += '</div></div>';
+
+// Insert summary sebelum tabel commissions
+var commCard = document.getElementById('commissionsBody');
+if (commCard) {
+var existingSummary = document.getElementById('commSummaryPanel');
+if (existingSummary) existingSummary.remove();
+var summaryDiv = document.createElement('div');
+summaryDiv.id = 'commSummaryPanel';
+summaryDiv.innerHTML = summaryHTML;
+commCard.parentNode.insertBefore(summaryDiv, commCard);
+}
+}
+
 let commissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === currentUser.id);
 document.getElementById('commissionsBody').innerHTML = commissions.map(c => {
 const commId = c.id ? String(c.id).trim() : '';
@@ -1539,12 +1688,50 @@ var el = document.getElementById('regStepInfo');
 if (el) el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ' + msg;
 }
 
+// Validasi ukuran file sebelum resize
+if (ktpFile.size > 5 * 1024 * 1024) {
+showToast('Foto KTP terlalu besar (max 5MB). Silakan kecilkan ukuran foto.', 'error');
+btn.disabled = false;
+btn.innerHTML = origHTML;
+var stepElRemSize = document.getElementById('regStepInfo');
+if (stepElRemSize) stepElRemSize.remove();
+return;
+}
+if (tabunganFile.size > 5 * 1024 * 1024) {
+showToast('Foto Tabungan terlalu besar (max 5MB). Silakan kecilkan ukuran foto.', 'error');
+btn.disabled = false;
+btn.innerHTML = origHTML;
+var stepElRemSize2 = document.getElementById('regStepInfo');
+if (stepElRemSize2) stepElRemSize2.remove();
+return;
+}
+
 try {
-// FIX: Resize ke 400px width, quality 0.4 (sebelumnya 600px, 0.6)
+// FIX: Resize ke 400px width, quality 0.4
 setStep('Mengecilkan foto KTP...');
-var ktpBase64 = await resizeImage(ktpFile, 400, 0.4);
+var ktpBase64;
+try { ktpBase64 = await resizeImage(ktpFile, 400, 0.4); }
+catch(imgErr) {
+showToast('Gagal memproses foto KTP: ' + (imgErr.message || 'Format gambar tidak didukung'), 'error');
+throw imgErr;
+}
+
 setStep('Mengecilkan foto tabungan...');
-var tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4);
+var tabunganBase64;
+try { tabunganBase64 = await resizeImage(tabunganFile, 400, 0.4); }
+catch(imgErr) {
+showToast('Gagal memproses foto Tabungan: ' + (imgErr.message || 'Format gambar tidak didukung'), 'error');
+throw imgErr;
+}
+
+if (!ktpBase64 || ktpBase64.length < 50) {
+showToast('Foto KTP gagal diproses. Coba foto lain atau kompres dulu.', 'error');
+throw new Error('KTP base64 invalid');
+}
+if (!tabunganBase64 || tabunganBase64.length < 50) {
+showToast('Foto Tabungan gagal diproses. Coba foto lain atau kompres dulu.', 'error');
+throw new Error('Tabungan base64 invalid');
+}
 
 setStep('Mengirim data ke server...');
 var submitData = {
@@ -1557,7 +1744,13 @@ tabunganBase64: tabunganBase64, tabunganMimeType: tabunganFile.type || 'image/jp
 Debug.log('REGISTER: ktpBase64 length=' + ktpBase64.length + ', tabunganBase64 length=' + tabunganBase64.length);
 
 setStep('Mengirim data ke server...');
-var sendOk = await submitRegisterViaIframe(submitData);
+var sendOk;
+try { sendOk = await submitRegisterViaIframe(submitData); }
+catch(sendErr) {
+showToast('Gagal mengirim data ke server: ' + (sendErr.message || 'Koneksi terputus'), 'error');
+throw sendErr;
+}
+
 if (!sendOk) {
 showToast('Gagal terhubung ke server. Data Anda tersimpan, silakan coba lagi.', 'error');
 btn.disabled = false;
@@ -1571,7 +1764,12 @@ setStep('Menunggu konfirmasi server (20 detik)...');
 await new Promise(function(r) { setTimeout(r, 20000); });
 
 setStep('Memverifikasi pendaftaran...');
-var userFound = await verifyUserRegistered(email);
+var userFound;
+try { userFound = await verifyUserRegistered(email); }
+catch(verErr) {
+showToast('Server sedang sibuk. Silakan coba login dalam 1-2 menit.', 'warning');
+userFound = null;
+}
 
 if (userFound) {
 clearRegisterDraft();
@@ -1914,6 +2112,46 @@ ov.classList.remove('active');
 }else{
 sb.classList.add('open');
 ov.classList.add('active');
+}
+}
+
+function shareToSocial(platform){
+var link = document.getElementById('refLinkInput').value;
+if (!link) { showToast('Link referral tidak tersedia', 'error'); return; }
+var text = 'Yuk coba kopi lokal terbaik dari Nusantara! ☕ Dapatkan harga spesial melalui link referral saya: ' + link;
+
+if (platform === 'facebook') {
+var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link) + '&quote=' + encodeURIComponent(text);
+window.open(fbUrl, '_blank', 'width=600,height=400');
+} else if (platform === 'instagram') {
+// IG tidak support direct share via web → copy text + buka IG
+navigator.clipboard.writeText(text).then(function() {
+showToast('Teks disalin! Buka Instagram dan paste di story/caption.', 'success');
+setTimeout(function() { window.open('https://instagram.com', '_blank'); }, 1500);
+}).catch(function() {
+// Fallback: select text manual
+var ta = document.createElement('textarea');
+ta.value = text;
+document.body.appendChild(ta);
+ta.select();
+document.execCommand('copy');
+document.body.removeChild(ta);
+showToast('Teks disalin! Buka Instagram dan paste.', 'success');
+});
+} else if (platform === 'tiktok') {
+// TikTok tidak support direct share → copy + buka TikTok
+navigator.clipboard.writeText(text).then(function() {
+showToast('Teks disalin! Buka TikTok dan paste di caption.', 'success');
+setTimeout(function() { window.open('https://tiktok.com', '_blank'); }, 1500);
+}).catch(function() {
+var ta = document.createElement('textarea');
+ta.value = text;
+document.body.appendChild(ta);
+ta.select();
+document.execCommand('copy');
+document.body.removeChild(ta);
+showToast('Teks disalin! Buka TikTok dan paste.', 'success');
+});
 }
 }
 
