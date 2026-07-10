@@ -268,9 +268,10 @@ empty.style.display = 'none';
 
 grid.innerHTML = filtered.map(function(t){
 var isImg = (t.type || '').toLowerCase() === 'image';
+var directUrl = getDirectImageUrl(t.url || t.driveurl || '');
 var preview = isImg 
-  ? `<img src="${t.url || t.driveurl || ''}" onerror="this.parentNode.innerHTML='<i class=\"fas fa-image\" style=\"font-size:3rem;color:var(--primary-light)\"></i>${t.name || ''}'" alt="${t.name || ''}">` 
-  : `<video src="${t.url || t.driveurl || ''}" muted loop></video>`;
+  ? `<img src="${directUrl}" onerror="this.parentNode.innerHTML='<i class=\"fas fa-image\" style=\"font-size:3rem;color:var(--primary-light)\"></i>${t.name || ''}'" alt="${t.name || ''}">` 
+  : `<video src="${directUrl}" muted loop></video>`;
 var typeLabel = isImg ? '<i class="fas fa-image"></i> Gambar' : '<i class="fas fa-video"></i> Video';
 var overlay = String(t.active).toLowerCase() === 'false' ? '<div class="inactive-overlay">Non-Aktif</div>' : '';
 
@@ -456,9 +457,10 @@ var ref = getRefCode();
 var link = CONFIG.BASE_URL + (ref ? '?ref=' + encodeURIComponent(ref) : '');
 var isImg = (t.type || '').toLowerCase() === 'image';
 
+var directUrl = getDirectImageUrl(t.url || t.driveurl || '');
 document.getElementById('dlPreview').innerHTML = isImg 
-  ? '<img src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' 
-  : '<video src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
+  ? '<img src="' + directUrl + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' 
+  : '<video src="' + directUrl + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
 
 document.getElementById('dlQR').innerHTML = '';
 if(ref){
@@ -477,11 +479,25 @@ function getGoogleDriveId(url) {
   return (match && match[1]) ? match[1] : '';
 }
 
+function getDirectImageUrl(url) {
+  if (!url) return '';
+  // If already a direct URL, return as-is
+  if (url.indexOf('googleusercontent.com') !== -1) return url;
+  if (url.indexOf('drive.google.com/uc?') !== -1) return url;
+
+  var driveId = getGoogleDriveId(url);
+  if (driveId) {
+    // Use Google Drive direct viewer URL for images
+    return 'https://drive.google.com/uc?export=view&id=' + driveId;
+  }
+  return url;
+}
+
 async function confirmDownload(){
 if(!selectedTemplate) return;
 var ref = getRefCode();
 var isImg = (selectedTemplate.type || '').toLowerCase() === 'image';
-var fileUrl = selectedTemplate.url || selectedTemplate.driveurl || '';
+var fileUrl = getDirectImageUrl(selectedTemplate.url || selectedTemplate.driveurl || '');
 var extension = isImg ? '.jpg' : '.mp4';
 var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + extension;
 
