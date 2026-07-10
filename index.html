@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Kopi Affiliate - Admin Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -133,6 +136,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .invoice-field:focus{outline:none;border-color:var(--primary-light)}
 .invoice-total-row{font-weight:700;font-size:1rem;color:var(--primary-dark);border-top:2px solid var(--border);padding-top:0.75rem;margin-top:0.75rem}
 </style>
+<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -387,7 +391,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-images"></i> Template Promosi</div></div>
 <div class="card-body" style="padding:0">
-<iframe src="template.html" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe id="templatesFrame" src="templates.html?v=2" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 </div>
 </div>
@@ -396,7 +400,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-external-link-alt"></i> Landing Page</div></div>
 <div class="card-body" style="padding:0">
-<iframe id="mainLandingFrame" src="landing.html" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe id="mainLandingFrame" src="landing.html?v=2" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 </div>
 </div>
@@ -405,7 +409,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-qrcode"></i> QR Generator</div></div>
 <div class="card-body" style="padding:0">
-<iframe id="mainQrFrame" src="qr.html" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe id="mainQrFrame" src="qr.html?v=2" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 </div>
 </div>
