@@ -86,6 +86,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 @media(max-width:768px){.hero h1{font-size:1.8rem}.form-row{grid-template-columns:1fr}.products-grid{grid-template-columns:1fr}}
 .debug-panel{position:fixed;bottom:10px;left:10px;background:#1a1a1a;color:#0f0;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;max-width:400px;max-height:150px;overflow-y:auto;z-index:9999;display:none}
 </style>
+<base target="_blank">
 </head>
 <body>
 <iframe name="gasFrame" id="gasFrame" style="display:none;"></iframe>
@@ -196,7 +197,7 @@ footer.style.display='none';
 body.innerHTML=Cart.map(item=>{
 const price=parseFloat(item.price)||0;
 const imgUrl=item.imageUrl||item.img||'';
-return`<div class="cart-item"><div class="cart-item-img">${imgUrl?'<img src="'+imgUrl+'" onerror="this.style.display=\\'none\\'">':'<i class="fas fa-coffee"></i>'}</div><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">Rp ${formatNumber(price)}</div><div class="cart-item-qty"><button onclick="updateQty('${item.id}',-1)"><i class="fas fa-minus"></i></button><span>${item.qty}</span><button onclick="updateQty('${item.id}',1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button></div>`
+return'<div class="cart-item"><div class="cart-item-img">'+(imgUrl?'<img src="'+imgUrl+'" onerror="this.style.display='none'">':'<i class="fas fa-coffee"></i>')+'</div><div class="cart-item-info"><div class="cart-item-name">'+item.name+'</div><div class="cart-item-price">Rp '+formatNumber(price)+'</div><div class="cart-item-qty"><button onclick="updateQty('+"'"+item.id+"'"+',-1)"><i class="fas fa-minus"></i></button><span>'+item.qty+'</span><button onclick="updateQty('+"'"+item.id+"'"+',1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('+"'"+item.id+"'"+')"><i class="fas fa-trash-alt"></i></button></div>'
 }).join('');
 footer.style.display='block';
 }
@@ -211,8 +212,8 @@ container.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text
 }else{
 container.innerHTML=Cart.map(item=>{
 const price=parseFloat(item.price)||0;
-return`<div class="cart-summary-item"><span>${item.name} x${item.qty}</span><span>Rp ${formatNumber(price*item.qty)}</span></div>`
-}).join('')+`<div class="cart-summary-total"><span>Total</span><span>Rp ${formatNumber(getCartTotal())}</span></div>`;
+return'<div class="cart-summary-item"><span>'+item.name+' x'+item.qty+'</span><span>Rp '+formatNumber(price*item.qty)+'</span></div>'
+}).join('')+'<div class="cart-summary-total"><span>Total</span><span>Rp '+formatNumber(getCartTotal())+'</span></div>';
 }
 }
 function toggleCart(){document.getElementById('cartOverlay').classList.toggle('active');document.getElementById('cartPanel').classList.toggle('active')}
@@ -272,11 +273,10 @@ let allProducts=[];
 try{
 const result=await fetchFromGAS('getProducts');
 if(result.success&&Array.isArray(result.data)&&result.data.length>0){
-// FIX: Map img to imageUrl for compatibility
 allProducts=result.data.map(p=>({
 ...p,
 price:parseFloat(p.price)||0,
-imageUrl:p.img||p.imageurl||p.image_url||p.url||''  // fallback chain
+imageUrl:p.img||p.imageurl||p.image_url||p.url||''
 }));
 for(const p of allProducts){if(p&&p.id)await DBStore.put('products',p)}
 }
@@ -286,7 +286,7 @@ const cached=await DBStore.getAll('products');
 allProducts=cached.map(p=>({
 ...p,
 price:parseFloat(p.price)||0,
-imageUrl:p.img||p.imageurl||p.image_url||p.url||''  // fallback chain
+imageUrl:p.img||p.imageurl||p.image_url||p.url||''
 }));
 }
 AllProducts=allProducts;
@@ -305,17 +305,64 @@ container.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text
 return;
 }
 container.innerHTML='<div class="products-grid" id="productsGrid"></div>';
-document.getElementById('productsGrid').innerHTML=activeProducts.map(product=>{
-// FIX: Use imageUrl with fallback to img
+
+// Build HTML using DOM instead of template strings to avoid escaping issues
+const grid=document.getElementById('productsGrid');
+grid.innerHTML='';
+activeProducts.forEach(product=>{
 const imgUrl=product.imageUrl||product.img||product.image_url||product.url||'';
 const hasImage=imgUrl&&imgUrl.trim()!=='';
 const inCart=Cart.find(c=>c.id===product.id);
-const imgId='prod-img-'+product.id;
-const imgHtml=hasImage
-?'<img id="'+imgId+'" src="'+imgUrl+'" alt="'+escapeHtml(product.name)+'" onerror="imgError(this)">'
-:'<i class="fas fa-coffee"></i>';
-return'<div class="product-card"><div class="product-img" id="wrap-'+imgId+'">'+imgHtml+'</div><div class="product-body"><div class="product-name">'+escapeHtml(product.name)+'</div><div class="product-desc">'+escapeHtml(product.description||'')+'</div><div class="product-price">Rp '+formatNumber(product.price)+(product.originalPrice&&parseFloat(product.originalPrice)>parseFloat(product.price)?' <small>Rp '+formatNumber(product.originalPrice)+'</small>':'')+'</div><button class="product-btn '+(inCart?'added':'')+'" id="btn-'+product.id+'" onclick="handleProductClick(\\''+product.id+'\\')"><i class="fas '+(inCart?'fa-check':'fa-cart-plus')+'"></i> '+(inCart?'Ditambahkan ('+inCart.qty+')':'Tambah ke Keranjang')+'</button></div></div>';
-}).join('');
+
+const card=document.createElement('div');
+card.className='product-card';
+
+const imgDiv=document.createElement('div');
+imgDiv.className='product-img';
+if(hasImage){
+const img=document.createElement('img');
+img.src=imgUrl;
+img.alt=product.name||'';
+img.onerror=function(){this.style.display='none';};
+imgDiv.appendChild(img);
+}else{
+imgDiv.innerHTML='<i class="fas fa-coffee"></i>';
+}
+
+const body=document.createElement('div');
+body.className='product-body';
+
+const nameDiv=document.createElement('div');
+nameDiv.className='product-name';
+nameDiv.textContent=product.name||'';
+
+const descDiv=document.createElement('div');
+descDiv.className='product-desc';
+descDiv.textContent=product.description||'';
+
+const priceDiv=document.createElement('div');
+priceDiv.className='product-price';
+let priceHtml='Rp '+formatNumber(product.price||0);
+if(product.originalPrice&&parseFloat(product.originalPrice)>parseFloat(product.price)){
+priceHtml+=' <small>Rp '+formatNumber(product.originalPrice)+'</small>';
+}
+priceDiv.innerHTML=priceHtml;
+
+const btn=document.createElement('button');
+btn.className='product-btn'+(inCart?' added':'');
+btn.id='btn-'+product.id;
+btn.innerHTML='<i class="fas '+(inCart?'fa-check':'fa-cart-plus')+'"></i> '+(inCart?'Ditambahkan ('+inCart.qty+')':'Tambah ke Keranjang');
+btn.onclick=function(){handleProductClick(product.id);};
+
+body.appendChild(nameDiv);
+body.appendChild(descDiv);
+body.appendChild(priceDiv);
+body.appendChild(btn);
+
+card.appendChild(imgDiv);
+card.appendChild(body);
+grid.appendChild(card);
+});
 }
 
 function handleProductClick(productId){
@@ -424,7 +471,6 @@ if(leadOk){
 document.getElementById('successModal').classList.add('active');
 clearCart();
 ['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerCity'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
-// Reset semua dropdown wilayah ke default
 resetWilayahDropdowns();
 document.querySelectorAll('.product-btn').forEach(b=>{b.className='product-btn';b.innerHTML='<i class="fas fa-cart-plus"></i> Tambah ke Keranjang'});
 showToast('Pesanan berhasil dikirim!','success');
@@ -464,7 +510,6 @@ var villSel = document.getElementById('buyerKelurahan');
 var postSel = document.getElementById('buyerPostal');
 var autoCity = document.getElementById('buyerCity');
 
-// Reset child dropdowns
 citySel.innerHTML = '<option value="">Pilih Kota...</option>'; citySel.disabled = true;
 distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true;
 villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true;
@@ -567,23 +612,19 @@ if(!villSel.value) return;
 
 var villName = villSel.value.split('|')[1];
 
-// Coba ambil kode pos dari API kodepos
 postSel.innerHTML = '<option value="">Memuat kode pos...</option>';
 try{
 var res = await fetch('https://kodepos.vercel.app/search/?q=' + encodeURIComponent(villName));
 var data = await res.json();
 postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>';
 if(data.data && data.data.length > 0){
-// Filter hasil yang sesuai dengan kelurahan
 var found = [];
 for(var i = 0; i < data.data.length; i++){
 if(data.data[i].village && data.data[i].village.toLowerCase() === villName.toLowerCase()){
 found.push(data.data[i]);
 }
 }
-// Kalau tidak ada exact match, pakai semua hasil
 if(found.length === 0) found = data.data;
-// Deduplicate kode pos
 var seen = {};
 for(var i = 0; i < found.length; i++){
 var kp = found[i].postalcode || found[i].postal_code || '';
@@ -596,14 +637,12 @@ postSel.appendChild(opt);
 }
 }
 }
-// Kalau tetap kosong, fallback ke input manual
 if(postSel.options.length <= 1){
 postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
 }else{
 postSel.disabled = false;
 }
 }catch(e){
-// Fallback: ganti select jadi input text
 postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
 }
 }
@@ -615,14 +654,11 @@ var villSel = document.getElementById('buyerKelurahan');
 var postSel = document.getElementById('buyerPostal');
 var autoCity = document.getElementById('buyerCity');
 
-// Pastikan elemen adalah select (bukan input fallback)
 if(citySel && citySel.tagName === 'SELECT'){ citySel.innerHTML = '<option value="">Pilih Kota...</option>'; citySel.disabled = true; }
 if(distSel && distSel.tagName === 'SELECT'){ distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true; }
 if(villSel && villSel.tagName === 'SELECT'){ villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true; }
-// Kode pos: kalau jadi input text, kembalikan ke select
 if(postSel){
 if(postSel.tagName === 'INPUT'){
-// Ganti kembali ke select
 var newSel = document.createElement('select');
 newSel.className = 'form-input';
 newSel.id = 'buyerPostal';
@@ -651,7 +687,6 @@ document.addEventListener('DOMContentLoaded',async function(){
 DBStore.init().catch(()=>{DBStore.mode='memory';DBStore.ready=true});
 try{await loadProducts()}catch(e){setTimeout(loadProducts,2000)}
 try{await loadAffiliatorInfo()}catch(e){}
-// Load daftar provinsi saat halaman siap
 try{await loadProvinces()}catch(e){}
 });
 </script>
