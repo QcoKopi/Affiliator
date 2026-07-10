@@ -69,6 +69,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle.on::before{transform:translateX(20px)}
 .preview-watermark{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(255,255,255,0.9);padding:0.5rem;border-radius:var(--radius-sm);font-size:0.7rem;text-align:center}
 .qr-preview{width:120px;height:120px;margin:0 auto}
+.preview-container{margin-top:10px;text-align:center;display:none}
+.preview-img-el,.preview-video-el{max-width:100%;max-height:150px;border-radius:var(--radius-sm);border:1px solid var(--border)}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.container{padding:1rem}}
 </style>
@@ -142,6 +144,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <p style="font-size:0.75rem;color:var(--text-light)">JPG/PNG/GIF/MP4, max 10MB</p>
 <p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500"></p>
 </div>
+<div class="preview-container" id="tplPreviewContainer"></div>
 </div>
 </form>
 </div>
@@ -283,30 +286,38 @@ function openUploadModal(){
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
   document.getElementById('tplFileName').textContent = ''; 
-  
-  var oldImg = document.querySelector('#tplUploadWrap .preview-img');
-  if(oldImg) oldImg.remove();
+  var container = document.getElementById('tplPreviewContainer');
+  container.innerHTML = '';
+  container.style.display = 'none';
 }
 
 function handleTplFileSelect(input){
   var f = input.files[0];
+  var container = document.getElementById('tplPreviewContainer');
+  container.innerHTML = '';
+  
   if(f){
     var sizeMB = f.size * 0.00000095367;
     document.getElementById('tplFileName').textContent = f.name + ' (' + sizeMB.toFixed(2) + ' MB)';
     
-    var wrap = document.getElementById('tplUploadWrap');
+    var isVideo = f.type.includes('video');
+    var el;
     
-    var oldImg = wrap.querySelector('.preview-img');
-    if(oldImg) oldImg.remove();
+    if(isVideo){
+      el = document.createElement('video');
+      el.className = 'preview-video-el';
+      el.controls = true;
+      el.muted = true;
+    } else {
+      el = document.createElement('img');
+      el.className = 'preview-img-el';
+    }
     
-    var img = document.createElement('img');
-    img.src = URL.createObjectURL(f);
-    img.className = 'preview-img';
-    img.style.maxWidth = '100%';
-    img.style.height = '120px';
-    img.style.objectFit = 'contain';
-    img.style.marginTop = '10px';
-    wrap.appendChild(img);
+    el.src = URL.createObjectURL(f);
+    container.appendChild(el);
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
   }
 }
 
@@ -325,27 +336,43 @@ showToast('Mengupload template...', 'info');
 
 try{
 var base64 = await fileToBase64(file);
-var params = { action: 'saveTemplate', name: name, category: category, type: type, filename: file.name, mimeType: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'), base64: base64 };
+var payload = {
+  action: 'saveTemplate',
+  name: name,
+  category: category,
+  type: type,
+  filename: file.name,
+  mimeType: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'),
+  base64: base64
+};
 
-var form = document.createElement('form');
-form.method = 'POST';
-form.action = CONFIG.GAS_URL;
-form.target = '_blank';
-form.style.display = 'none';
-for(var k in params){
-var inp = document.createElement('input');
-inp.name = k;
-inp.value = params[k];
-form.appendChild(inp);
+var formBody = [];
+for (var property in payload) {
+  var encodedKey = encodeURIComponent(property);
+  var encodedValue = encodeURIComponent(payload[property]);
+  formBody.push(encodedKey + "=" + encodedValue);
 }
-document.body.appendChild(form);
-form.submit();
-setTimeout(function(){ document.body.removeChild(form); }, 5000);
+formBody = formBody.join("&");
 
-showToast('Template diupload! Refresh halaman untuk melihat.', 'success');
-setTimeout(function(){ fetchTemplates(); }, 8000);
+var response = await fetch(CONFIG.GAS_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+  },
+  body: formBody
+});
+
+var resData = await response.json();
+
+if(resData.success){
+  showToast('Template berhasil diupload!', 'success');
+  fetchTemplates();
+} else {
+  showToast('Gagal upload: ' + (resData.message || ''), 'error');
+}
+
 }catch(err){
-showToast('Gagal upload: ' + (err.message || ''), 'error');
+  showToast('Gagal upload: ' + (err.message || ''), 'error');
 }
 }
 
@@ -377,23 +404,48 @@ async function confirmDownload(){
 if(!selectedTemplate) return;
 var ref = getRefCode();
 var isImg = (selectedTemplate.type || '').toLowerCase() === 'image';
+var fileUrl = selectedTemplate.url || selectedTemplate.driveurl || '';
+var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '');
+
+closeModal('downloadModal');
 
 if(isImg && ref){
 showToast('Menyiapkan gambar dengan watermark...', 'info');
 try{
-var canvas = await addWatermarkToImage(selectedTemplate.url || selectedTemplate.driveurl || '', ref);
+var canvas = await addWatermarkToImage(fileUrl, ref);
 var a = document.createElement('a');
-a.download = (selectedTemplate.name || 'template') + '_' + ref + '.jpg';
+a.download = fileName + '.jpg';
 a.href = canvas.toDataURL('image/jpeg', 0.9);
 a.click();
 showToast('Download dimulai!', 'success');
 }catch(e){
-window.open(selectedTemplate.url || selectedTemplate.driveurl || '', '_blank');
+triggerDirectDownload(fileUrl, fileName);
 }
 } else {
-window.open(selectedTemplate.url || selectedTemplate.driveurl || '', '_blank');
+showToast('Mengunduh file...', 'info');
+triggerDirectDownload(fileUrl, fileName);
 }
-closeModal('downloadModal');
+}
+
+async function triggerDirectDownload(url, filename) {
+try {
+var res = await fetch(url);
+var blob = await res.blob();
+var blobUrl = URL.createObjectURL(blob);
+var a = document.createElement('a');
+a.href = blobUrl;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(blobUrl);
+showToast('Download dimulai!', 'success');
+} catch (e) {
+var a = document.createElement('a');
+a.href = url;
+a.download = filename;
+a.click();
+}
 }
 
 async function addWatermarkToImage(imgUrl, refCode){
