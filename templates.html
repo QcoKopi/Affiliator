@@ -192,7 +192,7 @@ if(ls){ try{ json = JSON.parse(ls); }catch(e){} }
 }
 if(json && json.email){
 currentUser = json;
-if(json.isAdmin){
+if(json.isAdmin && String(json.isAdmin).toLowerCase() === 'true'){
 document.getElementById('adminBar').classList.add('show');
 document.getElementById('adminToggleBtn').style.display = 'inline-flex';
 }
@@ -279,11 +279,35 @@ if(document.getElementById('adminPanel').classList.contains('show')) renderAdmin
 }
 
 // ==================== UPLOAD ====================
-function openUploadModal(){ document.getElementById('uploadModal').classList.add('active'); document.getElementById('uploadForm').reset(); document.getElementById('tplFileName').textContent = ''; }
+function openUploadModal(){ 
+  document.getElementById('uploadModal').classList.add('active'); 
+  document.getElementById('uploadForm').reset(); 
+  document.getElementById('tplFileName').textContent = ''; 
+  
+  var oldImg = document.querySelector('#tplUploadWrap .preview-img');
+  if(oldImg) oldImg.remove();
+}
 
 function handleTplFileSelect(input){
-var f = input.files[0];
-if(f) document.getElementById('tplFileName').textContent = f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
+  var f = input.files[0];
+  if(f){
+    var sizeMB = f.size * 0.00000095367;
+    document.getElementById('tplFileName').textContent = f.name + ' (' + sizeMB.toFixed(2) + ' MB)';
+    
+    var wrap = document.getElementById('tplUploadWrap');
+    
+    var oldImg = wrap.querySelector('.preview-img');
+    if(oldImg) oldImg.remove();
+    
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.className = 'preview-img';
+    img.style.maxWidth = '100%';
+    img.style.height = '120px';
+    img.style.objectFit = 'contain';
+    img.style.marginTop = '10px';
+    wrap.appendChild(img);
+  }
 }
 
 async function handleUpload(e){
