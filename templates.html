@@ -52,7 +52,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
 .file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative}
 .file-upload-wrapper:hover{border-color:var(--primary-light)}
-.file-upload-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.file-upload-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10}
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
 .toast{background:var(--card-bg);border-radius:var(--radius-sm);padding:1rem 1.5rem;box-shadow:0 10px 40px rgba(93,64,55,0.12);border-left:4px solid var(--primary);display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;min-width:300px}
 .toast.success{border-left-color:var(--success)}
@@ -69,8 +69,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle.on::before{transform:translateX(20px)}
 .preview-watermark{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(255,255,255,0.9);padding:0.5rem;border-radius:var(--radius-sm);font-size:0.7rem;text-align:center}
 .qr-preview{width:120px;height:120px;margin:0 auto}
-.preview-container{margin-top:10px;text-align:center;display:none}
-.preview-img-el,.preview-video-el{max-width:100%;max-height:150px;border-radius:var(--radius-sm);border:1px solid var(--border)}
+.preview-container{margin-top:15px;text-align:center;display:none;width:100%;min-height:100px}
+.preview-img-el,.preview-video-el{max-width:100%;max-height:180px;border-radius:var(--radius-sm);border:2px solid var(--border);object-fit:contain}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.container{padding:1rem}}
 </style>
@@ -81,7 +81,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 <div class="admin-bar" id="adminBar">
 <span><i class="fas fa-user-shield"></i> Admin Mode</span>
-<a href="index.html"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
+<a href="index.html" target="_self"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
 </div>
 
 <div class="header">
@@ -89,7 +89,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div style="display:flex;gap:0.75rem;align-items:center">
 <span id="userInfo" style="font-size:0.85rem;color:var(--text-light)"></span>
 <button class="btn btn-outline btn-sm" id="adminToggleBtn" style="display:none" onclick="toggleAdminPanel()"><i class="fas fa-cog"></i> Kelola</button>
-<a href="index.html" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Dashboard</a>
+<a href="index.html" target="_self" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Dashboard</a>
 </div>
 </div>
 
@@ -405,7 +405,8 @@ if(!selectedTemplate) return;
 var ref = getRefCode();
 var isImg = (selectedTemplate.type || '').toLowerCase() === 'image';
 var fileUrl = selectedTemplate.url || selectedTemplate.driveurl || '';
-var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '');
+var extension = isImg ? '.jpg' : '.mp4';
+var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + extension;
 
 closeModal('downloadModal');
 
@@ -414,9 +415,12 @@ showToast('Menyiapkan gambar dengan watermark...', 'info');
 try{
 var canvas = await addWatermarkToImage(fileUrl, ref);
 var a = document.createElement('a');
-a.download = fileName + '.jpg';
+a.target = '_self'; 
+a.download = fileName;
 a.href = canvas.toDataURL('image/jpeg', 0.9);
+document.body.appendChild(a);
 a.click();
+document.body.removeChild(a);
 showToast('Download dimulai!', 'success');
 }catch(e){
 triggerDirectDownload(fileUrl, fileName);
@@ -433,6 +437,7 @@ var res = await fetch(url);
 var blob = await res.blob();
 var blobUrl = URL.createObjectURL(blob);
 var a = document.createElement('a');
+a.target = '_self'; 
 a.href = blobUrl;
 a.download = filename;
 document.body.appendChild(a);
@@ -441,10 +446,20 @@ document.body.removeChild(a);
 URL.revokeObjectURL(blobUrl);
 showToast('Download dimulai!', 'success');
 } catch (e) {
+var cleanUrl = url;
+if (url.includes('drive.google.com/uc') || url.includes('docs.google.com')) {
+var idMatch = url.match(/id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+if (idMatch && idMatch[1]) {
+cleanUrl = 'https://docs.google.com/uc?export=download&id=' + idMatch[1];
+}
+}
 var a = document.createElement('a');
-a.href = url;
+a.target = '_self'; 
+a.href = cleanUrl;
 a.download = filename;
+document.body.appendChild(a);
 a.click();
+document.body.removeChild(a);
 }
 }
 
