@@ -195,7 +195,8 @@ footer.style.display='none';
 }else{
 body.innerHTML=Cart.map(item=>{
 const price=parseFloat(item.price)||0;
-return`<div class="cart-item"><div class="cart-item-img">${item.imageUrl?'<img src="'+item.imageUrl+'" onerror="this.style.display=\'none\'">':'<i class="fas fa-coffee"></i>'}</div><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">Rp ${formatNumber(price)}</div><div class="cart-item-qty"><button onclick="updateQty('${item.id}',-1)"><i class="fas fa-minus"></i></button><span>${item.qty}</span><button onclick="updateQty('${item.id}',1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button></div>`
+const imgUrl=item.imageUrl||item.img||'';
+return`<div class="cart-item"><div class="cart-item-img">${imgUrl?'<img src="'+imgUrl+'" onerror="this.style.display=\\'none\\'">':'<i class="fas fa-coffee"></i>'}</div><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">Rp ${formatNumber(price)}</div><div class="cart-item-qty"><button onclick="updateQty('${item.id}',-1)"><i class="fas fa-minus"></i></button><span>${item.qty}</span><button onclick="updateQty('${item.id}',1)"><i class="fas fa-plus"></i></button></div></div><button class="cart-item-remove" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button></div>`
 }).join('');
 footer.style.display='block';
 }
@@ -271,13 +272,22 @@ let allProducts=[];
 try{
 const result=await fetchFromGAS('getProducts');
 if(result.success&&Array.isArray(result.data)&&result.data.length>0){
-allProducts=result.data.map(p=>({...p,price:parseFloat(p.price)||0}));
+// FIX: Map img to imageUrl for compatibility
+allProducts=result.data.map(p=>({
+...p,
+price:parseFloat(p.price)||0,
+imageUrl:p.img||p.imageurl||p.image_url||p.url||''  // fallback chain
+}));
 for(const p of allProducts){if(p&&p.id)await DBStore.put('products',p)}
 }
 }catch(e){}
 if(allProducts.length===0){
 const cached=await DBStore.getAll('products');
-allProducts=cached.map(p=>({...p,price:parseFloat(p.price)||0}));
+allProducts=cached.map(p=>({
+...p,
+price:parseFloat(p.price)||0,
+imageUrl:p.img||p.imageurl||p.image_url||p.url||''  // fallback chain
+}));
 }
 AllProducts=allProducts;
 
@@ -296,13 +306,15 @@ return;
 }
 container.innerHTML='<div class="products-grid" id="productsGrid"></div>';
 document.getElementById('productsGrid').innerHTML=activeProducts.map(product=>{
-const hasImage=product.imageUrl&&product.imageUrl.trim()!=='';
+// FIX: Use imageUrl with fallback to img
+const imgUrl=product.imageUrl||product.img||product.image_url||product.url||'';
+const hasImage=imgUrl&&imgUrl.trim()!=='';
 const inCart=Cart.find(c=>c.id===product.id);
 const imgId='prod-img-'+product.id;
 const imgHtml=hasImage
-?'<img id="'+imgId+'" src="'+product.imageUrl+'" alt="'+escapeHtml(product.name)+'" onerror="imgError(this)">'
+?'<img id="'+imgId+'" src="'+imgUrl+'" alt="'+escapeHtml(product.name)+'" onerror="imgError(this)">'
 :'<i class="fas fa-coffee"></i>';
-return'<div class="product-card"><div class="product-img" id="wrap-'+imgId+'">'+imgHtml+'</div><div class="product-body"><div class="product-name">'+escapeHtml(product.name)+'</div><div class="product-desc">'+escapeHtml(product.description||'')+'</div><div class="product-price">Rp '+formatNumber(product.price)+(product.originalPrice&&parseFloat(product.originalPrice)>parseFloat(product.price)?' <small>Rp '+formatNumber(product.originalPrice)+'</small>':'')+'</div><button class="product-btn '+(inCart?'added':'')+'" id="btn-'+product.id+'" onclick="handleProductClick(\''+product.id+'\')"><i class="fas '+(inCart?'fa-check':'fa-cart-plus')+'"></i> '+(inCart?'Ditambahkan ('+inCart.qty+')':'Tambah ke Keranjang')+'</button></div></div>';
+return'<div class="product-card"><div class="product-img" id="wrap-'+imgId+'">'+imgHtml+'</div><div class="product-body"><div class="product-name">'+escapeHtml(product.name)+'</div><div class="product-desc">'+escapeHtml(product.description||'')+'</div><div class="product-price">Rp '+formatNumber(product.price)+(product.originalPrice&&parseFloat(product.originalPrice)>parseFloat(product.price)?' <small>Rp '+formatNumber(product.originalPrice)+'</small>':'')+'</div><button class="product-btn '+(inCart?'added':'')+'" id="btn-'+product.id+'" onclick="handleProductClick(\\''+product.id+'\\')"><i class="fas '+(inCart?'fa-check':'fa-cart-plus')+'"></i> '+(inCart?'Ditambahkan ('+inCart.qty+')':'Tambah ke Keranjang')+'</button></div></div>';
 }).join('');
 }
 
