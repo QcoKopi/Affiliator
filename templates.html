@@ -41,18 +41,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .filter-bar{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
 .form-input,.form-select{width:100%;padding:0.6rem 0.875rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem}
 .form-input:focus,.form-select:focus{outline:none;border-color:var(--primary-light)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.active{display:flex}
-.modal{background:var(--card-bg);border-radius:var(--radius);max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(93,0,0,0.12)}
+.modal{background:var(--card-bg);border-radius:var(--radius);max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15)}
 .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .modal-close{background:none;border:none;font-size:1.5rem;color:var(--text-light);cursor:pointer}
 .modal-body{padding:1.5rem}
 .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.5rem}
 .form-group{margin-bottom:1rem}
 .form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
-.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative;margin-bottom:1rem}
-.file-upload-wrapper:hover{border-color:var(--primary-light)}
+
+.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative;margin-bottom:1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px}
 .file-upload-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10}
+
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
 .toast{background:var(--card-bg);border-radius:var(--radius-sm);padding:1rem 1.5rem;box-shadow:0 10px 40px rgba(93,64,55,0.12);border-left:4px solid var(--primary);display:flex;align-items:center;gap:0.75rem;animation:slideIn 0.3s ease;min-width:300px}
 .toast.success{border-left-color:var(--success)}
@@ -68,8 +70,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:2px;left:2px;transition:transform 0.3s}
 .status-toggle.on::before{transform:translateX(20px)}
 .qr-preview{width:120px;height:120px;margin:0 auto}
-.preview-container{margin-top:15px;text-align:center;width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);box-shadow:inset 0 1px 3px rgba(0,0,0,0.05)}
-.preview-img-el,.preview-video-el{max-width:100%;max-height:180px;border-radius:var(--radius-sm);object-fit:contain;display:inline-block}
+
+/* Desain Pop-up Jendela Preview yang Bersih & Aman */
+.popup-preview-box{width:100%;text-align:center;padding:10px;background:#000;border-radius:var(--radius-sm);max-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.popup-preview-box img, .popup-preview-box video{max-width:100%;max-height:280px;object-fit:contain}
+
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.container{padding:1rem}}
 </style>
@@ -138,18 +143,34 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <label class="form-label">File Template</label>
 <div class="file-upload-wrapper" id="tplUploadWrap">
 <input type="file" id="tplFile" accept="image/jpeg,image/png,image/gif,video/mp4,video/webm" onchange="handleTplFileSelect(this)" required>
+<div id="uploadPlaceholder">
 <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:var(--primary-light)"></i>
 <p style="margin-top:0.5rem">Klik atau drag file</p>
 <p style="font-size:0.75rem;color:var(--text-light)">JPG/PNG/GIF/MP4, max 10MB</p>
+</div>
 <p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500"></p>
 </div>
-<div class="preview-container" id="tplPreviewContainer" style="display:none;"></div>
+<div id="previewBtnContainer" style="display:none; text-align:center; margin-top:5px;">
+  <button type="button" class="btn btn-outline btn-sm" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> Klik Lihat File Terpilih</button>
+</div>
 </div>
 </form>
 </div>
 <div class="modal-footer">
 <button class="btn btn-outline" type="button" onclick="closeModal('uploadModal')">Batal</button>
 <button class="btn btn-primary" type="submit" form="uploadForm"><i class="fas fa-upload"></i> Upload</button>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="popupPreviewModal" style="z-index: 3000;">
+<div class="modal" style="max-width:400px;">
+<div class="modal-header"><h3><i class="fas fa-file-image"></i> Preview File</h3><button class="modal-close" onclick="closeModal('popupPreviewModal')">&times;</button></div>
+<div class="modal-body">
+  <div class="popup-preview-box" id="popupPreviewContent"></div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-primary btn-sm" onclick="closeModal('popupPreviewModal')">Tutup</button>
 </div>
 </div>
 </div>
@@ -179,12 +200,12 @@ GAS_URL: 'https://script.google.com/macros/s/AKfycbzXi0ZSoJAIqsF3J2rjR3B2G59jzdw
 BASE_URL: 'https://affiliate.qcoid.com/landing.html'
 };
 
-// ==================== STATE ====================
 var TEMPLATES = [];
 var currentFilter = 'all';
 var currentUser = null;
 var selectedTemplate = null;
 var currentPreviewObjectURL = null;
+var currentPreviewType = 'image';
 
 // ==================== SESSION ====================
 function loadSession(){
@@ -269,7 +290,6 @@ return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:0.7
 }).join('') || '<tr><td colspan="5" style="text-align:center;padding:1rem;color:var(--text-light)">Belum ada template</td></tr>';
 }
 
-// ==================== FILTER ====================
 function filterTemplates(type){
 currentFilter = type;
 document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -277,31 +297,27 @@ event.target.classList.add('active');
 renderGallery();
 }
 
-// ==================== ADMIN PANEL ====================
 function toggleAdminPanel(){
 document.getElementById('adminPanel').classList.toggle('show');
 if(document.getElementById('adminPanel').classList.contains('show')) renderAdminList();
 }
 
-// ==================== UPLOAD & PREVIEW ====================
+// ==================== SELEKSI FILE & ALUR PREVIEW BARU ====================
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
   document.getElementById('tplFileName').textContent = ''; 
-  
+  document.getElementById('uploadPlaceholder').style.style = 'block';
+  document.getElementById('previewBtnContainer').style.display = 'none';
   if (currentPreviewObjectURL) {
     URL.revokeObjectURL(currentPreviewObjectURL);
     currentPreviewObjectURL = null;
   }
-  var container = document.getElementById('tplPreviewContainer');
-  container.innerHTML = '';
-  container.style.display = 'none';
 }
 
 function handleTplFileSelect(input){
   var f = input.files[0];
-  var container = document.getElementById('tplPreviewContainer');
-  container.innerHTML = '';
+  var btnContainer = document.getElementById('previewBtnContainer');
   
   if (currentPreviewObjectURL) {
     URL.revokeObjectURL(currentPreviewObjectURL);
@@ -313,25 +329,32 @@ function handleTplFileSelect(input){
     document.getElementById('tplFileName').textContent = f.name + ' (' + sizeMB.toFixed(2) + ' MB)';
     
     currentPreviewObjectURL = URL.createObjectURL(f);
-    var isVideo = f.type.includes('video');
-    var el;
+    currentPreviewType = f.type.includes('video') ? 'video' : 'image';
     
-    if(isVideo){
-      el = document.createElement('video');
-      el.className = 'preview-video-el';
-      el.controls = true;
-      el.muted = true;
-    } else {
-      el = document.createElement('img');
-      el.className = 'preview-img-el';
-    }
-    
-    el.src = currentPreviewObjectURL;
-    container.appendChild(el);
-    container.style.display = 'block';
+    btnContainer.style.display = 'block'; // Munculkan tombol klik preview
   } else {
-    container.style.display = 'none';
+    btnContainer.style.display = 'none';
   }
+}
+
+function openFilePreviewPopup() {
+  if(!currentPreviewObjectURL) return;
+  var contentBox = document.getElementById('popupPreviewContent');
+  contentBox.innerHTML = '';
+  
+  var el;
+  if(currentPreviewType === 'video') {
+    el = document.createElement('video');
+    el.controls = true;
+    el.autoplay = true;
+    el.muted = true;
+  } else {
+    el = document.createElement('img');
+  }
+  el.src = currentPreviewObjectURL;
+  contentBox.appendChild(el);
+  
+  document.getElementById('popupPreviewModal').classList.add('active');
 }
 
 async function handleUpload(e){
@@ -361,35 +384,29 @@ var payload = {
 
 var formBody = [];
 for (var property in payload) {
-  var encodedKey = encodeURIComponent(property);
-  var encodedValue = encodeURIComponent(payload[property]);
-  formBody.push(encodedKey + "=" + encodedValue);
+  formBody.push(encodeURIComponent(property) + "=" + encodeURIComponent(payload[property]));
 }
 formBody = formBody.join("&");
 
 var response = await fetch(CONFIG.GAS_URL, {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-  },
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
   body: formBody
 });
 
 var resData = await response.json();
-
 if(resData.success){
   showToast('Template berhasil diupload!', 'success');
   fetchTemplates();
 } else {
   showToast('Gagal upload: ' + (resData.message || ''), 'error');
 }
-
 }catch(err){
   showToast('Gagal upload: ' + (err.message || ''), 'error');
 }
 }
 
-// ==================== DOWNLOAD & WATERMARK EMBED ====================
+// ==================== DOWNLOAD & WATERMARK (FIXED BLOK PUTIH) ====================
 function openDownloadModal(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -397,19 +414,20 @@ selectedTemplate = t;
 
 var ref = getRefCode();
 var link = CONFIG.BASE_URL + (ref ? '?ref=' + encodeURIComponent(ref) : '');
-
 var isImg = (t.type || '').toLowerCase() === 'image';
-document.getElementById('dlPreview').innerHTML = isImg ? '<img src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' : '<video src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
+
+document.getElementById('dlPreview').innerHTML = isImg 
+  ? '<img src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' 
+  : '<video src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
 
 document.getElementById('dlQR').innerHTML = '';
 if(ref){
 new QRCode(document.getElementById('dlQR'), { text: link, width: 120, height: 120 });
 document.getElementById('dlRefLink').textContent = link;
 } else {
-document.getElementById('dlQR').innerHTML = '<p style="font-size:0.75rem;color:var(--text-light)">Login untuk generate QR dengan referral</p>';
+document.getElementById('dlQR').innerHTML = '<p style="font-size:0.75rem;color:var(--text-light)">Login untuk otomatis sematkan QR & referral</p>';
 document.getElementById('dlRefLink').textContent = '';
 }
-
 document.getElementById('downloadModal').classList.add('active');
 }
 
@@ -424,7 +442,7 @@ var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + 
 closeModal('downloadModal');
 
 if(isImg && ref){
-showToast('Menyisipkan QR Code & Link Referral...', 'info');
+showToast('Menyiapkan Gambar + QR Code...', 'info');
 try{
 var canvas = await addWatermarkToImage(fileUrl, ref);
 var a = document.createElement('a');
@@ -436,7 +454,9 @@ a.click();
 document.body.removeChild(a);
 showToast('Download dimulai!', 'success');
 }catch(e){
-triggerDirectDownload(fileUrl, fileName);
+  // Peringatan jika CORS Google Drive menghalangi proses Canvas lokal
+  showToast('Sistem mengunduh file asli (Watermark dilewati karena proteksi host asal)', 'info');
+  triggerDirectDownload(fileUrl, fileName);
 }
 } else {
 showToast('Mengunduh file...', 'info');
@@ -457,7 +477,6 @@ document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
 URL.revokeObjectURL(blobUrl);
-showToast('Download dimulai!', 'success');
 } catch (e) {
 var cleanUrl = url;
 if (url.includes('drive.google.com/uc') || url.includes('docs.google.com')) {
@@ -476,82 +495,89 @@ document.body.removeChild(a);
 }
 }
 
-// Fungsi Utama: Menggabungkan Gambar Asli + QR Code + Link Teks ke dalam 1 File Gambar
+// Fungsi utama render blok putih kontras tinggi + konten hitam ke file gambar unduhan
 async function addWatermarkToImage(imgUrl, refCode){
 return new Promise(function(resolve, reject){
 var img = new Image();
-img.crossOrigin = 'anonymous';
+img.crossOrigin = 'anonymous'; // Wajib ada untuk memicu pembacaan CORS
 img.onload = function(){
+try {
 var canvas = document.createElement('canvas');
 canvas.width = img.width;
 canvas.height = img.height;
 var ctx = canvas.getContext('2d');
 
-// 1. Gambar desain template utama
+// 1. Gambar utama
 ctx.drawImage(img, 0, 0);
 
-// 2. Tentukan ukuran bar watermark proporsional terhadap resolusi gambar asli
-var barHeight = Math.max(80, img.height * 0.12);
-ctx.fillStyle = 'rgba(93, 64, 55, 0.95)';
+// 2. Buat blok persegi panjang warna Putih Bersih di dasar gambar
+var barHeight = Math.max(95, img.height * 0.13);
+ctx.fillStyle = '#FFFFFF';
 ctx.fillRect(0, img.height - barHeight, img.width, barHeight);
 
-// 3. Generate QR Code secara tersembunyi di memori untuk disalin ke Canvas
+// Garis pembatas atas blok putih agar tetap terstruktur rapi
+ctx.strokeStyle = '#E8E4E0';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.moveTo(0, img.height - barHeight);
+ctx.lineTo(img.width, img.height - barHeight);
+ctx.stroke();
+
+// 3. Render QR Code tersembunyi ke memori
 var qrContainer = document.getElementById('hiddenQrContainer');
 qrContainer.innerHTML = '';
-var qrSize = Math.round(barHeight * 0.85);
+var qrSize = Math.round(barHeight * 0.82);
 
 new QRCode(qrContainer, {
   text: CONFIG.BASE_URL + '?ref=' + refCode,
   width: qrSize,
   height: qrSize,
+  colorDark: '#000000',
+  colorLight: '#FFFFFF',
   correctLevel: QRCode.CorrectLevel.H
 });
 
-// Tunggu render QR selesai di objek imaji DOM internal
 setTimeout(function(){
-  var qrImgEl = qrContainer.querySelector('img');
-  if(qrImgEl && qrImgEl.src){
-    var qrImg = new Image();
-    qrImg.onload = function() {
-      // Tempel QR Code di sebelah kanan bar
-      var qrX = img.width - qrSize - Math.round(barHeight * 0.1);
-      var qrY = img.height - barHeight + Math.round((barHeight - qrSize) / 2);
-      
-      // Beri background putih sedikit di sekeliling QR agar kontras
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+  try {
+    var qrImgEl = qrContainer.querySelector('img');
+    if(qrImgEl && qrImgEl.src){
+      var qrImg = new Image();
+      qrImg.onload = function() {
+        var qrX = img.width - qrSize - Math.round(barHeight * 0.1);
+        var qrY = img.height - barHeight + Math.round((barHeight - qrSize) / 2);
+        
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-      // 4. Tambahkan Teks Informasi Link di sebelah kiri bar
-      ctx.fillStyle = 'white';
-      var fontSize = Math.max(14, Math.round(img.width * 0.018));
-      ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
-      ctx.textBaseline = 'middle';
-      
-      var linkText = 'Pesan di: ' + CONFIG.BASE_URL + '?ref=' + refCode;
-      ctx.fillText(linkText, Math.round(barHeight * 0.2), img.height - barHeight / 2);
+        // 4. Tambahkan teks link warna hitam pekat agar terbaca jelas di atas blok putih
+        ctx.fillStyle = '#000000';
+        var fontSize = Math.max(14, Math.round(img.width * 0.018));
+        ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
+        ctx.textBaseline = 'middle';
+        
+        var linkText = 'Pesan di: ' + CONFIG.BASE_URL + '?ref=' + refCode;
+        ctx.fillText(linkText, Math.round(barHeight * 0.2), img.height - barHeight / 2);
 
-      resolve(canvas);
-    };
-    qrImg.src = qrImgEl.src;
-  } else {
-    // Jalankan fallback jika QR gagal digenerate ke Canvas
-    ctx.fillStyle = 'white';
-    var fontSize = Math.max(14, Math.round(img.width * 0.015));
-    ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Link: ' + CONFIG.BASE_URL + '?ref=' + refCode, 15, img.height - barHeight / 2);
-    resolve(canvas);
+        resolve(canvas);
+      };
+      qrImg.src = qrImgEl.src;
+    } else {
+      throw new Error('QR generation failed');
+    }
+  } catch(innerErr) {
+    reject(innerErr);
   }
-}, 300);
+}, 350);
 
+} catch(canvasErr) {
+  reject(canvasErr);
+}
 };
-img.onerror = reject;
+img.onerror = function(err) { reject(err); };
 img.src = imgUrl;
 });
 }
 
-// ==================== ADMIN ACTIONS ====================
+// ==================== ACTIONS ====================
 async function toggleTemplateStatus(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -582,7 +608,6 @@ showToast('Template dihapus', 'success');
 }catch(e){ showToast('Gagal hapus template', 'error'); }
 }
 
-// ==================== UTILS ====================
 function fileToBase64(file){
 return new Promise(function(resolve, reject){
 var r = new FileReader();
@@ -610,7 +635,6 @@ c.appendChild(t);
 setTimeout(function(){ t.remove(); }, 4000);
 }
 
-// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function(){
 loadSession();
 fetchTemplates();
