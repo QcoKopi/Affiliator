@@ -149,8 +149,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 <p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500;word-break:break-all"></p>
 </div>
+
 <div id="previewBtnContainer" style="display:none; text-align:center; margin-top:10px; margin-bottom:10px;">
-  <button type="button" class="btn btn-outline" style="width:100%; border-color:var(--primary); color:var(--primary)" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> 👁️ LIHAT PREVIEW FILE TERPILIH</button>
+  <button type="button" class="btn btn-outline" style="width:100%; border-color:var(--primary); color:var(--primary)" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> LIHAT PREVIEW FILE TERPILIH</button>
 </div>
 </div>
 </form>
@@ -301,7 +302,7 @@ document.getElementById('adminPanel').classList.toggle('show');
 if(document.getElementById('adminPanel').classList.contains('show')) renderAdminList();
 }
 
-// ==================== ALUR POPUP PREVIEW (FIXED & REALISASI 100%) ====================
+// ==================== HANDLERS UPLOAD & PREVIEW POPUP ====================
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
@@ -408,7 +409,7 @@ if(resData.success){
 }
 }
 
-// ==================== DOWNLOAD & GAS SERVER-SIDE PROXY (REALISASI IDE 2) ====================
+// ==================== DOWNLOAD & SERVER-SIDE PROXY ====================
 function openDownloadModal(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -433,7 +434,6 @@ document.getElementById('dlRefLink').textContent = '';
 document.getElementById('downloadModal').classList.add('active');
 }
 
-// Ekstraksi ID Google Drive dari URL asal
 function getGoogleDriveId(url) {
   if (!url) return '';
   var match = url.match(/id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
@@ -456,7 +456,6 @@ try{
   var driveId = getGoogleDriveId(fileUrl);
   var localDataUrl = '';
 
-  // JIKA FILE BERASAL DARI DRIVE, JALANKAN REQUEST BYPASS PROXY KE GAS
   if(driveId) {
     var proxyRes = await fetch(CONFIG.GAS_URL + '?action=getDriveBlobBase64&id=' + encodeURIComponent(driveId));
     var proxyData = await proxyRes.json();
@@ -466,7 +465,6 @@ try{
       throw new Error(proxyData.message || 'Gagal bypass proxy server');
     }
   } else {
-    // Jika file eksternal umum biasa, jalankan fetch blob biasa
     var res = await fetch(fileUrl);
     var blob = await res.blob();
     localDataUrl = URL.createObjectURL(blob);
@@ -621,6 +619,7 @@ showToast('Template dihapus', 'success');
 }catch(e){ showToast('Gagal hapus template', 'error'); }
 }
 
+// ==================== UTILS ====================
 function fileToBase64(file){
 return new Promise(function(resolve, reject){
 var r = new FileReader();
