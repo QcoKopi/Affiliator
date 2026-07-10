@@ -71,7 +71,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle.on::before{transform:translateX(20px)}
 .qr-preview{width:120px;height:120px;margin:0 auto}
 
-/* Box Konten Pop-up Preview yang Bersih dan Terisolasi */
 .popup-preview-box{width:100%;text-align:center;padding:10px;background:#1e1e1e;border-radius:var(--radius-sm);max-height:350px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .popup-preview-box img, .popup-preview-box video{max-width:100%;max-height:330px;object-fit:contain}
 
@@ -293,7 +292,7 @@ return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:0.7
 function filterTemplates(type){
 currentFilter = type;
 document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-event.target.classList.add('active');
+if(event && event.target) event.target.classList.add('active');
 renderGallery();
 }
 
@@ -302,7 +301,7 @@ document.getElementById('adminPanel').classList.toggle('show');
 if(document.getElementById('adminPanel').classList.contains('show')) renderAdminList();
 }
 
-// ==================== SELEKSI FILE & POPUP PREVIEW (REALISASI IDE 1) ====================
+// ==================== ALUR POPUP PREVIEW (FIXED & REALISASI 100%) ====================
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
@@ -332,8 +331,8 @@ function handleTplFileSelect(input){
     currentPreviewObjectURL = URL.createObjectURL(f);
     currentPreviewType = f.type.includes('video') ? 'video' : 'image';
     
-    placeholder.style.display = 'none'; // Sembunyikan ikon upload agar rapi
-    btnContainer.style.display = 'block'; // TAMPILKAN TOMBOL PREVIEW POPUP NYATA
+    placeholder.style.display = 'none'; 
+    btnContainer.style.display = 'block'; 
   } else {
     placeholder.style.display = 'block';
     btnContainer.style.display = 'none';
@@ -409,7 +408,7 @@ if(resData.success){
 }
 }
 
-// ==================== DOWNLOAD & LOCAL PROXY BLOB WATERMARK (REALISASI IDE 2) ====================
+// ==================== DOWNLOAD & GAS SERVER-SIDE PROXY (REALISASI IDE 2) ====================
 function openDownloadModal(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -434,6 +433,13 @@ document.getElementById('dlRefLink').textContent = '';
 document.getElementById('downloadModal').classList.add('active');
 }
 
+// Ekstraksi ID Google Drive dari URL asal
+function getGoogleDriveId(url) {
+  if (!url) return '';
+  var match = url.match(/id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+  return (match && match[1]) ? match[1] : '';
+}
+
 async function confirmDownload(){
 if(!selectedTemplate) return;
 var ref = getRefCode();
@@ -445,15 +451,29 @@ var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + 
 closeModal('downloadModal');
 
 if(isImg && ref){
-showToast('Mengambil data GDrive ke lokal browser...', 'info');
+showToast('Mengambil data GDrive via Server Proxy...', 'info');
 try{
-  // STRATEGI IDE 2: Tarik file secara paksa via fetch untuk dijadikan Blob Lokal (Membypass CORS)
-  var response = await fetch(fileUrl);
-  var blob = await response.blob();
-  var localBlobUrl = URL.createObjectURL(blob);
+  var driveId = getGoogleDriveId(fileUrl);
+  var localDataUrl = '';
 
-  showToast('Menyisipkan Watermark pada file lokal...', 'info');
-  var canvas = await addWatermarkToImage(localBlobUrl, ref);
+  // JIKA FILE BERASAL DARI DRIVE, JALANKAN REQUEST BYPASS PROXY KE GAS
+  if(driveId) {
+    var proxyRes = await fetch(CONFIG.GAS_URL + '?action=getDriveBlobBase64&id=' + encodeURIComponent(driveId));
+    var proxyData = await proxyRes.json();
+    if(proxyData.success && proxyData.base64) {
+      localDataUrl = 'data:' + (proxyData.mimeType || 'image/jpeg') + ';base64,' + proxyData.base64;
+    } else {
+      throw new Error(proxyData.message || 'Gagal bypass proxy server');
+    }
+  } else {
+    // Jika file eksternal umum biasa, jalankan fetch blob biasa
+    var res = await fetch(fileUrl);
+    var blob = await res.blob();
+    localDataUrl = URL.createObjectURL(blob);
+  }
+
+  showToast('Menyisipkan Watermark pada file...', 'info');
+  var canvas = await addWatermarkToImage(localDataUrl, ref);
   
   var a = document.createElement('a');
   a.target = '_self'; 
@@ -463,11 +483,11 @@ try{
   a.click();
   document.body.removeChild(a);
   
-  URL.revokeObjectURL(localBlobUrl); // Bersihkan memori lokal
-  showToast('Download Sukses dengan Watermark Kontras!', 'success');
+  if(!driveId) URL.revokeObjectURL(localDataUrl); 
+  showToast('Download Sukses dengan Watermark!', 'success');
 }catch(e){
-  // Fallback cadangan ekstrim jika link hancur
-  showToast('Gagal memproses lokal blob, mendownload file asli...', 'error');
+  console.error(e);
+  showToast('Gagal bypass proxy, mendownload file asli...', 'error');
   triggerDirectDownload(fileUrl, fileName);
 }
 } else {
@@ -478,36 +498,23 @@ triggerDirectDownload(fileUrl, fileName);
 
 async function triggerDirectDownload(url, filename) {
 try {
-var res = await fetch(url);
-var blob = await res.blob();
-var blobUrl = URL.createObjectURL(blob);
-var a = document.createElement('a');
-a.target = '_self'; 
-a.href = blobUrl;
-a.download = filename;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(blobUrl);
+  var driveId = getGoogleDriveId(url);
+  var cleanUrl = url;
+  if(driveId) {
+    cleanUrl = 'https://docs.google.com/uc?export=download&id=' + driveId;
+  }
+  var a = document.createElement('a');
+  a.target = '_self'; 
+  a.href = cleanUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 } catch (e) {
-var cleanUrl = url;
-if (url.includes('drive.google.com/uc') || url.includes('docs.google.com')) {
-var idMatch = url.match(/id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
-if (idMatch && idMatch[1]) {
-cleanUrl = 'https://docs.google.com/uc?export=download&id=' + idMatch[1];
-}
-}
-var a = document.createElement('a');
-a.target = '_self'; 
-a.href = cleanUrl;
-a.download = filename;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
+  showToast('Gagal mengunduh file', 'error');
 }
 }
 
-// Pemrosesan Kanvas dari Objek Lokal Hasil Unduhan Memori Browser
 async function addWatermarkToImage(localImgUrl, refCode){
 return new Promise(function(resolve, reject){
 var img = new Image();
@@ -518,15 +525,12 @@ canvas.width = img.width;
 canvas.height = img.height;
 var ctx = canvas.getContext('2d');
 
-// 1. Gambar desain utama
 ctx.drawImage(img, 0, 0);
 
-// 2. Buat blok persegi panjang warna Putih Bersih di dasar gambar
 var barHeight = Math.max(95, img.height * 0.13);
 ctx.fillStyle = '#FFFFFF';
 ctx.fillRect(0, img.height - barHeight, img.width, barHeight);
 
-// Garis pembatas atas blok putih agar tetap terstruktur rapi
 ctx.strokeStyle = '#E8E4E0';
 ctx.lineWidth = 2;
 ctx.beginPath();
@@ -534,7 +538,6 @@ ctx.moveTo(0, img.height - barHeight);
 ctx.lineTo(img.width, img.height - barHeight);
 ctx.stroke();
 
-// 3. Render QR Code tersembunyi ke memori
 var qrContainer = document.getElementById('hiddenQrContainer');
 qrContainer.innerHTML = '';
 var qrSize = Math.round(barHeight * 0.82);
@@ -559,7 +562,6 @@ setTimeout(function(){
         
         ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-        // 4. Tambahkan teks link warna hitam pekat agar terbaca jelas di atas blok putih
         ctx.fillStyle = '#000000';
         var fontSize = Math.max(14, Math.round(img.width * 0.018));
         ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
@@ -584,7 +586,7 @@ setTimeout(function(){
 }
 };
 img.onerror = function(err) { reject(err); };
-img.src = localImgUrl; // Menggunakan URL Blob lokal hasil fetch aman
+img.src = localImgUrl;
 });
 }
 
