@@ -135,7 +135,58 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .invoice-field{background:#f9f9f9;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0.5rem 0.75rem;font-size:0.85rem;width:100%;font-family:inherit}
 .invoice-field:focus{outline:none;border-color:var(--primary-light)}
 .invoice-total-row{font-weight:700;font-size:1rem;color:var(--primary-dark);border-top:2px solid var(--border);padding-top:0.75rem;margin-top:0.75rem}
+/* ===== PRODUCT IMAGE UPLOAD ===== */
+.product-image-upload {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: var(--bg);
+  position: relative;
+}
+.product-image-upload:hover {
+  border-color: var(--primary-light);
+  background: #f5f0eb;
+}
+.product-image-upload.has-image {
+  border-style: solid;
+  border-color: var(--success);
+  background: #e8f5e9;
+}
+.product-image-upload i {
+  font-size: 2rem;
+  color: var(--primary-light);
+  margin-bottom: 0.5rem;
+}
+.product-image-upload p {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  margin: 0;
+}
+.product-image-preview {
+  max-width: 180px;
+  max-height: 180px;
+  border-radius: var(--radius-sm);
+  margin: 0 auto;
+  display: block;
+  object-fit: cover;
+}
+.product-image-actions {
+  display: none;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+.product-image-upload.has-image .product-image-actions {
+  display: flex;
+}
+.product-image-upload.has-image #productImageUploadContent {
+  display: none;
+}
 </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -424,18 +475,34 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="modal-body">
 <form id="productForm" onsubmit="saveProduct(event)">
 <input type="hidden" id="productId">
+<input type="hidden" id="productImageBase64">
+<input type="hidden" id="productImageMimeType">
+<input type="hidden" id="productImageUrl">
 <div class="form-group"><label class="form-label">Nama Produk</label><input type="text" class="form-input" id="productName" required></div>
 <div class="form-row">
 <div class="form-group"><label class="form-label">Kategori</label><input type="text" class="form-input" id="productCategory" placeholder="Contoh: Roast Beans, Bubuk" required></div>
 <div class="form-group"><label class="form-label">Harga (Rp)</label><input type="number" class="form-input" id="productPrice" required></div>
 </div>
-<div class="form-group"><label class="form-label">URL Link Gambar</label><input type="url" class="form-input" id="productImg" placeholder="https://example.com/image.jpg"></div>
+<div class="form-group">
+<label class="form-label">Gambar Produk</label>
+<div class="product-image-upload" id="productImageUploadArea" onclick="document.getElementById('productImageFile').click()">
+<div id="productImageUploadContent">
+<i class="fas fa-cloud-upload-alt"></i>
+<p>Klik untuk upload gambar<br><small>JPG, PNG, GIF, WebP (max 2MB)</small></p>
+</div>
+<img id="productImagePreview" class="product-image-preview" style="display:none">
+<div class="product-image-actions" id="productImageActions">
+<button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeProductImage()"><i class="fas fa-trash"></i> Hapus</button>
+</div>
+</div>
+<input type="file" id="productImageFile" style="display:none" accept="image/*" onchange="handleProductImageSelect(this)">
+</div>
 <div class="form-group"><label class="form-label">Deskripsi Produk</label><textarea class="form-textarea" id="productDesc"></textarea></div>
 <div class="form-group">
 <label class="form-label">Status Produk Aktif</label>
 <label class="toggle-switch"><input type="checkbox" id="productActive" checked><span class="toggle-slider"></span></label>
 </div>
-<div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Batal</button><button type="submit" class="btn btn-primary">Simpan Produk</button></div>
+<div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('productModal')">Batal</button><button type="submit" class="btn btn-primary" id="saveProductBtn">Simpan Produk</button></div>
 </form>
 </div>
 </div>
@@ -1007,8 +1074,58 @@ return '<tr><td>' + imgTag + '</td><td><strong>' + (p.name || '-') + '</strong><
 }).join('');
 }
 
+// ==================== PRODUCT IMAGE HANDLING ====================
+function handleProductImageSelect(input) {
+const file = input.files[0];
+if (!file) return;
+
+if (file.size > 2 * 1024 * 1024) {
+showToast('Ukuran gambar maksimal 2MB', 'error');
+input.value = '';
+return;
+}
+if (!file.type.startsWith('image/')) {
+showToast('File harus berupa gambar', 'error');
+input.value = '';
+return;
+}
+
+const reader = new FileReader();
+reader.onload = function(e) {
+const base64Full = e.target.result;
+const base64Data = base64Full.split(',')[1];
+const mimeType = file.type;
+
+document.getElementById('productImageBase64').value = base64Data;
+document.getElementById('productImageMimeType').value = mimeType;
+
+const preview = document.getElementById('productImagePreview');
+preview.src = base64Full;
+preview.style.display = 'block';
+
+document.getElementById('productImageUploadArea').classList.add('has-image');
+
+showToast('Gambar berhasil dipilih', 'success');
+};
+reader.readAsDataURL(file);
+}
+
+function removeProductImage() {
+document.getElementById('productImageFile').value = '';
+document.getElementById('productImageBase64').value = '';
+document.getElementById('productImageMimeType').value = '';
+document.getElementById('productImageUrl').value = '';
+
+const preview = document.getElementById('productImagePreview');
+preview.src = '';
+preview.style.display = 'none';
+
+document.getElementById('productImageUploadArea').classList.remove('has-image');
+}
+
 function openProductModal(id) {
 document.getElementById('productForm').reset();
+removeProductImage();
 if (!id) {
 document.getElementById('productModalTitle').innerText = 'Tambah Produk Baru';
 document.getElementById('productId').value = '';
@@ -1021,9 +1138,17 @@ document.getElementById('productId').value = p.id;
 document.getElementById('productName').value = p.name || '';
 document.getElementById('productCategory').value = p.category || '';
 document.getElementById('productPrice').value = p.price || 0;
-document.getElementById('productImg').value = p.img || '';
 document.getElementById('productDesc').value = p.description || p.desc || '';
 document.getElementById('productActive').checked = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
+// Load existing image
+const imgUrl = p.img || p.imageurl || p.image_url || '';
+if (imgUrl) {
+document.getElementById('productImageUrl').value = imgUrl;
+const preview = document.getElementById('productImagePreview');
+preview.src = imgUrl;
+preview.style.display = 'block';
+document.getElementById('productImageUploadArea').classList.add('has-image');
+}
 }
 }
 document.getElementById('productModal').classList.add('active');
@@ -1035,9 +1160,11 @@ const id = document.getElementById('productId').value;
 const name = document.getElementById('productName').value;
 const category = document.getElementById('productCategory').value;
 const price = document.getElementById('productPrice').value;
-const img = document.getElementById('productImg').value;
 const desc = document.getElementById('productDesc').value;
 const active = document.getElementById('productActive').checked ? 'true' : 'false';
+const imgBase64 = document.getElementById('productImageBase64').value;
+const imgMimeType = document.getElementById('productImageMimeType').value;
+const existingImgUrl = document.getElementById('productImageUrl').value;
 
 closeModal('productModal');
 updateSyncStatus('syncing');
@@ -1048,11 +1175,18 @@ action: 'saveProduct',
 name: name,
 category: category,
 price: price,
-img: img,
 description: desc,
 active: active
 };
 if (id) params.id = id;
+
+// Send image data
+if (imgBase64) {
+params.imgBase64 = imgBase64;
+params.imgMimeType = imgMimeType;
+} else if (existingImgUrl) {
+params.img = existingImgUrl;
+}
 
 const res = await callGASGet('saveProduct', params);
 if (res.success) {
