@@ -52,7 +52,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .form-group{margin-bottom:1rem}
 .form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
 
-.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative;margin-bottom:1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px}
+.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative;margin-bottom:1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px}
 .file-upload-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10}
 
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
@@ -71,9 +71,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle.on::before{transform:translateX(20px)}
 .qr-preview{width:120px;height:120px;margin:0 auto}
 
-/* Desain Pop-up Jendela Preview yang Bersih & Aman */
-.popup-preview-box{width:100%;text-align:center;padding:10px;background:#000;border-radius:var(--radius-sm);max-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.popup-preview-box img, .popup-preview-box video{max-width:100%;max-height:280px;object-fit:contain}
+/* Box Konten Pop-up Preview yang Bersih dan Terisolasi */
+.popup-preview-box{width:100%;text-align:center;padding:10px;background:#1e1e1e;border-radius:var(--radius-sm);max-height:350px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.popup-preview-box img, .popup-preview-box video{max-width:100%;max-height:330px;object-fit:contain}
 
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.container{padding:1rem}}
@@ -148,10 +148,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <p style="margin-top:0.5rem">Klik atau drag file</p>
 <p style="font-size:0.75rem;color:var(--text-light)">JPG/PNG/GIF/MP4, max 10MB</p>
 </div>
-<p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500"></p>
+<p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500;word-break:break-all"></p>
 </div>
-<div id="previewBtnContainer" style="display:none; text-align:center; margin-top:5px;">
-  <button type="button" class="btn btn-outline btn-sm" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> Klik Lihat File Terpilih</button>
+<div id="previewBtnContainer" style="display:none; text-align:center; margin-top:10px; margin-bottom:10px;">
+  <button type="button" class="btn btn-outline" style="width:100%; border-color:var(--primary); color:var(--primary)" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> 👁️ LIHAT PREVIEW FILE TERPILIH</button>
 </div>
 </div>
 </form>
@@ -164,13 +164,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 
 <div class="modal-overlay" id="popupPreviewModal" style="z-index: 3000;">
-<div class="modal" style="max-width:400px;">
-<div class="modal-header"><h3><i class="fas fa-file-image"></i> Preview File</h3><button class="modal-close" onclick="closeModal('popupPreviewModal')">&times;</button></div>
+<div class="modal" style="max-width:420px;">
+<div class="modal-header"><h3><i class="fas fa-file-image"></i> Preview File Terpilih</h3><button class="modal-close" onclick="closeModal('popupPreviewModal')">&times;</button></div>
 <div class="modal-body">
   <div class="popup-preview-box" id="popupPreviewContent"></div>
 </div>
 <div class="modal-footer">
-  <button class="btn btn-primary btn-sm" onclick="closeModal('popupPreviewModal')">Tutup</button>
+  <button class="btn btn-primary" style="width:100%" onclick="closeModal('popupPreviewModal')">Tutup Preview</button>
 </div>
 </div>
 </div>
@@ -302,12 +302,12 @@ document.getElementById('adminPanel').classList.toggle('show');
 if(document.getElementById('adminPanel').classList.contains('show')) renderAdminList();
 }
 
-// ==================== SELEKSI FILE & ALUR PREVIEW BARU ====================
+// ==================== SELEKSI FILE & POPUP PREVIEW (REALISASI IDE 1) ====================
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
   document.getElementById('tplFileName').textContent = ''; 
-  document.getElementById('uploadPlaceholder').style.style = 'block';
+  document.getElementById('uploadPlaceholder').style.display = 'block';
   document.getElementById('previewBtnContainer').style.display = 'none';
   if (currentPreviewObjectURL) {
     URL.revokeObjectURL(currentPreviewObjectURL);
@@ -318,6 +318,7 @@ function openUploadModal(){
 function handleTplFileSelect(input){
   var f = input.files[0];
   var btnContainer = document.getElementById('previewBtnContainer');
+  var placeholder = document.getElementById('uploadPlaceholder');
   
   if (currentPreviewObjectURL) {
     URL.revokeObjectURL(currentPreviewObjectURL);
@@ -331,8 +332,10 @@ function handleTplFileSelect(input){
     currentPreviewObjectURL = URL.createObjectURL(f);
     currentPreviewType = f.type.includes('video') ? 'video' : 'image';
     
-    btnContainer.style.display = 'block'; // Munculkan tombol klik preview
+    placeholder.style.display = 'none'; // Sembunyikan ikon upload agar rapi
+    btnContainer.style.display = 'block'; // TAMPILKAN TOMBOL PREVIEW POPUP NYATA
   } else {
+    placeholder.style.display = 'block';
     btnContainer.style.display = 'none';
   }
 }
@@ -406,7 +409,7 @@ if(resData.success){
 }
 }
 
-// ==================== DOWNLOAD & WATERMARK (FIXED BLOK PUTIH) ====================
+// ==================== DOWNLOAD & LOCAL PROXY BLOB WATERMARK (REALISASI IDE 2) ====================
 function openDownloadModal(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -442,20 +445,29 @@ var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + 
 closeModal('downloadModal');
 
 if(isImg && ref){
-showToast('Menyiapkan Gambar + QR Code...', 'info');
+showToast('Mengambil data GDrive ke lokal browser...', 'info');
 try{
-var canvas = await addWatermarkToImage(fileUrl, ref);
-var a = document.createElement('a');
-a.target = '_self'; 
-a.download = fileName;
-a.href = canvas.toDataURL('image/jpeg', 0.95);
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-showToast('Download dimulai!', 'success');
+  // STRATEGI IDE 2: Tarik file secara paksa via fetch untuk dijadikan Blob Lokal (Membypass CORS)
+  var response = await fetch(fileUrl);
+  var blob = await response.blob();
+  var localBlobUrl = URL.createObjectURL(blob);
+
+  showToast('Menyisipkan Watermark pada file lokal...', 'info');
+  var canvas = await addWatermarkToImage(localBlobUrl, ref);
+  
+  var a = document.createElement('a');
+  a.target = '_self'; 
+  a.download = fileName;
+  a.href = canvas.toDataURL('image/jpeg', 0.95);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  URL.revokeObjectURL(localBlobUrl); // Bersihkan memori lokal
+  showToast('Download Sukses dengan Watermark Kontras!', 'success');
 }catch(e){
-  // Peringatan jika CORS Google Drive menghalangi proses Canvas lokal
-  showToast('Sistem mengunduh file asli (Watermark dilewati karena proteksi host asal)', 'info');
+  // Fallback cadangan ekstrim jika link hancur
+  showToast('Gagal memproses lokal blob, mendownload file asli...', 'error');
   triggerDirectDownload(fileUrl, fileName);
 }
 } else {
@@ -495,11 +507,10 @@ document.body.removeChild(a);
 }
 }
 
-// Fungsi utama render blok putih kontras tinggi + konten hitam ke file gambar unduhan
-async function addWatermarkToImage(imgUrl, refCode){
+// Pemrosesan Kanvas dari Objek Lokal Hasil Unduhan Memori Browser
+async function addWatermarkToImage(localImgUrl, refCode){
 return new Promise(function(resolve, reject){
 var img = new Image();
-img.crossOrigin = 'anonymous'; // Wajib ada untuk memicu pembacaan CORS
 img.onload = function(){
 try {
 var canvas = document.createElement('canvas');
@@ -507,7 +518,7 @@ canvas.width = img.width;
 canvas.height = img.height;
 var ctx = canvas.getContext('2d');
 
-// 1. Gambar utama
+// 1. Gambar desain utama
 ctx.drawImage(img, 0, 0);
 
 // 2. Buat blok persegi panjang warna Putih Bersih di dasar gambar
@@ -573,7 +584,7 @@ setTimeout(function(){
 }
 };
 img.onerror = function(err) { reject(err); };
-img.src = imgUrl;
+img.src = localImgUrl; // Menggunakan URL Blob lokal hasil fetch aman
 });
 }
 
