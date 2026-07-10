@@ -50,7 +50,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.5rem}
 .form-group{margin-bottom:1rem}
 .form-label{display:block;font-weight:500;font-size:0.85rem;margin-bottom:0.4rem}
-.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative}
+.file-upload-wrapper{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);position:relative;margin-bottom:1rem}
 .file-upload-wrapper:hover{border-color:var(--primary-light)}
 .file-upload-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10}
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:0.5rem}
@@ -67,10 +67,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .status-toggle.on{background:var(--success)}
 .status-toggle::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:2px;left:2px;transition:transform 0.3s}
 .status-toggle.on::before{transform:translateX(20px)}
-.preview-watermark{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(255,255,255,0.9);padding:0.5rem;border-radius:var(--radius-sm);font-size:0.7rem;text-align:center}
 .qr-preview{width:120px;height:120px;margin:0 auto}
-.preview-container{margin-top:15px;text-align:center;display:none;width:100%;min-height:100px}
-.preview-img-el,.preview-video-el{max-width:100%;max-height:180px;border-radius:var(--radius-sm);border:2px solid var(--border);object-fit:contain}
+.preview-container{margin-top:15px;text-align:center;width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);box-shadow:inset 0 1px 3px rgba(0,0,0,0.05)}
+.preview-img-el,.preview-video-el{max-width:100%;max-height:180px;border-radius:var(--radius-sm);object-fit:contain;display:inline-block}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 @media(max-width:768px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.container{padding:1rem}}
 </style>
@@ -144,7 +143,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <p style="font-size:0.75rem;color:var(--text-light)">JPG/PNG/GIF/MP4, max 10MB</p>
 <p id="tplFileName" style="font-size:0.8rem;color:var(--success);margin-top:0.5rem;font-weight:500"></p>
 </div>
-<div class="preview-container" id="tplPreviewContainer"></div>
+<div class="preview-container" id="tplPreviewContainer" style="display:none;"></div>
 </div>
 </form>
 </div>
@@ -171,6 +170,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 </div>
 
+<div id="hiddenQrContainer" style="display:none; width:300px; height:300px;"></div>
+
 <script>
 // ==================== CONFIG ====================
 const CONFIG = {
@@ -183,6 +184,7 @@ var TEMPLATES = [];
 var currentFilter = 'all';
 var currentUser = null;
 var selectedTemplate = null;
+var currentPreviewObjectURL = null;
 
 // ==================== SESSION ====================
 function loadSession(){
@@ -281,11 +283,16 @@ document.getElementById('adminPanel').classList.toggle('show');
 if(document.getElementById('adminPanel').classList.contains('show')) renderAdminList();
 }
 
-// ==================== UPLOAD ====================
+// ==================== UPLOAD & PREVIEW ====================
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
   document.getElementById('tplFileName').textContent = ''; 
+  
+  if (currentPreviewObjectURL) {
+    URL.revokeObjectURL(currentPreviewObjectURL);
+    currentPreviewObjectURL = null;
+  }
   var container = document.getElementById('tplPreviewContainer');
   container.innerHTML = '';
   container.style.display = 'none';
@@ -296,10 +303,16 @@ function handleTplFileSelect(input){
   var container = document.getElementById('tplPreviewContainer');
   container.innerHTML = '';
   
+  if (currentPreviewObjectURL) {
+    URL.revokeObjectURL(currentPreviewObjectURL);
+    currentPreviewObjectURL = null;
+  }
+  
   if(f){
     var sizeMB = f.size * 0.00000095367;
     document.getElementById('tplFileName').textContent = f.name + ' (' + sizeMB.toFixed(2) + ' MB)';
     
+    currentPreviewObjectURL = URL.createObjectURL(f);
     var isVideo = f.type.includes('video');
     var el;
     
@@ -313,7 +326,7 @@ function handleTplFileSelect(input){
       el.className = 'preview-img-el';
     }
     
-    el.src = URL.createObjectURL(f);
+    el.src = currentPreviewObjectURL;
     container.appendChild(el);
     container.style.display = 'block';
   } else {
@@ -376,7 +389,7 @@ if(resData.success){
 }
 }
 
-// ==================== DOWNLOAD ====================
+// ==================== DOWNLOAD & WATERMARK EMBED ====================
 function openDownloadModal(tplId){
 var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
@@ -411,13 +424,13 @@ var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + 
 closeModal('downloadModal');
 
 if(isImg && ref){
-showToast('Menyiapkan gambar dengan watermark...', 'info');
+showToast('Menyisipkan QR Code & Link Referral...', 'info');
 try{
 var canvas = await addWatermarkToImage(fileUrl, ref);
 var a = document.createElement('a');
 a.target = '_self'; 
 a.download = fileName;
-a.href = canvas.toDataURL('image/jpeg', 0.9);
+a.href = canvas.toDataURL('image/jpeg', 0.95);
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
@@ -463,6 +476,7 @@ document.body.removeChild(a);
 }
 }
 
+// Fungsi Utama: Menggabungkan Gambar Asli + QR Code + Link Teks ke dalam 1 File Gambar
 async function addWatermarkToImage(imgUrl, refCode){
 return new Promise(function(resolve, reject){
 var img = new Image();
@@ -472,18 +486,65 @@ var canvas = document.createElement('canvas');
 canvas.width = img.width;
 canvas.height = img.height;
 var ctx = canvas.getContext('2d');
+
+// 1. Gambar desain template utama
 ctx.drawImage(img, 0, 0);
 
-var barHeight = Math.max(60, img.height * 0.08);
-ctx.fillStyle = 'rgba(93, 64, 55, 0.85)';
+// 2. Tentukan ukuran bar watermark proporsional terhadap resolusi gambar asli
+var barHeight = Math.max(80, img.height * 0.12);
+ctx.fillStyle = 'rgba(93, 64, 55, 0.95)';
 ctx.fillRect(0, img.height - barHeight, img.width, barHeight);
 
-ctx.fillStyle = 'white';
-ctx.font = 'bold ' + Math.max(14, img.width * 0.015) + 'px Inter, sans-serif';
-ctx.textBaseline = 'middle';
-ctx.fillText('Pesan: ' + CONFIG.BASE_URL + '?ref=' + refCode, 15, img.height - barHeight / 2);
+// 3. Generate QR Code secara tersembunyi di memori untuk disalin ke Canvas
+var qrContainer = document.getElementById('hiddenQrContainer');
+qrContainer.innerHTML = '';
+var qrSize = Math.round(barHeight * 0.85);
 
-resolve(canvas);
+new QRCode(qrContainer, {
+  text: CONFIG.BASE_URL + '?ref=' + refCode,
+  width: qrSize,
+  height: qrSize,
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+// Tunggu render QR selesai di objek imaji DOM internal
+setTimeout(function(){
+  var qrImgEl = qrContainer.querySelector('img');
+  if(qrImgEl && qrImgEl.src){
+    var qrImg = new Image();
+    qrImg.onload = function() {
+      // Tempel QR Code di sebelah kanan bar
+      var qrX = img.width - qrSize - Math.round(barHeight * 0.1);
+      var qrY = img.height - barHeight + Math.round((barHeight - qrSize) / 2);
+      
+      // Beri background putih sedikit di sekeliling QR agar kontras
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      // 4. Tambahkan Teks Informasi Link di sebelah kiri bar
+      ctx.fillStyle = 'white';
+      var fontSize = Math.max(14, Math.round(img.width * 0.018));
+      ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
+      ctx.textBaseline = 'middle';
+      
+      var linkText = 'Pesan di: ' + CONFIG.BASE_URL + '?ref=' + refCode;
+      ctx.fillText(linkText, Math.round(barHeight * 0.2), img.height - barHeight / 2);
+
+      resolve(canvas);
+    };
+    qrImg.src = qrImgEl.src;
+  } else {
+    // Jalankan fallback jika QR gagal digenerate ke Canvas
+    ctx.fillStyle = 'white';
+    var fontSize = Math.max(14, Math.round(img.width * 0.015));
+    ctx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Link: ' + CONFIG.BASE_URL + '?ref=' + refCode, 15, img.height - barHeight / 2);
+    resolve(canvas);
+  }
+}, 300);
+
 };
 img.onerror = reject;
 img.src = imgUrl;
