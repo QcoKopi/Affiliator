@@ -688,7 +688,15 @@ showToast('Template dihapus', 'success');
 // ==================== UTILS ====================
 function handleImageError(img, name) {
   console.error('Image failed to load:', img.src);
-  img.parentNode.innerHTML = '<div style="text-align:center;padding:20px"><i class="fas fa-image" style="font-size:3rem;color:var(--primary-light);display:block;margin-bottom:0.5rem"></i><span style="font-size:0.8rem;color:var(--text-light)">' + (name || 'Gambar') + '</span><p style="font-size:0.7rem;color:var(--danger);margin-top:0.5rem">Pastikan file GDrive di-share "Anyone with the link"</p></div>';
+  var driveId = getGoogleDriveId(img.src);
+  var retryUrl = driveId ? 'https://drive.google.com/uc?export=view&id=' + driveId : img.src;
+  // Try one more time with alternative URL format
+  if (img.getAttribute('data-retried') !== 'true') {
+    img.setAttribute('data-retried', 'true');
+    img.src = retryUrl;
+    return;
+  }
+  img.parentNode.innerHTML = '<div style="text-align:center;padding:20px"><i class="fas fa-image" style="font-size:3rem;color:var(--primary-light);display:block;margin-bottom:0.5rem"></i><span style="font-size:0.8rem;color:var(--text-light)">' + (name || 'Gambar') + '</span><p style="font-size:0.7rem;color:var(--danger);margin-top:0.5rem">Gagal memuat gambar. Cek sharing GDrive atau upload ulang.</p></div>';
 }
 
 function fileToBase64(file){
