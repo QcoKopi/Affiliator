@@ -953,6 +953,33 @@ return { success: false, error: err.message };
 }
 }
 
+// FIX: dipakai untuk request yang membawa data besar (mis. foto produk base64).
+// callGASGet menempel semua data ke URL (query string) sehingga kalau ada base64
+// gambar, URL jadi sangat panjang dan ditolak server dengan error 403 SEBELUM
+// sampai ke doGet(). callGASPost mengirim data lewat body POST (seperti yang
+// sudah dipakai untuk upload KTP/Tabungan), jadi tidak ada batas panjang URL,
+// dan tetap membaca balasan JSON-nya (beda dengan syncToGAS yang lewat iframe).
+async function callGASPost(action, params) {
+try {
+const body = new URLSearchParams();
+body.append('action', action);
+for (let key in params) {
+if (params[key] !== undefined && params[key] !== null) {
+body.append(key, String(params[key]));
+}
+}
+// Content-Type default URLSearchParams = application/x-www-form-urlencoded,
+// ini termasuk "simple request" jadi tidak memicu CORS preflight (OPTIONS)
+// yang tidak didukung Apps Script.
+const response = await fetchWithTimeout(CONFIG.GAS_URL, { method: 'POST', body: body }, 30000);
+if (!response.ok) throw new Error('HTTP ' + response.status);
+return await response.json();
+}catch(err) {
+Debug.log('GAS POST PARAM ERROR:', action + ': ' + err.message);
+return { success: false, error: err.message };
+}
+}
+
 // ==================== SYNC ALL DATA ====================
 async function syncAllData() {
 updateSyncStatus('syncing');
@@ -1188,7 +1215,9 @@ params.imgMimeType = imgMimeType;
 params.img = existingImgUrl;
 }
 
-const res = await callGASGet('saveProduct', params);
+// FIX: pakai POST (bukan GET) karena imgBase64 bisa sangat besar dan akan
+// membuat URL terlalu panjang jika dikirim lewat query string -> error 403.
+const res = imgBase64 ? await callGASPost('saveProduct', params) : await callGASGet('saveProduct', params);
 if (res.success) {
 showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
 await syncAllData();
