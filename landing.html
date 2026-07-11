@@ -293,9 +293,14 @@ setTimeout(()=>{if(form.parentNode)form.parentNode.removeChild(form);},5000);
 
 async function fetchFromGAS(action){
 try{
-const response=await fetch(CONFIG.GAS_URL+'?action='+encodeURIComponent(action));
+const controller=new AbortController();
+const timeoutId=setTimeout(()=>controller.abort(),10000);
+const response=await fetch(CONFIG.GAS_URL+'?action='+encodeURIComponent(action),{signal:controller.signal});
+clearTimeout(timeoutId);
 if(!response.ok)throw new Error('HTTP '+response.status);
-return await response.json();
+const text=await response.text();
+if(text.trim().startsWith('<'))throw new Error('GAS returned HTML');
+return JSON.parse(text);
 }catch(err){return{success:false,error:err.message}}
 }
 
@@ -304,7 +309,10 @@ const DBStore={
 db:null,ready:false,mode:'unknown',
 memory:{users:[],leads:[],commissions:[],products:[],orders:[]},
 init:function(){if(this.initPromise)return this.initPromise;this.initPromise=this._tryInit();return this.initPromise},
-_tryInit:async function(){try{await this._initIDB(3000);this.mode='indexeddb';this.ready=true;return}catch(e){}try{localStorage.setItem('_t','1');localStorage.removeItem('_t');this.mode='localstorage';this.ready=true;return}catch(e){}this.mode='memory';this.ready=true},
+_tryInit:async function(){try{await this._initIDB(3000);this.mode='indexeddb';this.ready=true;return}catch(e){
+  console.error('GAS fetch error:', e);
+  showToast('Gagal memuat produk dari server. Menggunakan data lokal...', 'error');
+}try{localStorage.setItem('_t','1');localStorage.removeItem('_t');this.mode='localstorage';this.ready=true;return}catch(e){}this.mode='memory';this.ready=true},
 _initIDB:function(t){return new Promise((r,j)=>{const x=setTimeout(()=>j('to'),t);const q=indexedDB.open(CONFIG.DB_NAME,CONFIG.DB_VERSION);q.onerror=(e)=>{clearTimeout(x);j()};q.onsuccess=(e)=>{clearTimeout(x);this.db=q.result;r()};q.onupgradeneeded=(e)=>{const d=e.target.result;['users','leads','commissions','products','orders'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'})})}})},
 getAll:function(s){return new Promise(r=>{if(this.mode==='indexeddb'&&this.db){const q=this.db.transaction(s,'readonly').objectStore(s).getAll();q.onsuccess=(e)=>r(e.target.result||[]);q.onerror=(e)=>r([])}else if(this.mode==='localstorage'){try{const v=localStorage.getItem('aff_'+s);r(v?JSON.parse(v):[])}catch(e){r([])}}else{r(this.memory[s]||[])}})},
 put:function(s,d){return new Promise(r=>{if(this.mode==='indexeddb'&&this.db){const q=this.db.transaction(s,'readwrite').objectStore(s).put(d);q.onsuccess=()=>r();q.onerror=()=>r()}else if(this.mode==='localstorage'){try{const a=JSON.parse(localStorage.getItem('aff_'+s)||'[]');const i=a.findIndex(x=>x.id===d.id);if(i>=0)a[i]=d;else a.push(d);localStorage.setItem('aff_'+s,JSON.stringify(a))}catch(e){}r()}else{const a=this.memory[s]||[];const i=a.findIndex(x=>x.id===d.id);if(i>=0)a[i]=d;else a.push(d);r()}})}
