@@ -897,36 +897,15 @@ setTimeout(function() { reject(new Error('Timeout: server tidak respons dalam ' 
 }
 
 async function fetchFromGAS(action) {
-return new Promise(function(resolve) {
-var iframe = document.getElementById('gasFrame');
-var form = document.createElement('form');
-form.method = 'GET';
-form.action = CONFIG.GAS_URL;
-form.target = 'gasFrame';
-form.style.display = 'none';
-var af = document.createElement('input');
-af.name = 'action';
-af.value = action;
-form.appendChild(af);
-iframe.onload = function() {
 try {
-var doc = iframe.contentDocument || iframe.contentWindow.document;
-var body = doc.body.innerText || doc.body.textContent;
-if (body && body.trim()) {
-var data = JSON.parse(body.trim());
-resolve(data);
-} else {
-resolve({ success: false, error: 'Empty response' });
+const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
+const response = await fetchWithTimeout(url, {}, 15000);
+if (!response.ok) throw new Error('HTTP ' + response.status);
+return await response.json();
+}catch(err) {
+Debug.log('GAS GET ERROR:', action + ': ' + err.message);
+return { success: false, error: err.message };
 }
-} catch(e) {
-resolve({ success: false, error: e.message });
-}
-};
-setTimeout(function() { resolve({ success: false, error: 'Timeout' }); }, 15000);
-document.body.appendChild(form);
-form.submit();
-setTimeout(function() { if(form.parentNode) form.parentNode.removeChild(form); }, 5000);
-});
 }
 
 async function syncToGAS(action, data) {
@@ -1778,86 +1757,6 @@ sidebar.classList.toggle('open');
 overlay.classList.toggle('active');
 }
 
-
-
-// ==================== SAVE USER DETAIL ====================
-async function saveUserDetail() {
-  const userId = document.getElementById('detailUserId').value;
-  if (!userId) {
-    showToast('ID User tidak valid', 'error');
-    return;
-  }
-
-  const name = document.getElementById('detailName').value.trim();
-  const email = document.getElementById('detailEmail').value.trim();
-  const phone = document.getElementById('detailPhone').value.trim();
-  const password = document.getElementById('detailPassword').value;
-
-  if (!name || !email || !phone) {
-    showToast('Nama, Email, dan Phone wajib diisi', 'error');
-    return;
-  }
-
-  const btn = document.getElementById('btnSaveUserDetail');
-  const btnOriginal = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-  const params = {
-    action: 'updateUser',
-    id: userId,
-    name: name,
-    email: email,
-    phone: phone
-  };
-
-  if (password) {
-    params.password = password;
-  }
-
-  // Handle file uploads
-  const ktpFile = document.getElementById('adminRegKtp').files[0];
-  const tabFile = document.getElementById('adminRegTabungan').files[0];
-
-  try {
-    if (ktpFile) {
-      const ktpBase64 = await fileToBase64(ktpFile);
-      params.ktpBase64 = ktpBase64;
-      params.ktpMimeType = ktpFile.type || 'image/jpeg';
-    }
-    if (tabFile) {
-      const tabBase64 = await fileToBase64(tabFile);
-      params.tabunganBase64 = tabBase64;
-      params.tabunganMimeType = tabFile.type || 'image/jpeg';
-    }
-
-    const res = await callGASGet('updateUser', params);
-    if (res.success) {
-      showToast('User berhasil diupdate!', 'success');
-      closeModal('userDetailModal');
-      await syncAllData();
-    } else {
-      showToast(res.error || 'Gagal update user', 'error');
-    }
-  } catch (err) {
-    showToast('Error: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = btnOriginal;
-  }
-}
-
-// ==================== FILE TO BASE64 HELPER ====================
-function fileToBase64(file) {
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      resolve(e.target.result.split(',')[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 window.onload = function() {
 checkAccess();
 };
