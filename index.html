@@ -897,15 +897,36 @@ setTimeout(function() { reject(new Error('Timeout: server tidak respons dalam ' 
 }
 
 async function fetchFromGAS(action) {
+return new Promise(function(resolve) {
+var iframe = document.getElementById('gasFrame');
+var form = document.createElement('form');
+form.method = 'GET';
+form.action = CONFIG.GAS_URL;
+form.target = 'gasFrame';
+form.style.display = 'none';
+var af = document.createElement('input');
+af.name = 'action';
+af.value = action;
+form.appendChild(af);
+iframe.onload = function() {
 try {
-const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action);
-const response = await fetchWithTimeout(url, {}, 15000);
-if (!response.ok) throw new Error('HTTP ' + response.status);
-return await response.json();
-}catch(err) {
-Debug.log('GAS GET ERROR:', action + ': ' + err.message);
-return { success: false, error: err.message };
+var doc = iframe.contentDocument || iframe.contentWindow.document;
+var body = doc.body.innerText || doc.body.textContent;
+if (body && body.trim()) {
+var data = JSON.parse(body.trim());
+resolve(data);
+} else {
+resolve({ success: false, error: 'Empty response' });
 }
+} catch(e) {
+resolve({ success: false, error: e.message });
+}
+};
+setTimeout(function() { resolve({ success: false, error: 'Timeout' }); }, 15000);
+document.body.appendChild(form);
+form.submit();
+setTimeout(function() { if(form.parentNode) form.parentNode.removeChild(form); }, 5000);
+});
 }
 
 async function syncToGAS(action, data) {
