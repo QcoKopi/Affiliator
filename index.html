@@ -166,8 +166,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
   margin: 0;
 }
 .product-image-preview {
-  max-width: 180px;
-  max-height: 180px;
+  width: 200px;
+  height: 143px;
   border-radius: var(--radius-sm);
   margin: 0 auto;
   display: block;
@@ -504,7 +504,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="product-image-upload" id="productImageUploadArea" onclick="document.getElementById('productImageFile').click()">
 <div id="productImageUploadContent">
 <i class="fas fa-cloud-upload-alt"></i>
-<p>Klik untuk upload gambar<br><small>JPG, PNG, GIF, WebP (max 2MB)</small></p>
+<p>Klik untuk upload gambar<br><small>JPG, PNG, GIF, WebP (max 2MB)</small><br><small style="color:var(--primary)">Rekomendasi: foto landscape rasio 1.4:1 (mis. 840x600px) - gambar dengan rasio lain tetap bisa diupload, tapi sisi kiri/kanan atau atas/bawahnya bisa terpotong sedikit saat tampil di landing page</small></p>
 </div>
 <img id="productImagePreview" class="product-image-preview" style="display:none">
 <div class="product-image-actions" id="productImageActions">
