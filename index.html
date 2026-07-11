@@ -1082,6 +1082,26 @@ return '<tr><td>' + formatDate(l.date) + '</td><td>' + (l.name || '-') + '</td><
 }
 
 // ==================== PRODUCTS (Admin) ====================
+// ==================== GOOGLE DRIVE IMAGE URL HELPER ====================
+// FIX: 'uc?export=view&id=...' tidak bisa lagi di-embed sebagai <img> (403).
+// Konversi ke format lh3.googleusercontent.com yang sudah terbukti jalan di
+// templates.html. Diterapkan di render, jadi jalan untuk data lama & baru
+// tanpa perlu ubah data di sheet.
+function getGoogleDriveId(url) {
+  if (!url) return '';
+  var match = url.match(/id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+  return (match && match[1]) ? match[1] : '';
+}
+
+function getDirectImageUrl(url) {
+  if (!url) return '';
+  if (url.indexOf('googleusercontent.com') !== -1) return url;
+  if (url.indexOf('drive.google.com/thumbnail') !== -1) return url;
+  var driveId = getGoogleDriveId(url);
+  if (driveId) return 'https://lh3.googleusercontent.com/d/' + driveId;
+  return url;
+}
+
 function renderProducts() {
 if (!currentUser || !currentUser.isAdmin) return;
 const body = document.getElementById('productsBody');
@@ -1093,7 +1113,7 @@ return;
 body.innerHTML = DATA.products.map(p => {
 const pId = p.id || '';
 const isAct = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
-const imgTag = p.img ? '<div class="product-img-preview"><img src="' + p.img + '" onerror="this.src=\'https://placehold.co/50?text=Kopi\'"></div>' : '<div class="product-img-preview"><i class="fas fa-coffee"></i></div>';
+const imgTag = p.img ? '<div class="product-img-preview"><img src="' + getDirectImageUrl(p.img) + '" onerror="this.src=\'https://placehold.co/50?text=Kopi\'"></div>' : '<div class="product-img-preview"><i class="fas fa-coffee"></i></div>';
 const toggleTitle = isAct ? 'Nonaktifkan' : 'Aktifkan';
 const toggleIcon = isAct ? 'fa-toggle-on' : 'fa-toggle-off';
 const toggleClass = isAct ? 'btn-success' : 'btn-outline';
@@ -1172,7 +1192,7 @@ const imgUrl = p.img || p.imageurl || p.image_url || '';
 if (imgUrl) {
 document.getElementById('productImageUrl').value = imgUrl;
 const preview = document.getElementById('productImagePreview');
-preview.src = imgUrl;
+preview.src = getDirectImageUrl(imgUrl);
 preview.style.display = 'block';
 document.getElementById('productImageUploadArea').classList.add('has-image');
 }
@@ -1626,6 +1646,193 @@ showToast('Data sistem diperbarui!', 'success');
 
 function closeModal(id) {
 document.getElementById(id).classList.remove('active');
+}
+
+// ==================== USER DETAIL / EDIT PROFIL ====================
+// FIX: onclick="openMyProfileModal()" (tombol "Edit Profil") dan
+// onclick="openUserDetailModal(...)" (tombol "Detail" di Kelola Affiliator)
+// dipanggil di HTML tapi fungsinya tidak pernah ada di file ini, jadi tombolnya
+// diam saja saat diklik. Modal & backend (action updateUser) sudah tersedia,
+// jadi cukup dihubungkan di sini.
+
+function openUserDetailModal(userId) {
+var u = DATA.users.find(function(x) { return String(x.id) === String(userId); });
+if (!u) { showToast('Data affiliator tidak ditemukan. Coba refresh data.', 'error'); return; }
+
+var isSelf = currentUser && !currentUser.isAdmin && String(currentUser.id) === String(userId);
+var titleEl = document.querySelector('#userDetailModal .modal-header h3');
+if (titleEl) titleEl.innerHTML = '<i class="fas fa-user-edit"></i> ' + (isSelf ? 'Profil Saya' : 'Detail Affiliator');
+
+document.getElementById('detailUserId').value = u.id || '';
+document.getElementById('detailName').value = u.name || '';
+document.getElementById('detailEmail').value = u.email || '';
+document.getElementById('detailPhone').value = u.phone || u.whatsapp || '';
+document.getElementById('detailPassword').value = '';
+document.getElementById('detailRefCode').value = u.referralcode || u.referralCode || '';
+document.getElementById('detailStatus').value = u.status || 'Active';
+document.getElementById('detailBank').value = u.bank || '';
+document.getElementById('detailJoined').value = formatDate(u.joined || u.joinedat || '');
+
+var ktpUrl = u.ktpurl || u.ktpUrl || '';
+var tabunganUrl = u.tabunganurl || u.tabunganUrl || '';
+
+document.getElementById('detailKtpSection').style.display = ktpUrl ? 'block' : 'none';
+document.getElementById('detailKtpMissing').style.display = ktpUrl ? 'none' : 'block';
+if (ktpUrl) document.getElementById('detailKtpLink').href = ktpUrl;
+
+document.getElementById('detailTabunganSection').style.display = tabunganUrl ? 'block' : 'none';
+document.getElementById('detailTabunganMissing').style.display = tabunganUrl ? 'none' : 'block';
+if (tabunganUrl) document.getElementById('detailTabunganLink').href = tabunganUrl;
+
+// Reset input upload ulang KTP/Tabungan (khusus admin)
+['adminRegKtp', 'adminRegTabungan'].forEach(function(id) {
+var el = document.getElementById(id);
+if (el) el.value = '';
+});
+['adminKtpPreview', 'adminTabunganPreview'].forEach(function(id) {
+var el = document.getElementById(id);
+if (el) { el.style.display = 'none'; el.src = ''; }
+});
+['adminKtpFileName', 'adminTabunganFileName'].forEach(function(id) {
+var el = document.getElementById(id);
+if (el) el.textContent = '';
+});
+
+document.getElementById('userDetailModal').classList.add('active');
+}
+
+async function openMyProfileModal() {
+if (!currentUser || currentUser.isAdmin) return;
+var u = DATA.users.find(function(x) { return String(x.id) === String(currentUser.id); });
+if (!u) {
+// Data belum ter-sync di client, ambil dulu dari server
+try {
+await syncAllData();
+} catch (e) {}
+}
+openUserDetailModal(currentUser.id);
+}
+
+function fileToBase64(file) {
+return new Promise(function(resolve, reject) {
+var reader = new FileReader();
+reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+}
+
+async function saveUserDetail() {
+var id = document.getElementById('detailUserId').value;
+if (!id) return;
+
+var btn = document.getElementById('btnSaveUserDetail');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+try {
+var params = { id: id };
+var name = document.getElementById('detailName').value.trim();
+var email = document.getElementById('detailEmail').value.trim();
+var phone = document.getElementById('detailPhone').value.trim();
+var password = document.getElementById('detailPassword').value;
+
+if (name) params.name = name;
+if (email) params.email = email;
+if (phone) params.phone = phone;
+if (password) {
+if (password.length < 6) {
+showToast('Password minimal 6 karakter', 'error');
+return;
+}
+params.password = password;
+}
+
+var hasFile = false;
+if (currentUser && currentUser.isAdmin) {
+var ktpInput = document.getElementById('adminRegKtp');
+var tabInput = document.getElementById('adminRegTabungan');
+if (ktpInput && ktpInput.files && ktpInput.files[0]) {
+params.ktpBase64 = await fileToBase64(ktpInput.files[0]);
+hasFile = true;
+}
+if (tabInput && tabInput.files && tabInput.files[0]) {
+params.tabunganBase64 = await fileToBase64(tabInput.files[0]);
+hasFile = true;
+}
+}
+
+if (Object.keys(params).length <= 1) {
+showToast('Tidak ada perubahan untuk disimpan', 'error');
+return;
+}
+
+// FIX: pakai POST kalau ada file (base64 bisa besar -> GET akan 403, sama seperti kasus saveProduct)
+var res = hasFile ? await callGASPost('updateUser', params) : await callGASGet('updateUser', params);
+
+if (res.success) {
+showToast('Profil berhasil diperbarui!', 'success');
+closeModal('userDetailModal');
+
+if (currentUser && String(currentUser.id) === String(id)) {
+if (name) currentUser.name = name;
+if (email) currentUser.email = email;
+SessionManager.saveSession(currentUser);
+applyRoleVisibility();
+}
+
+await syncAllData();
+if (currentUser && currentUser.isAdmin) renderAffiliators();
+} else {
+showToast(res.error || 'Gagal menyimpan perubahan', 'error');
+}
+} catch (err) {
+showToast('Koneksi terputus saat menyimpan profil', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
+}
+
+// ==================== AKTIVASI AFFILIATOR (Admin) ====================
+// FIX: dipanggil dari tombol "Aktifkan" / "Nonaktifkan" di Kelola Affiliator,
+// sebelumnya juga tidak terdefinisi.
+async function activateUser(id, btnEl) {
+if (btnEl) btnEl.disabled = true;
+try {
+var res = await callGASGet('updateUser', { id: id, status: 'Active' });
+if (res.success) {
+showToast('Affiliator diaktifkan', 'success');
+await syncAllData();
+renderAffiliators();
+} else {
+showToast(res.error || 'Gagal mengaktifkan affiliator', 'error');
+}
+} catch (err) {
+showToast('Koneksi terputus', 'error');
+} finally {
+if (btnEl) btnEl.disabled = false;
+}
+}
+
+async function deactivateUser(id, btnEl) {
+if (!confirm('Nonaktifkan affiliator ini?')) return;
+if (btnEl) btnEl.disabled = true;
+try {
+var res = await callGASGet('updateUser', { id: id, status: 'Inactive' });
+if (res.success) {
+showToast('Affiliator dinonaktifkan', 'success');
+await syncAllData();
+renderAffiliators();
+} else {
+showToast(res.error || 'Gagal menonaktifkan affiliator', 'error');
+}
+} catch (err) {
+showToast('Koneksi terputus', 'error');
+} finally {
+if (btnEl) btnEl.disabled = false;
+}
 }
 
 function formatNumber(num) {
