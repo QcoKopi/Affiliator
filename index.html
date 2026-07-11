@@ -379,7 +379,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <li class="affiliator-only" style="display:none"><a onclick="openMyProfileModal()" style="cursor:pointer"><i class="fas fa-user-edit"></i> Edit Profil</a></li>
 <li class="admin-only" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1)"><a onclick="showPage('landing')" data-page="landing"><i class="fas fa-external-link-alt"></i> Landing Page</a></li>
 <li class="admin-only"><a onclick="showPage('qr')" data-page="qr"><i class="fas fa-qrcode"></i> QR Generator</a></li>
-
+<li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
 </ul>
 
 <!-- ===== LINK REFERRAL ANDA (Affiliator Only) ===== -->
@@ -391,7 +391,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <button class="sidebar-ref-copybtn" onclick="copySidebarReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
 </div>
 <div class="sidebar-ref-actions">
-<a id="sidebarLandingLink" href="#" target="_blank" class="sidebar-ref-btn sidebar-ref-btn-primary"><i class="fas fa-external-link-alt"></i> Tampilan Link Anda</a>
+<a id="sidebarLandingLink" href="#" target="_blank" class="sidebar-ref-btn sidebar-ref-btn-primary"><i class="fas fa-external-link-alt"></i> Buka Landing</a>
 <a id="sidebarQrLink" href="#" target="_blank" class="sidebar-ref-btn sidebar-ref-btn-outline"><i class="fas fa-qrcode"></i> Generate QR</a>
 </div>
 <div class="sidebar-ref-share">
@@ -403,11 +403,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <button class="sidebar-ref-share-btn sidebar-ref-copy" onclick="copySidebarReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
 </div>
 </div>
-</div>
-<div style="margin-top:auto;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1)">
-<a onclick="adminLogout()" style="color:rgba(255,255,255,0.7);text-decoration:none;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:8px;transition:all 0.3s;cursor:pointer;font-size:0.9rem" onmouseover="this.style.color='white';this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">
-<i class="fas fa-sign-out-alt"></i> Keluar
-</a>
 </div>
 </aside>
 
@@ -2071,6 +2066,19 @@ if (res.success) {
 showToast('Affiliator diaktifkan', 'success');
 await syncAllData();
 renderAffiliators();
+
+// Kirim notifikasi WA ke affiliator yang baru diaktifkan
+var u = DATA.users.find(function(x) { return String(x.id) === String(id); });
+if (u && u.phone) {
+var waMsg = 'Halo ' + (u.name || 'Affiliator') + ', selamat! Akun affiliator Anda telah *DISETUJUI & AKTIF* oleh Admin.\n\n' +
+'Anda sekarang dapat masuk ke dashboard dengan:\n📧 Email: ' + (u.email || '-') + '\n\n' +
+'Akses dashboard Anda di:\n' + window.location.origin + '\n\n' +
+'Semoga sukses berpromosi! 🚀\n- Tim Kopi Affiliate';
+var cleanPhone = String(u.phone).replace(/\D/g, '');
+if (cleanPhone.charAt(0) === '0') cleanPhone = '62' + cleanPhone.substring(1);
+else if (cleanPhone.indexOf('62') !== 0) cleanPhone = '62' + cleanPhone;
+window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(waMsg), '_blank');
+}
 } else {
 showToast(res.error || 'Gagal mengaktifkan affiliator', 'error');
 }
@@ -2108,7 +2116,7 @@ if (btnEl) btnEl.disabled = false;
 // opsi IG/TikTok kalau appnya terpasang); kalau browser tidak mendukung
 // (umumnya desktop), fallback ke salin link + panduan manual.
 function shareToSocial(platform) {
-var linkInput = document.getElementById('sidebarRefInput');
+var linkInput = document.getElementById('refLinkInput');
 var link = linkInput ? linkInput.value : '';
 if (!link) { showToast('Link referral belum tersedia', 'error'); return; }
 
