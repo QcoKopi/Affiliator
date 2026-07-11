@@ -187,7 +187,146 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .product-image-upload.has-image #productImageUploadContent {
   display: none;
 }
+
+/* ===== SIDEBAR REFERRAL SECTION (Affiliator Only) ===== */
+.sidebar-ref-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-ref-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.sidebar-ref-code {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+.sidebar-ref-input-wrap {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+.sidebar-ref-input {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  color: rgba(255,255,255,0.85);
+  font-family: inherit;
+  font-size: 0.72rem;
+  outline: none;
+}
+.sidebar-ref-copybtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.3s;
+}
+.sidebar-ref-copybtn:hover {
+  background: rgba(255,255,255,0.2);
+}
+.sidebar-ref-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.sidebar-ref-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.sidebar-ref-btn-primary {
+  background: var(--primary-light);
+  color: white;
+  border: none;
+}
+.sidebar-ref-btn-primary:hover {
+  background: var(--accent);
+}
+.sidebar-ref-btn-outline {
+  background: transparent;
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.sidebar-ref-btn-outline:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+.sidebar-ref-share {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 0.5rem;
+}
+.sidebar-ref-share-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.sidebar-ref-share-btns {
+  display: flex;
+  gap: 0.35rem;
+}
+.sidebar-ref-share-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: white;
+  transition: all 0.3s;
+}
+.sidebar-ref-ig {
+  background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+}
+.sidebar-ref-fb {
+  background: #1877F2;
+}
+.sidebar-ref-tiktok {
+  background: #000;
+}
+.sidebar-ref-copy {
+  background: rgba(255,255,255,0.15);
+}
+.sidebar-ref-share-btn:hover {
+  transform: scale(1.08);
+  opacity: 0.9;
+}
 </style>
+<base target="_blank">
 <base target="_blank">
 <base target="_blank">
 </head>
@@ -241,6 +380,29 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <li class="admin-only"><a onclick="showPage('qr')" data-page="qr"><i class="fas fa-qrcode"></i> QR Generator</a></li>
 <li><a onclick="adminLogout()" style="margin-top:2rem"><i class="fas fa-sign-out-alt"></i> Keluar</a></li>
 </ul>
+
+<!-- ===== LINK REFERRAL ANDA (Affiliator Only) ===== -->
+<div class="affiliator-only sidebar-ref-section" id="sidebarRefSection" style="display:none">
+<div class="sidebar-ref-header"><i class="fas fa-link"></i> Link Referral Anda</div>
+<div class="sidebar-ref-code" id="sidebarRefCode">-</div>
+<div class="sidebar-ref-input-wrap">
+<input type="text" class="sidebar-ref-input" id="sidebarRefInput" readonly value="">
+<button class="sidebar-ref-copybtn" onclick="copySidebarReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
+</div>
+<div class="sidebar-ref-actions">
+<a id="sidebarLandingLink" href="#" target="_blank" class="sidebar-ref-btn sidebar-ref-btn-primary"><i class="fas fa-external-link-alt"></i> Buka Landing</a>
+<a id="sidebarQrLink" href="#" target="_blank" class="sidebar-ref-btn sidebar-ref-btn-outline"><i class="fas fa-qrcode"></i> Generate QR</a>
+</div>
+<div class="sidebar-ref-share">
+<div class="sidebar-ref-share-label"><i class="fas fa-share-alt"></i> Bagikan</div>
+<div class="sidebar-ref-share-btns">
+<button class="sidebar-ref-share-btn sidebar-ref-ig" onclick="shareToSocial('instagram')" title="Instagram"><i class="fab fa-instagram"></i></button>
+<button class="sidebar-ref-share-btn sidebar-ref-fb" onclick="shareToSocial('facebook')" title="Facebook"><i class="fab fa-facebook-f"></i></button>
+<button class="sidebar-ref-share-btn sidebar-ref-tiktok" onclick="shareToSocial('tiktok')" title="TikTok"><i class="fab fa-tiktok"></i></button>
+<button class="sidebar-ref-share-btn sidebar-ref-copy" onclick="copySidebarReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
+</div>
+</div>
+</div>
 </aside>
 
 <!-- ==================== MAIN CONTENT ==================== -->
@@ -264,33 +426,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
-<!-- REFERRAL LINK CARD (Affiliator Only) -->
-<div class="card" id="refLinkCard" style="display:none">
-<div class="card-header">
-<div class="card-title"><i class="fas fa-link"></i> Link Referral Anda</div>
-<span class="badge badge-active" id="refCodeBadge">-</span>
-</div>
-<div class="card-body">
-<div class="referral-link-box" style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;display:flex;gap:0.5rem;align-items:center;border:1.5px solid var(--border)">
-<i class="fas fa-globe" style="color:var(--primary-light)"></i>
-<input type="text" id="refLinkInput" readonly style="flex:1;border:none;background:transparent;font-family:inherit;font-size:0.9rem;color:var(--text);outline:none">
-<button class="btn btn-outline btn-sm" onclick="copyReferralLink()" title="Salin Link"><i class="fas fa-copy"></i></button>
-</div>
-<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">
-<button onclick="showPage('landing')" class="btn btn-primary btn-sm"><i class="fas fa-external-link-alt"></i> Buka Landing</button>
-<button onclick="showPage('qr')" class="btn btn-outline btn-sm"><i class="fas fa-qrcode"></i> Generate QR</button>
-</div>
-<div style="border-top:1px solid var(--border);padding-top:0.75rem">
-<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem"><i class="fas fa-share-alt"></i> Bagikan ke sosial media:</p>
-<div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-<button class="btn btn-sm" onclick="shareToSocial('instagram')" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:white;border:none"><i class="fab fa-instagram"></i> IG</button>
-<button class="btn btn-sm" onclick="shareToSocial('facebook')" style="background:#1877F2;color:white;border:none"><i class="fab fa-facebook-f"></i> FB</button>
-<button class="btn btn-sm" onclick="shareToSocial('tiktok')" style="background:#000;color:white;border:none"><i class="fab fa-tiktok"></i> TikTok</button>
-<button class="btn btn-outline btn-sm" onclick="copyReferralLink()"><i class="fas fa-copy"></i> Salin Link</button>
-</div>
-</div>
-</div>
-</div>
+<!-- Link Referral Anda sudah DIPINDAH ke sidebar menu (affiliator-only) -->
 
 <!-- ORDERS AFFILIATOR -->
 <div class="card" id="affOrdersCard" style="display:none">
@@ -847,6 +983,44 @@ document.getElementById('roleIcon').className = 'fas fa-user';
 document.querySelectorAll('.admin-only').forEach(function(el) { el.style.display = 'none'; });
 document.querySelectorAll('.affiliator-only').forEach(function(el) { el.style.display = ''; });
 }
+// Update sidebar referral section untuk affiliator
+updateSidebarReferral();
+}
+
+// ==================== SIDEBAR REFERRAL FUNCTIONS ====================
+function updateSidebarReferral() {
+if (!currentUser || currentUser.isAdmin) return;
+var section = document.getElementById('sidebarRefSection');
+if (!section) return;
+if (currentUser.referralCode) {
+section.style.display = 'block';
+var fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
+document.getElementById('sidebarRefCode').textContent = currentUser.referralCode;
+document.getElementById('sidebarRefInput').value = fullLink;
+document.getElementById('sidebarLandingLink').href = fullLink;
+document.getElementById('sidebarQrLink').href = 'qr.html?ref=' + encodeURIComponent(currentUser.referralCode);
+} else {
+section.style.display = 'none';
+}
+}
+
+function copySidebarReferralLink() {
+var input = document.getElementById('sidebarRefInput');
+if (!input || !input.value) return;
+if (navigator.clipboard) {
+navigator.clipboard.writeText(input.value).then(function() {
+showToast('Link referral disalin ke clipboard!', 'success');
+}).catch(function() {
+input.select();
+document.execCommand('copy');
+showToast('Link referral disalin!', 'success');
+});
+} else {
+input.select();
+input.setSelectionRange(0, 99999);
+document.execCommand('copy');
+showToast('Link referral disalin!', 'success');
+}
 }
 
 // ==================== DEBUG LOGGER ====================
@@ -1065,14 +1239,10 @@ document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
 document.getElementById('dashValidLeads').textContent = validLeads.length;
 document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
-if (currentUser && !currentUser.isAdmin && currentUser.referralCode) {
-document.getElementById('refLinkCard').style.display = '';
-document.getElementById('refCodeBadge').textContent = currentUser.referralCode;
-var fullLink = window.location.origin + '/landing.html?ref=' + encodeURIComponent(currentUser.referralCode);
-document.getElementById('refLinkInput').value = fullLink;
-} else {
-document.getElementById('refLinkCard').style.display = 'none';
-document.getElementById('commInfoCard').style.display = 'none';
+// refLinkCard sudah DIPINDAH ke sidebar - tidak perlu di-handle di sini lagi
+if (!currentUser || currentUser.isAdmin) {
+var cic = document.getElementById('commInfoCard');
+if (cic) cic.style.display = 'none';
 }
 
 if (currentUser && !currentUser.isAdmin) {
