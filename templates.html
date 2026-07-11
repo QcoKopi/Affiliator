@@ -567,7 +567,7 @@ var fileName = (selectedTemplate.name || 'template') + (ref ? '_' + ref : '') + 
 closeModal('downloadModal');
 
 if(isImg && ref){
-showToast('Mengambil data via Server Proxy...', 'info');
+showToast('Mengambil data GDrive via Server Proxy...', 'info');
 try{
   var driveId = getGoogleDriveId(fileUrl);
   var localDataUrl = '';
@@ -575,6 +575,8 @@ try{
   if(driveId) {
     var proxyRes = await fetch(CONFIG.GAS_URL + '?action=getDriveBlobBase64&id=' + encodeURIComponent(driveId) + '&_ts=' + Date.now(), {cache:'no-store'});
     var proxyData = await proxyRes.json();
+    // FIX: backend mengembalikan key 'error' saat gagal, bukan 'message' -> sebelumnya
+    // pesan error asli tidak pernah tertangkap, jadi hanya tampil pesan generik.
     if(proxyData.success && proxyData.base64) {
       localDataUrl = 'data:' + (proxyData.mimeType || 'image/jpeg') + ';base64,' + proxyData.base64;
     } else {
@@ -586,46 +588,24 @@ try{
     localDataUrl = URL.createObjectURL(blob);
   }
 
-  showToast('Menyisipkan Watermark...', 'info');
+  showToast('Menyisipkan Watermark pada file...', 'info');
   var canvas = await addWatermarkToImage(localDataUrl, ref);
-
-  // FIX: canvas.toDataURL() bisa crash di mobile kalau gambar terlalu besar.
-  // Pakai toBlob() + URL.createObjectURL() yang lebih hemat memory.
-  canvas.toBlob(function(blob) {
-    if (!blob) {
-      showToast('Gagal membuat file gambar (memory penuh?)', 'error');
-      triggerDirectDownload(fileUrl, fileName);
-      return;
-    }
-    var blobUrl = URL.createObjectURL(blob);
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-    if (isIOS) {
-      // FIX: iOS Safari tidak mengenali <a download>. Buka di tab baru,
-      // user save manual dengan long-press atau Share Sheet.
-      var newWin = window.open(blobUrl, '_blank');
-      if (!newWin) {
-        showToast('Popup diblokir. Izinkan popup untuk download di iOS.', 'error');
-      } else {
-        showToast('Gambar dibuka di tab baru. Tekan lama & pilih Save Image.', 'success');
-      }
-    } else {
-      var a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 5000);
-      showToast('Download Sukses dengan Watermark!', 'success');
-    }
-
-    if(!driveId && localDataUrl.indexOf('blob:') === 0) URL.revokeObjectURL(localDataUrl);
-  }, 'image/jpeg', 0.92);
-
+  
+  var a = document.createElement('a');
+  a.target = '_self'; 
+  a.download = fileName;
+  a.href = canvas.toDataURL('image/jpeg', 0.95);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  if(!driveId) URL.revokeObjectURL(localDataUrl); 
+  showToast('Download Sukses dengan Watermark!', 'success');
 }catch(e){
   console.error('Watermark download error:', e);
-  showToast('Watermark gagal (' + (e && e.message ? e.message : 'unknown') + '), download asli...', 'error');
+  // FIX: tampilkan pesan error ASLI di toast (sebelumnya generik "Gagal bypass proxy"
+  // tanpa detail), supaya penyebab langsung kelihatan tanpa buka console.
+  showToast('Watermark gagal (' + (e && e.message ? e.message : 'unknown error') + '), download file asli...', 'error');
   triggerDirectDownload(fileUrl, fileName);
 }
 } else {
@@ -662,8 +642,7 @@ return;
 var img = new Image();
 img.onload = function(){
 try {
-// FIX: resize gambar kalau terlalu besar untuk mobile (max 1600px sisi terpanjang)
-// supaya canvas tidak melebihi memory limit di iOS/Android.
+// Resize gambar kalau terlalu besar untuk mobile (max 1600px sisi terpanjang)
 var maxDim = 1600;
 var w = img.width, h = img.height;
 if (w > maxDim || h > maxDim) {
@@ -702,20 +681,33 @@ new QRCode(qrContainer, {
   correctLevel: QRCode.CorrectLevel.H
 });
 
-// FIX: ganti setTimeout(350) guesswork dengan polling yang menunggu
-// QR code image benar-benar ready di DOM. Di mobile lambat, 350ms sering kurang.
+// FIX: qrcodejs bisa menghasilkan <canvas> ATAU <img> ATAU <table>.
+// Polling sebelumnya HANYA cek <img> -> kalau canvas hasilnya null terus -> timeout.
+// Sekarang: deteksi semua tipe elemen, ambil data URL dari canvas/img.
 var waitForQr = function(attempts) {
   if (attempts <= 0) {
-    reject(new Error('QR code generation timeout (>3 detik). Coba lagi.'));
+    reject(new Error('QR code generation timeout (>5 detik). Coba refresh halaman.'));
     return;
   }
-  var qrImgEl = qrContainer.querySelector('img');
-  if (qrImgEl && qrImgEl.src && qrImgEl.src.indexOf('data:image') === 0 && qrImgEl.naturalWidth > 0) {
-    var qrImg = new Image();
-    qrImg.onload = function() {
+
+  var qrCanvas = qrContainer.querySelector('canvas');
+  var qrImg = qrContainer.querySelector('img');
+  var qrDataUrl = null;
+
+  if (qrCanvas) {
+    // qrcodejs menghasilkan canvas -> ambil data URL langsung
+    try { qrDataUrl = qrCanvas.toDataURL('image/png'); } catch(e) {}
+  } else if (qrImg && qrImg.src) {
+    // qrcodejs menghasilkan img -> pakai src
+    qrDataUrl = qrImg.src;
+  }
+
+  if (qrDataUrl && qrDataUrl.indexOf('data:image') === 0) {
+    var qrImageObj = new Image();
+    qrImageObj.onload = function() {
       var qrX = w - qrSize - Math.round(barHeight * 0.1);
       var qrY = h - barHeight + Math.round((barHeight - qrSize) / 2);
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+      ctx.drawImage(qrImageObj, qrX, qrY, qrSize, qrSize);
 
       ctx.fillStyle = '#000000';
       var fontSize = Math.max(12, Math.round(w * 0.018));
@@ -725,13 +717,13 @@ var waitForQr = function(attempts) {
       ctx.fillText(linkText, Math.round(barHeight * 0.2), h - barHeight / 2);
       resolve(canvas);
     };
-    qrImg.onerror = function() { reject(new Error('Gagal load QR image')); };
-    qrImg.src = qrImgEl.src;
+    qrImageObj.onerror = function() { reject(new Error('Gagal load QR image')); };
+    qrImageObj.src = qrDataUrl;
   } else {
-    setTimeout(function() { waitForQr(attempts - 1); }, 150);
+    setTimeout(function() { waitForQr(attempts - 1); }, 200);
   }
 };
-waitForQr(25); // 25 x 150ms = max 3.75 detik
+waitForQr(30); // 30 x 200ms = max 6 detik
 
 } catch(canvasErr) {
   reject(canvasErr);
