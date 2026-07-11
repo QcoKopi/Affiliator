@@ -188,7 +188,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </style>
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
@@ -1156,127 +1155,104 @@ document.getElementById('productModal').classList.add('active');
 }
 
 async function saveProduct(e) {
-  e.preventDefault();
-  const id = document.getElementById('productId').value;
-  const name = document.getElementById('productName').value;
-  const category = document.getElementById('productCategory').value;
-  const price = document.getElementById('productPrice').value;
-  const desc = document.getElementById('productDesc').value;
-  const active = document.getElementById('productActive').checked ? 'true' : 'false';
-  const imgBase64 = document.getElementById('productImageBase64').value;
-  const imgMimeType = document.getElementById('productImageMimeType').value;
-  const existingImgUrl = document.getElementById('productImageUrl').value;
+e.preventDefault();
+const id = document.getElementById('productId').value;
+const name = document.getElementById('productName').value;
+const category = document.getElementById('productCategory').value;
+const price = document.getElementById('productPrice').value;
+const desc = document.getElementById('productDesc').value;
+const active = document.getElementById('productActive').checked ? 'true' : 'false';
+const imgBase64 = document.getElementById('productImageBase64').value;
+const imgMimeType = document.getElementById('productImageMimeType').value;
+const existingImgUrl = document.getElementById('productImageUrl').value;
 
-  closeModal('productModal');
-  updateSyncStatus('syncing');
+closeModal('productModal');
+updateSyncStatus('syncing');
 
-  try {
-    const params = {
-      action: 'saveProduct',
-      name: name,
-      category: category,
-      price: price,
-      description: desc,
-      active: active
-    };
-    if (id) params.id = id;
+try {
+const params = {
+action: 'saveProduct',
+name: name,
+category: category,
+price: price,
+description: desc,
+active: active
+};
+if (id) params.id = id;
 
-    if (imgBase64) {
-      // Membersihkan header metadata base64 jika ada secara aman
-      if (imgBase64.indexOf(',') !== -1) {
-        params.imgBase64 = imgBase64.split(',')[1];
-      } else {
-        params.imgBase64 = imgBase64;
-      }
-      params.imgMimeType = imgMimeType;
-    } else if (existingImgUrl) {
-      params.img = existingImgUrl;
-    }
+// Send image data
+if (imgBase64) {
+params.imgBase64 = imgBase64;
+params.imgMimeType = imgMimeType;
+} else if (existingImgUrl) {
+params.img = existingImgUrl;
+}
 
-    // Menggunakan POST murni untuk menghindari limitasi URL Gateway (Error 403)
-    const response = await fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'cors',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(params)
-    });
-
-    const res = await response.json();
-    if (res.success) {
-      showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
-      await syncAllData();
-      refreshLandingPreview();
-    } else {
-      showToast(res.error || 'Gagal menyimpan produk', 'error');
-      updateSyncStatus('synced');
-    }
-  } catch(err) {
-    showToast('Koneksi terputus saat menyimpan produk: ' + err.message, 'error');
-    updateSyncStatus('error');
-  }
+const res = await callGASGet('saveProduct', params);
+if (res.success) {
+showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
+await syncAllData();
+refreshLandingPreview();
+} else {
+showToast(res.error || 'Gagal menyimpan produk', 'error');
+updateSyncStatus('synced');
+}
+}catch(err) {
+showToast('Koneksi terputus saat menyimpan produk', 'error');
+updateSyncStatus('error');
+}
 }
 
 async function deleteProduct(id) {
-  if (!confirm('Apakah Anda yakin ingin menghapus produk ini secara permanen dari database?')) return;
-  updateSyncStatus('syncing');
-  try {
-    const res = await callGASGet('deleteProduct', { id: id });
-    if (res.success) {
-      showToast('Produk berhasil dihapus!', 'success');
-      await syncAllData();
-      refreshLandingPreview();
-    } else {
-      showToast(res.error || 'Gagal menghapus produk', 'error');
-      updateSyncStatus('synced');
-    }
-  } catch(err) {
-    showToast('Koneksi bermasalah', 'error');
-    updateSyncStatus('error');
-  }
+if (!confirm('Apakah Anda yakin ingin menghapus produk ini secara permanen dari database?')) return;
+updateSyncStatus('syncing');
+try {
+const res = await callGASGet('deleteProduct', { id: id });
+if (res.success) {
+showToast('Produk berhasil dihapus!', 'success');
+await syncAllData();
+refreshLandingPreview();
+} else {
+showToast(res.error || 'Gagal menghapus produk', 'error');
+updateSyncStatus('synced');
+}
+}catch(err) {
+showToast('Koneksi bermasalah', 'error');
+updateSyncStatus('error');
+}
 }
 
 async function toggleProductStatus(id) {
-  const p = DATA.products.find(prod => String(prod.id) === String(id));
-  if (!p) return;
-  const currentlyActive = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
-  const newActive = currentlyActive ? 'false' : 'true';
-  updateSyncStatus('syncing');
-  try {
-    const params = {
-      action: 'saveProduct',
-      id: id,
-      name: p.name || '',
-      category: p.category || '',
-      price: p.price || 0,
-      img: p.img || '',
-      description: p.description || p.desc || '',
-      active: newActive
-    };
-
-    // Menggunakan POST murni agar pengubahan status produk yang memiliki gambar besar tidak macet
-    const response = await fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'cors',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(params)
-    });
-
-    const res = await response.json();
-    if (res.success) {
-      showToast('Status produk diubah ke: ' + (newActive === 'true' ? 'Aktif' : 'Non-Aktif'), 'success');
-      await syncAllData();
-      renderProducts();
-      refreshLandingPreview();
-    } else {
-      showToast(res.error || 'Gagal mengubah status produk', 'error');
-      updateSyncStatus('synced');
-    }
-  } catch(err) {
-    showToast('Koneksi terputus saat mengubah status', 'error');
-    updateSyncStatus('error');
-  }
+const p = DATA.products.find(prod => String(prod.id) === String(id));
+if (!p) return;
+const currentlyActive = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
+const newActive = currentlyActive ? 'false' : 'true';
+updateSyncStatus('syncing');
+try {
+const params = {
+action: 'saveProduct',
+id: id,
+name: p.name || '',
+category: p.category || '',
+price: p.price || 0,
+img: p.img || '',
+description: p.description || p.desc || '',
+active: newActive
+};
+const res = await callGASGet('saveProduct', params);
+if (res.success) {
+showToast('Status produk diubah ke: ' + (newActive === 'true' ? 'Aktif' : 'Non-Aktif'), 'success');
+await syncAllData();
+renderProducts();
+refreshLandingPreview();
+} else {
+showToast(res.error || 'Gagal mengubah status produk', 'error');
+updateSyncStatus('synced');
+}
+}catch(err) {
+showToast('Koneksi terputus saat mengubah status', 'error');
+updateSyncStatus('error');
+}
 }
 
 function refreshLandingPreview() {
