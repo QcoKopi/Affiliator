@@ -145,9 +145,15 @@ body.in-iframe .container{padding-top:1rem!important}
 <div class="form-group"><label class="form-label">Tipe File</label><select class="form-select" id="tplType"><option value="image">Gambar</option><option value="video">Video</option></select></div>
 </div>
 <div class="form-group">
-<label class="form-label">File Template</label>
+<label class="form-label">Sumber File</label>
+<div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+<button type="button" class="tab-btn active" id="srcTabFile" onclick="switchUploadSource('file')" style="flex:1;text-align:center;justify-content:center">Upload File</button>
+<button type="button" class="tab-btn" id="srcTabLink" onclick="switchUploadSource('link')" style="flex:1;text-align:center;justify-content:center">Tempel Link Drive</button>
+</div>
+
+<div id="uploadSourceFile">
 <div class="file-upload-wrapper" id="tplUploadWrap">
-<input type="file" id="tplFile" accept="image/jpeg,image/png,image/gif,video/mp4,video/webm" onchange="handleTplFileSelect(this)" required>
+<input type="file" id="tplFile" accept="image/jpeg,image/png,image/gif,video/mp4,video/webm" onchange="handleTplFileSelect(this)">
 <div id="uploadPlaceholder">
 <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:var(--primary-light)"></i>
 <p style="margin-top:0.5rem">Klik atau drag file</p>
@@ -159,6 +165,14 @@ body.in-iframe .container{padding-top:1rem!important}
 
 <div id="previewBtnContainer" style="display:none; text-align:center; margin-top:10px; margin-bottom:10px;">
   <button type="button" class="btn btn-outline" style="width:100%; border-color:var(--primary); color:var(--primary)" onclick="openFilePreviewPopup()"><i class="fas fa-eye"></i> LIHAT PREVIEW FILE TERPILIH</button>
+</div>
+</div>
+
+<div id="uploadSourceLink" style="display:none">
+<input type="url" class="form-input" id="tplDriveLink" placeholder="https://drive.google.com/file/d/.../view">
+<p style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem;line-height:1.5">
+<i class="fas fa-info-circle" style="color:var(--info)"></i> Untuk file besar (terutama video, tidak kena batas 10MB): upload manual dulu ke folder <b>KopiAffiliate_Templates</b> di Google Drive &rarr; klik kanan file &rarr; <b>Bagikan</b> &rarr; ubah akses jadi <b>"Siapa saja yang memiliki link"</b> (WAJIB, kalau lupa nanti tidak bisa tampil) &rarr; salin link-nya, tempel di sini.
+</p>
 </div>
 </div>
 </form>
@@ -289,10 +303,16 @@ empty.style.display = 'none';
 
 grid.innerHTML = filtered.map(function(t){
 var isImg = (t.type || '').toLowerCase() === 'image';
-var directUrl = getDirectImageUrl(t.url || t.driveurl || '');
+var rawUrl = t.url || t.driveurl || '';
+var directUrl = getDirectImageUrl(rawUrl);
+// FIX: video TIDAK pakai hotlink lh3.googleusercontent.com (dirancang untuk gambar,
+// video butuh token sesi khusus dari Google yang tidak didapat dari URL statis).
+// Pakai iframe /preview resmi dari Google Drive - ini metode embed yang didukung
+// resmi dan konsisten jalan untuk video, apapun cara filenya diupload.
+var driveId = getGoogleDriveId(rawUrl);
 var preview = isImg 
   ? `<img src="${directUrl}" onerror="handleImageError(this,'${t.name || ''}')" alt="${t.name || ''}">` 
-  : `<video src="${directUrl}" muted loop></video>`;
+  : `<iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:100%;border:none" allow="autoplay"></iframe>`;
 var typeLabel = isImg ? '<i class="fas fa-image"></i> Gambar' : '<i class="fas fa-video"></i> Video';
 var overlay = String(t.active).toLowerCase() === 'false' ? '<div class="inactive-overlay">Non-Aktif</div>' : '';
 
@@ -332,6 +352,7 @@ if(document.getElementById('adminPanel').classList.contains('show')) renderAdmin
 function openUploadModal(){ 
   document.getElementById('uploadModal').classList.add('active'); 
   document.getElementById('uploadForm').reset(); 
+  switchUploadSource('file');
   document.getElementById('tplFileName').textContent = ''; 
   document.getElementById('uploadPlaceholder').style.display = 'block';
   document.getElementById('previewBtnContainer').style.display = 'none';
@@ -388,11 +409,61 @@ function openFilePreviewPopup() {
   document.getElementById('popupPreviewModal').classList.add('active');
 }
 
+function switchUploadSource(mode){
+document.getElementById('srcTabFile').classList.toggle('active', mode === 'file');
+document.getElementById('srcTabLink').classList.toggle('active', mode === 'link');
+document.getElementById('uploadSourceFile').style.display = mode === 'file' ? 'block' : 'none';
+document.getElementById('uploadSourceLink').style.display = mode === 'link' ? 'block' : 'none';
+// reset supaya tidak ada data nyangkut dari mode yang tidak dipakai
+document.getElementById('tplFile').value = '';
+document.getElementById('tplDriveLink').value = '';
+document.getElementById('tplFileName').textContent = '';
+document.getElementById('uploadPlaceholder').style.display = 'block';
+document.getElementById('previewBtnContainer').style.display = 'none';
+document.getElementById('inlinePreview').classList.remove('show');
+if (currentPreviewObjectURL) { URL.revokeObjectURL(currentPreviewObjectURL); currentPreviewObjectURL = null; }
+}
+
 async function handleUpload(e){
 e.preventDefault();
 var name = document.getElementById('tplName').value.trim();
 var category = document.getElementById('tplCategory').value;
 var type = document.getElementById('tplType').value;
+var isLinkMode = document.getElementById('uploadSourceLink').style.display !== 'none';
+
+// ==== MODE: tempel link Drive (untuk file besar, terutama video) ====
+if (isLinkMode) {
+var driveLink = document.getElementById('tplDriveLink').value.trim();
+if (!driveLink) { showToast('Tempel link Google Drive dulu', 'error'); return; }
+
+closeModal('uploadModal');
+showToast('Mendaftarkan link Drive...', 'info');
+
+try {
+var linkPayload = { action: 'saveTemplate', name: name, category: category, type: type, directDriveUrl: driveLink };
+var linkFormBody = [];
+for (var lp in linkPayload) { linkFormBody.push(encodeURIComponent(lp) + "=" + encodeURIComponent(linkPayload[lp])); }
+linkFormBody = linkFormBody.join("&");
+
+var linkResponse = await fetch(CONFIG.GAS_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+  body: linkFormBody
+});
+var linkResData = await linkResponse.json();
+if (linkResData.success) {
+  showToast('Template dari link Drive berhasil didaftarkan!', 'success');
+  fetchTemplates();
+} else {
+  showToast('Gagal: ' + (linkResData.error || linkResData.message || 'periksa link & sharing-nya'), 'error');
+}
+} catch(linkErr) {
+  showToast('Gagal mendaftarkan link: ' + (linkErr.message || ''), 'error');
+}
+return;
+}
+
+// ==== MODE: upload file langsung (base64, max 10MB) ====
 var file = document.getElementById('tplFile').files[0];
 
 if(!file){ showToast('Pilih file template', 'error'); return; }
@@ -446,10 +517,15 @@ selectedTemplate = t;
 var ref = getRefCode();
 var link = CONFIG.BASE_URL + (ref ? '?ref=' + encodeURIComponent(ref) : '');
 var isImg = (t.type || '').toLowerCase() === 'image';
+var previewUrl = t.url || t.driveurl || '';
 
+// FIX: gambar pakai konversi yang sama dengan galeri. Video pakai iframe
+// /preview resmi dari Google Drive (bukan hotlink <video src>) karena lebih
+// konsisten jalan untuk semua video, baik yang diupload lewat form maupun
+// yang didaftarkan lewat link Drive manual.
 document.getElementById('dlPreview').innerHTML = isImg 
-  ? '<img src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' 
-  : '<video src="' + (t.url || t.driveurl || '') + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)" controls muted></video>';
+  ? '<img src="' + getDirectImageUrl(previewUrl) + '" style="max-width:100%;max-height:250px;border-radius:var(--radius-sm)">' 
+  : '<iframe src="https://drive.google.com/file/d/' + getGoogleDriveId(previewUrl) + '/preview" style="width:100%;height:250px;border:none;border-radius:var(--radius-sm)" allow="autoplay"></iframe>';
 
 document.getElementById('dlQR').innerHTML = '';
 if(ref){
