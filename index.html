@@ -470,7 +470,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">Rp 0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPendingLeadsCount">0 leads</div></div>
 <div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">Rp 0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashRejectedLeadsCount">0 leads</div></div>
 <div class="stat-card admin-only"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
-<div class="stat-card" title="Komisi yang masih harus dibayar ke affiliator (5% dari transaksi valid, dikurangi yang sudah dibayar)"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Komisi Belum Dibayar</div></div>
+<div class="stat-card" title="Komisi yang masih harus dibayar ke affiliator (5% dari transaksi valid, dikurangi yang sudah dibayar)"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Komisi Belum Dibayar</div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPaidCommInfo">Sudah dibayar: Rp 0</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
 <!-- Link Referral Anda sudah DIPINDAH ke sidebar menu (affiliator-only) -->
@@ -1377,10 +1377,15 @@ const pendingLeads = filteredLeads.filter(l => String(l.status || 'Pending').toL
 const rejectedLeads = filteredLeads.filter(l => String(l.status || '').toLowerCase() === 'rejected');
 // BARU (fix): Total Komisi di dashboard sekarang cuma komisi yang BELUM dibayar
 // (outstanding) - supaya begitu komisi dibayar, angkanya berkurang, bukan tetap
-// menumpuk seakan-akan masih harus dibayar semua.
+// menumpuk seakan-akan masih harus dibayar semua. Nilai yang SUDAH dibayar
+// ditampilkan terpisah sebagai info tambahan (diminta supaya tetap terlihat).
 const totalComm = filteredCommissions.reduce((a, c) => {
 var isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
 return isPaid ? a : a + (parseFloat(c.amount) || 0);
+}, 0);
+const totalPaidComm = filteredCommissions.reduce((a, c) => {
+var isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
+return isPaid ? a + (parseFloat(c.amount) || 0) : a;
 }, 0);
 
 if (currentUser.isAdmin) {
@@ -1403,6 +1408,7 @@ var elVL = document.getElementById('dashValidLeadsCount'); if (elVL) elVL.textCo
 var elPL = document.getElementById('dashPendingLeadsCount'); if (elPL) elPL.textContent = pendingLeads.length + ' leads';
 var elRL = document.getElementById('dashRejectedLeadsCount'); if (elRL) elRL.textContent = rejectedLeads.length + ' leads';
 document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
+var elPaidComm = document.getElementById('dashPaidCommInfo'); if (elPaidComm) elPaidComm.textContent = 'Sudah dibayar: Rp ' + formatNumber(totalPaidComm);
 
 // refLinkCard sudah DIPINDAH ke sidebar - tidak perlu di-handle di sini lagi
 if (!currentUser || currentUser.isAdmin) {
