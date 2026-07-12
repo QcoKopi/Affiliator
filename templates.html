@@ -441,7 +441,7 @@ closeModal('uploadModal');
 showToast('Mendaftarkan link Drive...', 'info');
 
 try {
-var linkPayload = { action: 'saveTemplate', name: name, category: category, type: type, directDriveUrl: driveLink };
+var linkPayload = { action: 'saveTemplate', name: name, category: category, type: type, directDriveUrl: driveLink, token: (currentUser && currentUser.token) || '' };
 var linkFormBody = [];
 for (var lp in linkPayload) { linkFormBody.push(encodeURIComponent(lp) + "=" + encodeURIComponent(linkPayload[lp])); }
 linkFormBody = linkFormBody.join("&");
@@ -482,7 +482,8 @@ var payload = {
   type: type,
   filename: file.name,
   mimeType: file.type || (type === 'image' ? 'image/jpeg' : 'video/mp4'),
-  base64: base64
+  base64: base64,
+  token: (currentUser && currentUser.token) || ''
 };
 
 var formBody = [];
@@ -740,7 +741,7 @@ var t = TEMPLATES.find(function(x){ return String(x.id) === String(tplId); });
 if(!t) return;
 var newActive = String(t.active).toLowerCase() === 'false' ? 'true' : 'false';
 try{
-var res = await fetch(CONFIG.GAS_URL + '?action=saveTemplate&id=' + encodeURIComponent(tplId) + '&name=' + encodeURIComponent(t.name || '') + '&category=' + encodeURIComponent(t.category || '') + '&type=' + encodeURIComponent(t.type || '') + '&active=' + newActive);
+var res = await fetch(CONFIG.GAS_URL + '?action=saveTemplate&id=' + encodeURIComponent(tplId) + '&name=' + encodeURIComponent(t.name || '') + '&category=' + encodeURIComponent(t.category || '') + '&type=' + encodeURIComponent(t.type || '') + '&active=' + newActive + '&token=' + encodeURIComponent((currentUser && currentUser.token) || ''));
 var data = await res.json();
 if(data.success){
 t.active = newActive;
@@ -754,7 +755,7 @@ showToast('Status template diperbarui', 'success');
 async function deleteTemplate(tplId){
 if(!confirm('Hapus template ini secara permanen?')) return;
 try{
-var res = await fetch(CONFIG.GAS_URL + '?action=deleteTemplate&id=' + encodeURIComponent(tplId));
+var res = await fetch(CONFIG.GAS_URL + '?action=deleteTemplate&id=' + encodeURIComponent(tplId) + '&token=' + encodeURIComponent((currentUser && currentUser.token) || ''));
 var data = await res.json();
 if(data.success){
 TEMPLATES = TEMPLATES.filter(function(x){ return String(x.id) !== String(tplId); });
