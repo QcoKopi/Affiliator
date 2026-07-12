@@ -465,10 +465,10 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div id="page-dashboard" class="page active">
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
-<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Leads</div></div>
-<div class="stat-card"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Leads Valid</div></div>
-<div class="stat-card"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">0</div><div class="stat-label">Leads Pending</div></div>
-<div class="stat-card"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">0</div><div class="stat-label">Leads Rejected</div></div>
+<div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
+<div class="stat-card" title="Transaksi yang sudah membayar order"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Transaksi Valid <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
+<div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
+<div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
 <div class="stat-card admin-only"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
 <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
@@ -1839,7 +1839,12 @@ if (existingLeadsSummary) existingLeadsSummary.remove();
 var leadsSummaryDiv = document.createElement('div');
 leadsSummaryDiv.id = 'leadsSummaryPanel';
 leadsSummaryDiv.innerHTML = leadsSummaryHTML;
-leadsBodyEl.parentNode.insertBefore(leadsSummaryDiv, leadsBodyEl);
+// BARU (fix layout): sebelumnya disisipkan sebagai child langsung dari <table>
+// (HTML tidak valid, bikin CSS Grid di dalamnya gagal dapat lebar yang benar
+// sehingga memanjang ke bawah). Sekarang disisipkan sebelum .table-container,
+// jadi jadi elemen blok biasa di dalam .card-body.
+var leadsTableContainer = leadsBodyEl.closest('.table-container') || leadsBodyEl.parentNode;
+leadsTableContainer.parentNode.insertBefore(leadsSummaryDiv, leadsTableContainer);
 }
 } else {
 var oldLeadsSummary = document.getElementById('leadsSummaryPanel');
@@ -2061,7 +2066,11 @@ if (existingSummary) existingSummary.remove();
 var summaryDiv = document.createElement('div');
 summaryDiv.id = 'commSummaryPanel';
 summaryDiv.innerHTML = summaryHTML;
-commCard.parentNode.insertBefore(summaryDiv, commCard);
+// BARU (fix layout): sama seperti panel Leads - sisipkan sebelum .table-container
+// supaya jadi elemen blok biasa, bukan child langsung dari <table> (yang bikin
+// CSS Grid di dalamnya gagal dapat lebar yang benar dan memanjang ke bawah).
+var commTableContainer = commCard.closest('.table-container') || commCard.parentNode;
+commTableContainer.parentNode.insertBefore(summaryDiv, commTableContainer);
 }
 }
 
