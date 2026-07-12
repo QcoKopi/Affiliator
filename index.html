@@ -1071,6 +1071,7 @@ id: result.user.id || '',
 name: result.user.name,
 email: result.user.email,
 referralCode: result.user.referralCode || '',
+token: result.user.token || '', // BARU: token sesi dari server, wajib dikirim di setiap request selanjutnya
 ts: Date.now()
 };
 SessionManager.saveSession(sessionData);
@@ -1104,7 +1105,9 @@ async function fetchFromGAS(action) {
 try {
 // FIX: cegah browser menyajikan data lama dari cache (mis. leads/orders/
 // komisi tidak update setelah ada perubahan) - selalu minta data segar.
-const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action) + '&_ts=' + Date.now();
+// BARU: sertakan token sesi supaya server bisa memverifikasi identitas & role.
+const tokenParam = (currentUser && currentUser.token) ? '&token=' + encodeURIComponent(currentUser.token) : '';
+const url = CONFIG.GAS_URL + '?action=' + encodeURIComponent(action) + tokenParam + '&_ts=' + Date.now();
 const response = await fetchWithTimeout(url, { cache: 'no-store' }, 15000);
 if (!response.ok) throw new Error('HTTP ' + response.status);
 return await response.json();
@@ -1127,6 +1130,14 @@ const af = document.createElement('input');
 af.name = 'action';
 af.value = action;
 form.appendChild(af);
+
+// BARU: sertakan token sesi
+if (currentUser && currentUser.token) {
+const tf = document.createElement('input');
+tf.name = 'token';
+tf.value = currentUser.token;
+form.appendChild(tf);
+}
 
 for (let key in data) {
 const f = document.createElement('input');
@@ -1151,6 +1162,10 @@ if (params[key] !== undefined && params[key] !== null) {
 url += '&' + key + '=' + encodeURIComponent(String(params[key]));
 }
 }
+// BARU: sertakan token sesi
+if (currentUser && currentUser.token) {
+url += '&token=' + encodeURIComponent(currentUser.token);
+}
 url += '&_ts=' + Date.now();
 const response = await fetchWithTimeout(url, { cache: 'no-store' }, 15000);
 if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -1171,6 +1186,10 @@ async function callGASPost(action, params) {
 try {
 const body = new URLSearchParams();
 body.append('action', action);
+// BARU: sertakan token sesi
+if (currentUser && currentUser.token) {
+body.append('token', currentUser.token);
+}
 for (let key in params) {
 if (params[key] !== undefined && params[key] !== null) {
 body.append(key, String(params[key]));
@@ -1886,6 +1905,12 @@ renderCurrentPage();
 }
 
 function adminLogout() {
+// BARU: beri tahu server supaya token sesi ini dihapus juga (best-effort, tidak menunggu/blocking)
+if (currentUser && currentUser.token) {
+try {
+fetch(CONFIG.GAS_URL + '?action=logout&token=' + encodeURIComponent(currentUser.token), { cache: 'no-store' }).catch(function(){});
+} catch(e) {}
+}
 SessionManager.clearSession();
 window.location.reload();
 }
