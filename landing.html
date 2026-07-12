@@ -7,6 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kopi Nusantara - Premium Coffee</title>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -135,6 +136,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="form-row"><div class="form-group"><label class="form-label">Kecamatan <span class="required">*</span></label><select class="form-input" id="buyerDistrict" onchange="onDistrictChange()" disabled><option value="">Pilih Kecamatan...</option></select></div><div class="form-group"><label class="form-label">Kelurahan <span class="required">*</span></label><select class="form-input" id="buyerKelurahan" onchange="onVillageChange()" disabled><option value="">Pilih Kelurahan...</option></select></div></div>
 <div class="form-row"><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><select class="form-input" id="buyerPostal" disabled><option value="">Pilih Kode Pos...</option></select></div><div class="form-group"><label class="form-label">Kota (auto)</label><input type="text" class="form-input" id="buyerCity" placeholder="Otomatis" readonly style="background:var(--bg);color:var(--text-light)"></div></div>
 <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-textarea" id="buyerNotes" placeholder="Catatan tambahan (opsional)..."></textarea></div>
+<div class="form-group" style="display:flex;justify-content:center"><div class="g-recaptcha" id="leadCaptcha" data-sitekey="6Ldb6E8tAAAAAEdYKaHspdiTG_aC3OHKx5O5RR5Y"></div></div>
 <button class="btn btn-primary" onclick="submitLead()"><i class="fas fa-paper-plane"></i> Kirim Pesanan</button>
 <p style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:1rem"><i class="fas fa-lock"></i> Data Anda aman & terenkripsi</p>
 </div>
@@ -298,32 +300,30 @@ return`<div class="cart-summary-item"><span>${escapeHtml(item.name)}${variantLab
 function toggleCart(){document.getElementById('cartOverlay').classList.toggle('active');document.getElementById('cartPanel').classList.toggle('active')}
 function goToCheckout(){toggleCart();document.getElementById('formSection').scrollIntoView({behavior:'smooth'})}
 
+// BARU: sebelumnya pakai hidden iframe untuk POST, tapi response-nya cross-origin
+// jadi TIDAK BISA dibaca JS - fungsi ini selalu resolve(true) walau order gagal
+// tersimpan di server (misalnya error validasi/kuota GAS). Sekarang pakai fetch()
+// dengan body URLSearchParams (supaya tidak kena CORS preflight, sama seperti
+// callGASPost di index.html), dan benar-benar membaca result.success dari server.
 async function syncToGAS(action,data){
-return new Promise((resolve)=>{
-const iframe=document.getElementById('gasFrame');
-const form=document.createElement('form');
-form.method='POST';
-form.action=CONFIG.GAS_URL;
-form.target='gasFrame';
-form.style.display='none';
-const af=document.createElement('input');
-af.name='action';
-af.value=action;
-form.appendChild(af);
+try{
+const body=new URLSearchParams();
+body.append('action',action);
 for(let key in data){
 if(data[key]!==undefined&&data[key]!==null){
-const f=document.createElement('input');
-f.name=key;
-f.value=typeof data[key]==='object'?JSON.stringify(data[key]):String(data[key]||'');
-form.appendChild(f);
+body.append(key,typeof data[key]==='object'?JSON.stringify(data[key]):String(data[key]||''));
 }
 }
-iframe.onload=()=>resolve(true);
-setTimeout(()=>resolve(true),20000);
-document.body.appendChild(form);
-form.submit();
-setTimeout(()=>{if(form.parentNode)form.parentNode.removeChild(form);},5000);
-});
+const response=await Promise.race([
+fetch(CONFIG.GAS_URL,{method:'POST',body:body}),
+new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout')),20000))
+]);
+if(!response.ok)return false;
+const result=await response.json();
+return !!(result&&result.success);
+}catch(e){
+return false;
+}
 }
 
 async function fetchFromGAS(action,extraQuery){
@@ -612,6 +612,10 @@ if(!email.includes('@')||!email.includes('.')){showToast('Format email tidak val
 const phoneDigits=phone.replace(/\D/g,'');
 if(phoneDigits.length<10){showToast('Nomor WhatsApp minimal 10 digit','error');return}
 
+// BARU: validasi reCAPTCHA sudah diisi sebelum lanjut submit
+const captchaToken=typeof grecaptcha!=='undefined'?grecaptcha.getResponse():'';
+if(!captchaToken){showToast('Mohon centang "Saya bukan robot" terlebih dahulu','error');return}
+
 btn.disabled=true;
 btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
@@ -635,7 +639,8 @@ status:'Pending',
 date:now,
 transactionValue:finalTotal,
 source:'Landing Page',
-notes:productNames+' | '+street+' | '+notes
+notes:productNames+' | '+street+' | '+notes,
+captchaToken:captchaToken
 };
 
 const leadOk=await syncToGAS('addLead',leadData);
@@ -677,6 +682,7 @@ showToast('Pesanan berhasil dikirim!','success');
 }else{
 showToast('Pesanan disimpan lokal. Sinkronasi ke server akan dilakukan otomatis.','warning');
 }
+if(typeof grecaptcha!=='undefined'){try{grecaptcha.reset()}catch(e){}}
 }
 
 function closeSuccessModal(){document.getElementById('successModal').classList.remove('active')}
