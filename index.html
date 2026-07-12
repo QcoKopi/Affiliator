@@ -465,10 +465,10 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div id="page-dashboard" class="page active">
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
-<div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
-<div class="stat-card" title="Transaksi yang sudah membayar order"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">0</div><div class="stat-label">Transaksi Valid <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
-<div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
-<div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div></div>
+<div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator - nilai total transaksinya"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">Rp 0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashTotalLeadsCount">0 leads</div></div>
+<div class="stat-card" title="Transaksi yang sudah membayar order"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">Rp 0</div><div class="stat-label">Transaksi Valid <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashValidLeadsCount">0 leads</div></div>
+<div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">Rp 0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPendingLeadsCount">0 leads</div></div>
+<div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">Rp 0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashRejectedLeadsCount">0 leads</div></div>
 <div class="stat-card admin-only"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
 <div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
@@ -550,7 +550,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 </div>
 <div class="card-body" style="padding:0">
-<iframe id="landingPreviewFrame" src="landing.html" style="width:100%;height:500px;border:none;display:block"></iframe>
+<iframe id="landingPreviewFrame" style="width:100%;height:500px;border:none;display:block"></iframe>
 </div>
 </div>
 </div>
@@ -686,7 +686,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-external-link-alt"></i> Landing Page</div></div>
 <div class="card-body" style="padding:0">
-<iframe id="mainLandingFrame" src="landing.html?v=2" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe id="mainLandingFrame" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 </div>
 </div>
@@ -695,7 +695,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card">
 <div class="card-header"><div class="card-title"><i class="fas fa-qrcode"></i> QR Generator</div></div>
 <div class="card-body" style="padding:0">
-<iframe id="mainQrFrame" src="qr.html?v=2" style="width:100%;height:80vh;border:none;"></iframe>
+<iframe id="mainQrFrame" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 </div>
 </div>
@@ -776,6 +776,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <input type="number" class="form-input" id="updateTransValue" placeholder="0">
 </div>
 <div class="form-group"><label class="form-label">No. HP / Kontak <small style="color:var(--danger)">*editable</small></label><input type="text" class="form-input" id="updateLeadContact" placeholder="08123456789"></div>
+<div class="form-group"><label class="form-label">Catatan</label><textarea class="form-input" id="updateLeadNotes" rows="3" placeholder="Catatan internal soal lead ini (tidak terlihat oleh affiliator)" maxlength="500"></textarea></div>
 </div>
 <div class="modal-footer">
 <button class="btn btn-outline" onclick="closeModal('updateLeadModal')">Batal</button>
@@ -1375,10 +1376,19 @@ document.getElementById('dashTotalOrders').textContent = DATA.orders.length;
 document.getElementById('dashTotalProducts').textContent = DATA.products.length;
 }
 
-document.getElementById('dashTotalLeads').textContent = filteredLeads.length;
-document.getElementById('dashValidLeads').textContent = validLeads.length;
-document.getElementById('dashPendingLeads').textContent = pendingLeads.length;
-document.getElementById('dashRejectedLeads').textContent = rejectedLeads.length;
+// BARU: kartu dashboard menampilkan NILAI TRANSAKSI (jumlah Rupiah), bukan jumlah
+// lead. Jumlah lead tetap ditampilkan sebagai info kecil di bawahnya.
+const sumTransactionValue = function(arr) {
+return arr.reduce(function(a, l) { return a + (parseFloat(l.transactionvalue || l.transactionValue) || 0); }, 0);
+};
+document.getElementById('dashTotalLeads').textContent = 'Rp ' + formatNumber(sumTransactionValue(filteredLeads));
+document.getElementById('dashValidLeads').textContent = 'Rp ' + formatNumber(sumTransactionValue(validLeads));
+document.getElementById('dashPendingLeads').textContent = 'Rp ' + formatNumber(sumTransactionValue(pendingLeads));
+document.getElementById('dashRejectedLeads').textContent = 'Rp ' + formatNumber(sumTransactionValue(rejectedLeads));
+var elTL = document.getElementById('dashTotalLeadsCount'); if (elTL) elTL.textContent = filteredLeads.length + ' leads';
+var elVL = document.getElementById('dashValidLeadsCount'); if (elVL) elVL.textContent = validLeads.length + ' leads';
+var elPL = document.getElementById('dashPendingLeadsCount'); if (elPL) elPL.textContent = pendingLeads.length + ' leads';
+var elRL = document.getElementById('dashRejectedLeadsCount'); if (elRL) elRL.textContent = rejectedLeads.length + ' leads';
 document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(totalComm);
 
 // refLinkCard sudah DIPINDAH ke sidebar - tidak perlu di-handle di sini lagi
@@ -1946,6 +1956,7 @@ select.innerHTML = DATA.leads.map(l => '<option value="' + escapeHtml(l.id) + '"
 if (leadId) select.value = leadId;
 var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
 document.getElementById('updateLeadContact').value = lead ? (lead.contact || lead.whatsapp || '') : '';
+document.getElementById('updateLeadNotes').value = lead ? (lead.notes || '') : '';
 document.getElementById('updateTransValue').value = '';
 document.getElementById('transValueGroup').style.display = 'none';
 document.getElementById('updateLeadModal').classList.add('active');
@@ -1960,6 +1971,7 @@ const leadId = document.getElementById('updateLeadSelect').value;
 const newStatus = document.getElementById('updateLeadStatus').value;
 const transValue = parseFloat(document.getElementById('updateTransValue').value) || 0;
 const newContact = document.getElementById('updateLeadContact').value.trim();
+const newNotes = document.getElementById('updateLeadNotes').value.trim();
 const btn = document.getElementById('btnUpdateLead');
 
 const lead = DATA.leads.find(l => l.id === leadId);
@@ -1971,6 +1983,7 @@ btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 const params = { id: leadId, status: newStatus };
 if (transValue > 0) params.transactionValue = transValue;
 if (newContact) params.contact = newContact;
+if (newNotes !== (lead.notes || '')) params.notes = newNotes;
 
 const res = await callGASGet('updateLead', params);
 
@@ -2253,12 +2266,19 @@ qr: 'QR Generator'
 };
 document.getElementById('pageTitle').innerText = titles[pageId] || 'Admin';
 
-// Update iframe refs based on current user referral code
-if((pageId === 'landing' || pageId === 'qr') && currentUser && currentUser.referralCode) {
+// BARU (optimasi): iframe landing/qr sekarang lazy-load - baru diberi src saat
+// halamannya benar-benar dibuka pertama kali, bukan langsung saat index.html
+// dimuat (sebelumnya landing.html & qr.html selalu ikut ter-load di background
+// walau admin/affiliator tidak pernah buka tab itu sama sekali).
+if (pageId === 'products') {
+const previewFrame = document.getElementById('landingPreviewFrame');
+if (previewFrame && !previewFrame.src) previewFrame.src = 'landing.html';
+}
+if ((pageId === 'landing' || pageId === 'qr')) {
 const iframeId = pageId === 'landing' ? 'mainLandingFrame' : 'mainQrFrame';
 const iframe = document.getElementById(iframeId);
-if(iframe) {
-iframe.src = pageId + '.html?ref=' + encodeURIComponent(currentUser.referralCode);
+if (iframe && !iframe.src) {
+iframe.src = pageId + '.html' + (currentUser && currentUser.referralCode ? '?ref=' + encodeURIComponent(currentUser.referralCode) : '?v=2');
 }
 }
 
