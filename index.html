@@ -466,11 +466,11 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
 <div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator - nilai total transaksinya"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">Rp 0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashTotalLeadsCount">0 leads</div></div>
-<div class="stat-card" title="Transaksi yang sudah membayar order"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">Rp 0</div><div class="stat-label">Transaksi Valid <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashValidLeadsCount">0 leads</div></div>
+<div class="stat-card" title="Transaksi yang sudah membayar order (status Valid & Converted)"><div class="stat-icon green"><i class="fas fa-user-check"></i></div><div class="stat-value" id="dashValidLeads">Rp 0</div><div class="stat-label">Transaksi Valid <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashValidLeadsCount">0 leads</div></div>
 <div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">Rp 0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPendingLeadsCount">0 leads</div></div>
 <div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">Rp 0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashRejectedLeadsCount">0 leads</div></div>
 <div class="stat-card admin-only"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
-<div class="stat-card"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Total Komisi</div></div>
+<div class="stat-card" title="Komisi yang masih harus dibayar ke affiliator (5% dari transaksi valid, dikurangi yang sudah dibayar)"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Komisi Belum Dibayar</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
 <!-- Link Referral Anda sudah DIPINDAH ke sidebar menu (affiliator-only) -->
@@ -1364,11 +1364,24 @@ if (!currentUser) return;
 const filteredLeads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
 const filteredCommissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === currentUser.id);
 
-const validLeads = filteredLeads.filter(l => l.status === 'Valid');
+// BARU (fix): 'Valid' dan 'Converted' digabung jadi satu kategori "Transaksi Valid" -
+// keduanya sama-sama berarti "sudah membayar order", bedanya cuma progres fulfillment
+// (Converted = sudah diproses lebih lanjut). Sebelumnya 'Converted' tidak masuk hitungan
+// manapun, jadi ada transaksi yang "hilang" dari total valid/pending/rejected.
+const validLeads = filteredLeads.filter(l => {
+var s = String(l.status || '').toLowerCase();
+return s === 'valid' || s === 'converted';
+});
 // BARU: breakdown status transaksi (pending/rejected) untuk dashboard affiliator
 const pendingLeads = filteredLeads.filter(l => String(l.status || 'Pending').toLowerCase() === 'pending');
 const rejectedLeads = filteredLeads.filter(l => String(l.status || '').toLowerCase() === 'rejected');
-const totalComm = filteredCommissions.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
+// BARU (fix): Total Komisi di dashboard sekarang cuma komisi yang BELUM dibayar
+// (outstanding) - supaya begitu komisi dibayar, angkanya berkurang, bukan tetap
+// menumpuk seakan-akan masih harus dibayar semua.
+const totalComm = filteredCommissions.reduce((a, c) => {
+var isPaid = String(c.paid).toLowerCase().trim() === 'true' || c.paid === true;
+return isPaid ? a : a + (parseFloat(c.amount) || 0);
+}, 0);
 
 if (currentUser.isAdmin) {
 document.getElementById('dashTotalAff').textContent = DATA.users.length;
@@ -1893,7 +1906,8 @@ actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal
 actionBtn = '<button class="btn btn-sm btn-outline" onclick="viewLeadDetail(\'' + leadIdAttr + '\')" title="Lihat Detail"><i class="fas fa-eye"></i></button>';
 }
 
-return '<tr><td>' + formatDate(l.date) + '</td><td><strong>' + escapeHtml(l.name || '-') + '</strong></td><td>' + contactDisplay + '</td><td>' + escapeHtml(aff ? aff.name : (l.referralcode || l.referralCode || '-')) + '</td><td>Rp ' + formatNumber(val) + '</td><td><span class="badge badge-' + stat + '">' + escapeHtml(l.status || 'PENDING') + '</span></td><td><div style="display:flex;gap:4px">' + actionBtn + '</div></td></tr>';
+var notesIcon = (l.notes && String(l.notes).trim()) ? ' <i class="fas fa-sticky-note" style="color:var(--warning);font-size:0.8rem" title="Catatan: ' + escapeHtml(l.notes) + '"></i>' : '';
+return '<tr><td>' + formatDate(l.date) + '</td><td><strong>' + escapeHtml(l.name || '-') + '</strong>' + notesIcon + '</td><td>' + contactDisplay + '</td><td>' + escapeHtml(aff ? aff.name : (l.referralcode || l.referralCode || '-')) + '</td><td>Rp ' + formatNumber(val) + '</td><td><span class="badge badge-' + stat + '">' + escapeHtml(l.status || 'PENDING') + '</span></td><td><div style="display:flex;gap:4px">' + actionBtn + '</div></td></tr>';
 }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
 var leadsPgEl = document.getElementById('leadsPagination');
 if (leadsPgEl) leadsPgEl.innerHTML = paginationControlsHTML('leads', pg.page, pg.totalPages, pg.total);
