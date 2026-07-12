@@ -166,6 +166,7 @@ function imgError(img){img.style.display='none';const wrap=document.getElementBy
 
 // ==================== CART ====================
 let Cart=[];
+let AppliedCoupon=null; // BARU: {code, discount, type, value} kalau ada kupon aktif
 let AllProducts=[];
 let ActiveProducts=[]; // BARU: daftar produk aktif (sebelum difilter kategori)
 let CurrentCategoryFilter='all'; // BARU: kategori yang sedang dipilih di filter
@@ -212,6 +213,9 @@ function getCartCount(){return Cart.reduce((sum,item)=>sum+(parseInt(item.qty)||
 function clearCart(){Cart=[];updateCartUI()}
 
 function updateCartUI(){
+// BARU: kupon yang sedang aktif direset kalau isi keranjang berubah - diskon
+// dihitung dari subtotal, jadi harus dihitung ulang (minta pembeli terapkan lagi).
+AppliedCoupon=null;
 const count=getCartCount();
 const total=getCartTotal();
 const badge=document.getElementById('cartBadge');
@@ -289,13 +293,61 @@ function updateCartSummary(){
 const container=document.getElementById('cartSummaryContent');
 if(Cart.length===0){
 container.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div>';
-}else{
-container.innerHTML=Cart.map(item=>{
+return;
+}
+const subtotal=getCartTotal();
+const discount=AppliedCoupon?AppliedCoupon.discount:0;
+const finalTotal=Math.max(0,subtotal-discount);
+
+let html=Cart.map(item=>{
 const price=parseFloat(item.price)||0;
 const variantLabel=[item.sizeLabel,item.roastLabel].filter(Boolean).join(', ');
 return`<div class="cart-summary-item"><span>${escapeHtml(item.name)}${variantLabel?' ('+escapeHtml(variantLabel)+')':''} x${item.qty}</span><span>Rp ${formatNumber(price*item.qty)}</span></div>`
-}).join('')+`<div class="cart-summary-total"><span>Total</span><span>Rp ${formatNumber(getCartTotal())}</span></div>`;
+}).join('');
+
+// BARU: input kode kupon (atau tampilan kupon yang sudah diterapkan)
+html+='<div style="display:flex;gap:0.5rem;margin-top:0.75rem">';
+if(AppliedCoupon){
+html+='<div style="flex:1;background:var(--bg);border-radius:6px;padding:0.5rem 0.75rem;font-size:0.85rem;display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-tag" style="color:var(--success)"></i> '+escapeHtml(AppliedCoupon.code)+' terpakai</span><a href="#" onclick="removeCoupon();return false;" style="color:var(--danger);font-size:0.8rem;white-space:nowrap;margin-left:0.5rem">Hapus</a></div>';
+}else{
+html+='<input type="text" class="form-input" id="couponCodeInput" placeholder="Kode kupon (opsional)" style="flex:1;padding:0.5rem 0.75rem;font-size:0.85rem" onkeypress="if(event.key===\'Enter\'){event.preventDefault();applyCoupon();}">';
+html+='<button type="button" class="btn btn-outline" style="padding:0.5rem 1rem;font-size:0.85rem;white-space:nowrap" onclick="applyCoupon()">Terapkan</button>';
 }
+html+='</div>';
+
+html+=`<div class="cart-summary-item" style="border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.5rem"><span>Subtotal</span><span>Rp ${formatNumber(subtotal)}</span></div>`;
+if(discount>0){
+html+=`<div class="cart-summary-item" style="color:var(--success)"><span>Diskon (${escapeHtml(AppliedCoupon.code)})</span><span>-Rp ${formatNumber(discount)}</span></div>`;
+}
+html+=`<div class="cart-summary-total"><span>Total</span><span>Rp ${formatNumber(finalTotal)}</span></div>`;
+
+container.innerHTML=html;
+}
+
+// BARU: kirim kode kupon ke server untuk divalidasi & dihitung estimasi diskonnya
+async function applyCoupon(){
+const input=document.getElementById('couponCodeInput');
+const code=input?input.value.trim():'';
+if(!code){showToast('Masukkan kode kupon dulu','error');return}
+const subtotal=getCartTotal();
+try{
+const res=await fetch(CONFIG.GAS_URL+'?action=validateCoupon&code='+encodeURIComponent(code)+'&subtotal='+subtotal+'&_ts='+Date.now(),{cache:'no-store'});
+const data=await res.json();
+if(data.success){
+AppliedCoupon={code:data.code,discount:data.discount,type:data.type,value:data.value};
+showToast('Kupon "'+data.code+'" diterapkan! Hemat Rp '+formatNumber(data.discount),'success');
+updateCartSummary();
+}else{
+showToast(data.error||'Kupon tidak valid','error');
+}
+}catch(e){
+showToast('Gagal memeriksa kupon, coba lagi','error');
+}
+}
+
+function removeCoupon(){
+AppliedCoupon=null;
+updateCartSummary();
 }
 function toggleCart(){document.getElementById('cartOverlay').classList.toggle('active');document.getElementById('cartPanel').classList.toggle('active')}
 function goToCheckout(){toggleCart();document.getElementById('formSection').scrollIntoView({behavior:'smooth'})}
@@ -630,6 +682,11 @@ return c.name+(variantLabel?' ('+variantLabel+')':'')+' x'+c.qty;
 const finalTotal=Math.round(total);
 if(finalTotal<=0){showToast('Error: Total tidak valid','error');btn.disabled=false;btn.innerHTML=btnOriginal;return}
 
+// BARU: kalau ada kupon diterapkan, kurangi dari subtotal. Nilai akhir & kupon ini
+// tetap DIVALIDASI ULANG di server (bukan dipercaya begitu saja dari sini).
+const discountAmount=AppliedCoupon?AppliedCoupon.discount:0;
+const totalAfterDiscount=Math.max(0,finalTotal-discountAmount);
+
 const leadData={
 id:leadId,
 referralCode:refCode||'DIRECT',
@@ -637,7 +694,9 @@ name:name,
 contact:email+' / '+phone,
 status:'Pending',
 date:now,
-transactionValue:finalTotal,
+transactionValue:totalAfterDiscount,
+subtotal:finalTotal,
+couponCode:AppliedCoupon?AppliedCoupon.code:'',
 source:'Landing Page',
 notes:productNames+' | '+street+' | '+notes,
 captchaToken:captchaToken
