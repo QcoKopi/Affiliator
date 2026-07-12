@@ -414,6 +414,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <li class="admin-only"><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
 <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
 <li class="admin-only"><a onclick="showPage('auditlog')" data-page="auditlog"><i class="fas fa-history"></i> Audit Trail</a></li>
+<li class="admin-only"><a onclick="showPage('coupons')" data-page="coupons"><i class="fas fa-tags"></i> Kupon Diskon</a></li>
 <li><a onclick="showPage('templates')" data-page="templates"><i class="fas fa-images"></i> Template Promosi</a></li>
 <li class="affiliator-only" style="display:none"><a onclick="openMyProfileModal()" style="cursor:pointer"><i class="fas fa-user-edit"></i> Edit Profil</a></li>
 <li class="admin-only" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1)"><a onclick="showPage('landing')" data-page="landing"><i class="fas fa-external-link-alt"></i> Landing Page</a></li>
@@ -669,6 +670,64 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </table>
 </div>
 <div id="auditlogPagination"></div>
+</div>
+</div>
+</div>
+
+<!-- KUPON DISKON (BARU) -->
+<div id="page-coupons" class="page">
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-tags"></i> Kupon Diskon</div>
+<div class="filter-bar">
+<input type="text" class="form-input" id="filterCouponSearch" placeholder="Cari kode kupon..." oninput="PaginationState.coupons=1;renderCoupons()" style="width:200px">
+<button class="btn btn-primary btn-sm" onclick="openCouponModal()"><i class="fas fa-plus"></i> Buat Kupon Baru</button>
+</div>
+</div>
+<div class="card-body">
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Kode</th><th>Diskon</th><th>Min. Belanja</th><th>Pemakaian</th><th>Kedaluwarsa</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="couponsBody"></tbody>
+</table>
+</div>
+<div id="couponsPagination"></div>
+</div>
+</div>
+</div>
+
+<!-- MODAL TAMBAH/EDIT KUPON (BARU) -->
+<div class="modal-overlay" id="couponModal">
+<div class="modal" style="max-width:480px">
+<div class="modal-header"><h3><i class="fas fa-tag"></i> <span id="couponModalTitle">Buat Kupon Baru</span></h3><button class="modal-close" onclick="closeModal('couponModal')">&times;</button></div>
+<div class="modal-body">
+<input type="hidden" id="couponId">
+<div class="form-group">
+<label class="form-label">Kode Kupon</label>
+<div style="display:flex;gap:0.5rem">
+<input type="text" class="form-input" id="couponCode" placeholder="Contoh: HEMAT10" style="text-transform:uppercase">
+<button class="btn btn-outline btn-sm" type="button" onclick="generateCouponCode()" title="Buat kode acak"><i class="fas fa-random"></i></button>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Tipe Diskon</label><select class="form-select" id="couponType" onchange="toggleCouponMaxDiscountField()"><option value="percent">Persen (%)</option><option value="fixed">Potongan Tetap (Rp)</option></select></div>
+<div class="form-group"><label class="form-label" id="couponValueLabel">Nilai (%)</label><input type="number" class="form-input" id="couponValue" placeholder="10"></div>
+</div>
+<div class="form-row" id="couponMaxDiscountGroup">
+<div class="form-group"><label class="form-label">Maks. Potongan (Rp) <small style="color:var(--text-light)">(opsional, khusus persen)</small></label><input type="number" class="form-input" id="couponMaxDiscount" placeholder="Kosongkan = tanpa batas"></div>
+<div class="form-group"><label class="form-label">Min. Belanja (Rp) <small style="color:var(--text-light)">(opsional)</small></label><input type="number" class="form-input" id="couponMinPurchase" placeholder="Kosongkan = tanpa minimum"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Batas Pemakaian <small style="color:var(--text-light)">(opsional)</small></label><input type="number" class="form-input" id="couponUsageLimit" placeholder="Kosongkan = tanpa batas"></div>
+<div class="form-group"><label class="form-label">Kedaluwarsa <small style="color:var(--text-light)">(opsional)</small></label><input type="date" class="form-input" id="couponExpiry"></div>
+</div>
+<div class="form-group">
+<label class="form-label" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"><input type="checkbox" id="couponActive" checked style="width:auto"> Kupon Aktif</label>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-outline" onclick="closeModal('couponModal')">Batal</button>
+<button class="btn btn-primary" id="btnSaveCoupon" onclick="saveCouponForm()"><i class="fas fa-save"></i> Simpan Kupon</button>
 </div>
 </div>
 </div>
@@ -1356,6 +1415,7 @@ if (pageId === 'leads') renderLeads();
 if (pageId === 'orders') renderOrders();
 if (pageId === 'commissions') renderCommissions();
 if (pageId === 'auditlog') renderAuditLog();
+if (pageId === 'coupons') renderCoupons();
 applyRoleVisibility();
 }
 
@@ -2203,6 +2263,163 @@ var pgEl = document.getElementById('auditlogPagination');
 if (pgEl) pgEl.innerHTML = paginationControlsHTML('auditlog', pg.page, pg.totalPages, pg.total);
 }
 
+// ==================== KUPON DISKON (BARU) ====================
+var CouponsData = [];
+
+async function renderCoupons() {
+if (!currentUser || !currentUser.isAdmin) return;
+const tbody = document.getElementById('couponsBody');
+if (!tbody) return;
+tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
+try {
+const res = await callGASGet('getCoupons', {});
+if (res.success && Array.isArray(res.data)) {
+CouponsData = res.data;
+renderCouponsCurrentPage();
+} else {
+tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger)">' + escapeHtml(res.error || 'Gagal memuat kupon') + '</td></tr>';
+}
+} catch(e) {
+tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger)">Koneksi bermasalah ke server</td></tr>';
+}
+}
+
+function renderCouponsCurrentPage() {
+if (!currentUser || !currentUser.isAdmin) return;
+const tbody = document.getElementById('couponsBody');
+if (!tbody) return;
+const searchEl = document.getElementById('filterCouponSearch');
+const search = searchEl ? searchEl.value.toLowerCase() : '';
+const filtered = CouponsData.filter(function(c) {
+if (!search) return true;
+return String(c.code || '').toLowerCase().indexOf(search) !== -1;
+});
+const pg = paginate(filtered, 'coupons');
+tbody.innerHTML = pg.items.map(function(c) {
+var idAttr = escapeJsAttr(c.id);
+var isActive = String(c.active).toLowerCase().trim() === 'true';
+var isFixed = String(c.type).toLowerCase() === 'fixed';
+var discountLabel = isFixed ? ('Rp ' + formatNumber(c.value)) : ((parseFloat(c.value) || 0) + '%' + (c.maxdiscount ? ' (maks Rp ' + formatNumber(c.maxdiscount) + ')' : ''));
+var minPurchaseLabel = c.minpurchase ? ('Rp ' + formatNumber(c.minpurchase)) : '-';
+var usageLimit = parseInt(c.usagelimit) || 0;
+var usedCount = parseInt(c.usedcount) || 0;
+var usageLabel = usageLimit > 0 ? (usedCount + ' / ' + usageLimit) : (usedCount + ' / \u221e');
+var expiryLabel = c.expirydate ? formatDate(c.expirydate) : '-';
+var isExpired = c.expirydate && !isNaN(new Date(c.expirydate).getTime()) && new Date(c.expirydate).getTime() < Date.now();
+var statusBadge = !isActive ? '<span class="badge badge-inactive">Nonaktif</span>' : (isExpired ? '<span class="badge badge-rejected">Kedaluwarsa</span>' : '<span class="badge badge-active">Aktif</span>');
+var actionBtns = '<div style="display:flex;gap:4px">' +
+'<button class="btn btn-sm btn-outline" onclick="openCouponModal(\'' + idAttr + '\')" title="Edit"><i class="fas fa-edit"></i></button>' +
+'<button class="btn btn-sm btn-danger" onclick="deleteCouponConfirm(\'' + idAttr + '\')" title="Hapus"><i class="fas fa-trash-alt"></i></button>' +
+'</div>';
+return '<tr><td><code style="font-weight:600">' + escapeHtml(c.code || '-') + '</code></td><td>' + escapeHtml(discountLabel) + '</td><td>' + escapeHtml(minPurchaseLabel) + '</td><td>' + escapeHtml(usageLabel) + '</td><td>' + escapeHtml(expiryLabel) + '</td><td>' + statusBadge + '</td><td>' + actionBtns + '</td></tr>';
+}).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada kupon. Klik "Buat Kupon Baru" untuk mulai.</td></tr>';
+var pgEl = document.getElementById('couponsPagination');
+if (pgEl) pgEl.innerHTML = paginationControlsHTML('coupons', pg.page, pg.totalPages, pg.total);
+}
+
+function toggleCouponMaxDiscountField() {
+var type = document.getElementById('couponType').value;
+var label = document.getElementById('couponValueLabel');
+var maxGroup = document.getElementById('couponMaxDiscountGroup');
+if (label) label.textContent = type === 'fixed' ? 'Nilai (Rp)' : 'Nilai (%)';
+if (maxGroup) maxGroup.style.display = type === 'fixed' ? 'none' : 'flex';
+}
+
+function generateCouponCode() {
+var prefixes = ['HEMAT', 'PROMO', 'DISKON', 'KOPI', 'SPESIAL'];
+var prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+var digits = Math.floor(1000 + Math.random() * 9000);
+document.getElementById('couponCode').value = prefix + digits;
+}
+
+function openCouponModal(couponId) {
+if (!currentUser || !currentUser.isAdmin) return;
+document.getElementById('couponId').value = '';
+document.getElementById('couponCode').value = '';
+document.getElementById('couponType').value = 'percent';
+document.getElementById('couponValue').value = '';
+document.getElementById('couponMaxDiscount').value = '';
+document.getElementById('couponMinPurchase').value = '';
+document.getElementById('couponUsageLimit').value = '';
+document.getElementById('couponExpiry').value = '';
+document.getElementById('couponActive').checked = true;
+document.getElementById('couponModalTitle').textContent = 'Buat Kupon Baru';
+
+if (couponId) {
+var c = CouponsData.find(function(x) { return String(x.id) === String(couponId); });
+if (c) {
+document.getElementById('couponId').value = c.id;
+document.getElementById('couponCode').value = c.code || '';
+document.getElementById('couponType').value = String(c.type).toLowerCase() === 'fixed' ? 'fixed' : 'percent';
+document.getElementById('couponValue').value = c.value || '';
+document.getElementById('couponMaxDiscount').value = c.maxdiscount || '';
+document.getElementById('couponMinPurchase').value = c.minpurchase || '';
+document.getElementById('couponUsageLimit').value = c.usagelimit || '';
+document.getElementById('couponExpiry').value = c.expirydate ? String(c.expirydate).split('T')[0] : '';
+document.getElementById('couponActive').checked = String(c.active).toLowerCase().trim() === 'true';
+document.getElementById('couponModalTitle').textContent = 'Edit Kupon: ' + c.code;
+}
+}
+toggleCouponMaxDiscountField();
+document.getElementById('couponModal').classList.add('active');
+}
+
+async function saveCouponForm() {
+var id = document.getElementById('couponId').value;
+var code = document.getElementById('couponCode').value.trim().toUpperCase();
+var type = document.getElementById('couponType').value;
+var value = document.getElementById('couponValue').value;
+var maxDiscount = document.getElementById('couponMaxDiscount').value;
+var minPurchase = document.getElementById('couponMinPurchase').value;
+var usageLimit = document.getElementById('couponUsageLimit').value;
+var expiry = document.getElementById('couponExpiry').value;
+var active = document.getElementById('couponActive').checked ? 'true' : 'false';
+
+if (!code) { showToast('Kode kupon wajib diisi', 'error'); return; }
+if (!value || parseFloat(value) <= 0) { showToast('Nilai diskon wajib diisi', 'error'); return; }
+
+const btn = document.getElementById('btnSaveCoupon');
+const originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+try {
+const params = {
+code: code, type: type, value: value, active: active,
+maxDiscount: maxDiscount, minPurchase: minPurchase, usageLimit: usageLimit, expiryDate: expiry
+};
+if (id) params.id = id;
+const res = await callGASGet('saveCoupon', params);
+if (res.success) {
+showToast(id ? 'Kupon berhasil diperbarui!' : 'Kupon baru berhasil dibuat!', 'success');
+closeModal('couponModal');
+renderCoupons();
+} else {
+showToast(res.error || 'Gagal menyimpan kupon', 'error');
+}
+} catch(e) {
+showToast('Koneksi bermasalah', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
+}
+
+async function deleteCouponConfirm(id) {
+if (!confirm('Hapus kupon ini secara permanen? Kupon yang sudah pernah dipakai di order lama tidak akan terpengaruh.')) return;
+try {
+const res = await callGASGet('deleteCoupon', { id: id });
+if (res.success) {
+showToast('Kupon dihapus', 'success');
+renderCoupons();
+} else {
+showToast(res.error || 'Gagal menghapus kupon', 'error');
+}
+} catch(e) {
+showToast('Koneksi bermasalah', 'error');
+}
+}
+
 
 // BARU: buka KTP & Tabungan affiliator di tab baru sekaligus - satu klik dari
 // kolom Aksi di tabel Affiliators, dipakai admin untuk verifikasi cepat sebelum
@@ -2308,6 +2525,7 @@ leads: 'Leads Management',
 orders: 'Orders History',
 commissions: 'Komisi',
 auditlog: 'Audit Trail',
+coupons: 'Kupon Diskon',
 templates: 'Template Promosi',
 landing: 'Landing Page',
 qr: 'QR Generator'
@@ -2776,7 +2994,7 @@ btn.innerHTML = originalHTML;
 // panggil paginate(arr, 'key') untuk ambil potongan halaman aktif saja, lalu render
 // paginationControlsHTML(...) ke wadah div#xxxPagination.
 var PAGE_SIZE = 20;
-var PaginationState = { products: 1, affiliators: 1, leads: 1, orders: 1, commissions: 1, auditlog: 1 };
+var PaginationState = { products: 1, affiliators: 1, leads: 1, orders: 1, commissions: 1, auditlog: 1, coupons: 1 };
 
 function paginate(arr, key) {
 if (!PaginationState[key]) PaginationState[key] = 1;
@@ -2793,7 +3011,8 @@ affiliators: function() { renderAffiliators(); },
 leads: function() { renderLeads(); },
 orders: function() { renderOrders(); },
 commissions: function() { renderCommissions(); },
-auditlog: function() { renderAuditLogCurrentPage(); }
+auditlog: function() { renderAuditLogCurrentPage(); },
+coupons: function() { renderCouponsCurrentPage(); }
 };
 
 function goToPage(key, page) {
