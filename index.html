@@ -1944,9 +1944,20 @@ document.getElementById(id).classList.remove('active');
 // diam saja saat diklik. Modal & backend (action updateUser) sudah tersedia,
 // jadi cukup dihubungkan di sini.
 
-function openUserDetailModal(userId) {
+async function openUserDetailModal(userId) {
 var u = DATA.users.find(function(x) { return String(x.id) === String(userId); });
-if (!u) { showToast('Data affiliator tidak ditemukan. Coba refresh data.', 'error'); return; }
+if (!u) {
+// BARU: affiliator biasa tidak lagi punya DATA.users (getUsers sekarang khusus admin),
+// jadi kalau tidak ketemu di cache lokal, ambil langsung datanya sendiri lewat getUserDetail
+// (server mengizinkan ini untuk data milik sendiri, atau data siapa pun kalau pemanggilnya admin).
+var res = await callGASGet('getUserDetail', { id: userId });
+if (res.success && res.data) {
+u = res.data;
+} else {
+showToast(res.error || 'Data affiliator tidak ditemukan. Coba refresh data.', 'error');
+return;
+}
+}
 
 var isSelf = currentUser && !currentUser.isAdmin && String(currentUser.id) === String(userId);
 var titleEl = document.querySelector('#userDetailModal .modal-header h3');
@@ -1999,7 +2010,7 @@ try {
 await syncAllData();
 } catch (e) {}
 }
-openUserDetailModal(currentUser.id);
+await openUserDetailModal(currentUser.id);
 }
 
 function fileToBase64(file) {
