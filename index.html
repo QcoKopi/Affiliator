@@ -1796,6 +1796,14 @@ var statusBadge = '<span class="badge badge-' + (isActive ? 'active' : (isPendin
 var actionBtns = '<div style="display:flex;gap:4px">' +
 '<button class="btn btn-sm btn-outline" onclick="openUserDetailModal(\'' + uIdAttr + '\')" title="Detail"><i class="fas fa-eye"></i></button>';
 
+var hasKtp = !!(u.ktpurl || u.ktpUrl);
+var hasTabungan = !!(u.tabunganurl || u.tabunganUrl);
+if (hasKtp || hasTabungan) {
+actionBtns += ' <button class="btn btn-sm btn-outline" onclick="viewAffiliatorDocuments(\'' + uIdAttr + '\')" title="Lihat KTP & Tabungan (verifikasi)" style="color:var(--info);border-color:var(--info)"><i class="fas fa-id-card"></i></button>';
+} else {
+actionBtns += ' <button class="btn btn-sm btn-outline" disabled title="Belum upload KTP/Tabungan"><i class="fas fa-id-card" style="opacity:0.4"></i></button>';
+}
+
 if (isPending || u.status === 'Inactive') {
 actionBtns += ' <button class="btn btn-sm btn-success" onclick="activateUser(\'' + uIdAttr + '\', this)" title="Aktifkan"><i class="fas fa-check"></i></button>';
 } else if (isActive) {
@@ -2195,6 +2203,26 @@ var pgEl = document.getElementById('auditlogPagination');
 if (pgEl) pgEl.innerHTML = paginationControlsHTML('auditlog', pg.page, pg.totalPages, pg.total);
 }
 
+
+// BARU: buka KTP & Tabungan affiliator di tab baru sekaligus - satu klik dari
+// kolom Aksi di tabel Affiliators, dipakai admin untuk verifikasi cepat sebelum
+// menentukan valid/tidaknya lead dari affiliator itu.
+function viewAffiliatorDocuments(userId) {
+if (!currentUser || !currentUser.isAdmin) return;
+var u = DATA.users.find(function(x) { return String(x.id) === String(userId); });
+if (!u) { showToast('Data affiliator tidak ditemukan', 'error'); return; }
+
+var ktpUrl = u.ktpurl || u.ktpUrl || '';
+var tabunganUrl = u.tabunganurl || u.tabunganUrl || '';
+
+if (!ktpUrl && !tabunganUrl) { showToast('Affiliator ini belum upload KTP maupun Tabungan', 'warning'); return; }
+
+if (ktpUrl) window.open(ktpUrl, '_blank');
+if (tabunganUrl) window.open(tabunganUrl, '_blank');
+
+if (ktpUrl && !tabunganUrl) showToast('KTP dibuka - Tabungan belum diupload', 'info');
+else if (!ktpUrl && tabunganUrl) showToast('Tabungan dibuka - KTP belum diupload', 'info');
+}
 
 function markCommissionAsPaid(id) {
 if (!id || id === '') {
