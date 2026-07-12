@@ -541,7 +541,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-body">
 <div class="table-container">
 <table class="data-table">
-<thead><tr><th>Tanggal</th><th>Nama Lead</th><th>Kontak</th><th>Affiliator</th><th>Nilai Transaksi</th><th>Status</th><th>Aksi</th></tr></thead>
+<thead><tr><th>Tanggal</th><th>Nama Lead</th><th id="leadsContactHeader">Kontak</th><th>Affiliator</th><th>Nilai Transaksi</th><th>Status</th><th>Aksi</th></tr></thead>
 <tbody id="leadsBody"></tbody>
 </table>
 </div>
@@ -1648,6 +1648,9 @@ let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referra
 if (statusFilter) leads = leads.filter(l => l.status === statusFilter);
 if (searchFilter) leads = leads.filter(l => (l.name || '').toLowerCase().includes(searchFilter));
 
+var contactHeaderEl = document.getElementById('leadsContactHeader');
+if (contactHeaderEl) contactHeaderEl.textContent = currentUser.isAdmin ? 'Kontak' : 'Produk';
+
 document.getElementById('leadsBody').innerHTML = leads.map(l => {
 const leadId = l.id || '';
 const stat = String(l.status).toLowerCase() || 'pending';
@@ -1658,8 +1661,10 @@ let contactDisplay;
 if (currentUser.isAdmin) {
 contactDisplay = l.contact || l.whatsapp || '-';
 } else {
-const order = DATA.orders.find(o => String(o.leadid || o.leadId) === String(l.id));
-contactDisplay = order ? (order.kotakabupaten || order.kotaKabupaten || order.provinsi || '-') : '-';
+// BARU: affiliator melihat produk yang dibeli di kolom ini, bukan kontak lead
+// (nomor WA/email lead disembunyikan dari affiliator - lihat juga viewLeadDetail)
+const relatedOrders = DATA.orders.filter(o => String(o.leadid || o.leadId) === String(l.id));
+contactDisplay = relatedOrders.length > 0 ? relatedOrders.map(o => o.productname || o.productName || '-').join(', ') : '-';
 }
 
 let actionBtn = '';
@@ -1703,7 +1708,10 @@ const lead = DATA.leads.find(l => l.id === leadId);
 if (!lead) return;
 const aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (lead.referralcode || lead.referralCode));
 const val = parseFloat(lead.transactionvalue || lead.transactionValue) || 0;
-const detail = 'Nama: ' + (lead.name || '-') + '\nKontak: ' + (lead.contact || lead.whatsapp || '-') + '\nAffiliator: ' + (aff ? aff.name : (lead.referralcode || '-')) + '\nStatus: ' + (lead.status || 'Pending') + '\nNilai: Rp ' + formatNumber(val);
+// BARU: kota menggantikan kontak (email/WA lead disembunyikan dari affiliator)
+const order = DATA.orders.find(o => String(o.leadid || o.leadId) === String(lead.id));
+const kotaDisplay = order ? (order.kotakabupaten || order.kotaKabupaten || order.provinsi || '-') : '-';
+const detail = 'Nama: ' + (lead.name || '-') + '\nKota: ' + kotaDisplay + '\nAffiliator: ' + (aff ? aff.name : (lead.referralcode || '-')) + '\nStatus: ' + (lead.status || 'Pending') + '\nNilai: Rp ' + formatNumber(val);
 alert(detail);
 }
 
