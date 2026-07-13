@@ -3410,6 +3410,36 @@ document.getElementById('resetPasswordOverlay').style.display = 'flex';
 } else {
 checkAccess();
 }
+
+// BARU: cadangan terakhir untuk kolom pencarian. Event oninput/onkeyup ternyata
+// tidak selalu terpicu konsisten di sebagian browser/device. Ini TIDAK bergantung
+// pada event sama sekali - cuma mengecek isi kotak pencarian setiap 300ms dan
+// langsung memicu render kalau isinya berubah. Selalu jalan, apa pun penyebab
+// event browser yang tidak konsisten itu.
+(function() {
+var searchInputConfigs = [
+{ id: 'filterProductSearch', fn: function() { PaginationState.products = 1; renderProducts(); } },
+{ id: 'filterAffiliatorSearch', fn: function() { PaginationState.affiliators = 1; renderAffiliators(); } },
+{ id: 'filterLeadSearch', fn: function() { PaginationState.leads = 1; renderLeads(); } },
+{ id: 'filterOrderSearch', fn: function() { PaginationState.orders = 1; renderOrders(); } },
+{ id: 'filterCommissionSearch', fn: function() { PaginationState.commissions = 1; renderCommissions(); } },
+{ id: 'filterAuditSearch', fn: function() { PaginationState.auditlog = 1; renderAuditLogCurrentPage(); } },
+{ id: 'filterCouponSearch', fn: function() { PaginationState.coupons = 1; renderCouponsCurrentPage(); } }
+];
+var lastValues = {};
+setInterval(function() {
+for (var i = 0; i < searchInputConfigs.length; i++) {
+var cfg = searchInputConfigs[i];
+var el = document.getElementById(cfg.id);
+if (!el) continue;
+if (lastValues[cfg.id] === undefined) { lastValues[cfg.id] = el.value; continue; }
+if (el.value !== lastValues[cfg.id]) {
+lastValues[cfg.id] = el.value;
+try { cfg.fn(); } catch(e) { /* diam-diam saja, jangan sampai polling ini berhenti gara-gara 1 error */ }
+}
+}
+}, 300);
+})();
 };
 </script>
 </body>
