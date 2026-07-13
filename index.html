@@ -1506,7 +1506,7 @@ if (hideOrders) hideOrders.style.display = 'none';
 const recent = filteredLeads.slice(-5).reverse();
 document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
 const aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
-return '<tr><td>' + formatDate(l.date) + '</td><td>' + escapeHtml(l.name || '-') + '</td><td>' + escapeHtml(aff ? aff.name : (l.referralcode || l.referralCode || '-')) + '</td><td><span class="badge badge-' + escapeHtml((l.status || 'pending').toLowerCase()) + '">' + escapeHtml(l.status || 'Pending') + '</span></td><td class="admin-only"><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal(\'' + escapeJsAttr(l.id) + '\')"><i class="fas fa-edit"></i></button></td></tr>';
+return '<tr><td>' + formatDate(l.date) + '</td><td>' + escapeHtml(l.name || '-') + '</td><td>' + escapeHtml(aff ? aff.name : (l.referralcode || l.referralCode || '-')) + '</td><td><span class="badge badge-' + escapeHtml(String(l.status || 'pending').toLowerCase()) + '">' + escapeHtml(l.status || 'Pending') + '</span></td><td class="admin-only"><button class="btn btn-sm btn-primary" onclick="openUpdateLeadModal(\'' + escapeJsAttr(l.id) + '\')"><i class="fas fa-edit"></i></button></td></tr>';
 }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
 }
 
@@ -1545,7 +1545,7 @@ const searchEl = document.getElementById('filterProductSearch');
 const search = searchEl ? searchEl.value.toLowerCase() : '';
 const filtered = DATA.products.filter(function(p) {
 if (!search) return true;
-return (p.name || '').toLowerCase().indexOf(search) !== -1 || (p.category || '').toLowerCase().indexOf(search) !== -1;
+return String(p.name || '').toLowerCase().indexOf(search) !== -1 || String(p.category || '').toLowerCase().indexOf(search) !== -1;
 });
 const pg = paginate(filtered, 'products');
 body.innerHTML = pg.items.map(p => {
@@ -1827,9 +1827,9 @@ var ref = u.referralcode || u.referralCode;
 var affLeads = DATA.leads.filter(function(l) { return (l.referralcode || l.referralCode) === ref; });
 var affComm = DATA.commissions.filter(function(c) { return (c.affiliatorid || c.affiliatorId) === u.id; });
 var totalComm = affComm.reduce(function(a, c) { return a + (parseFloat(c.amount) || 0); }, 0);
-var totalSales = affLeads.filter(function(l) { var s = (l.status || '').toLowerCase(); return s === 'valid' || s === 'converted'; }).length;
-var totalPending = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'pending'; }).length;
-var totalReject = affLeads.filter(function(l) { return (l.status || '').toLowerCase() === 'rejected'; }).length;
+var totalSales = affLeads.filter(function(l) { var s = String(l.status || '').toLowerCase(); return s === 'valid' || s === 'converted'; }).length;
+var totalPending = affLeads.filter(function(l) { return String(l.status || '').toLowerCase() === 'pending'; }).length;
+var totalReject = affLeads.filter(function(l) { return String(l.status || '').toLowerCase() === 'rejected'; }).length;
 return { user: u, ref: ref, affLeads: affLeads, totalComm: totalComm, totalSales: totalSales, totalPending: totalPending, totalReject: totalReject };
 });
 
@@ -1841,7 +1841,7 @@ const affFiltered = affStats.filter(function(item) {
 if (!affSearch) return true;
 var u = item.user;
 var ref = String(item.ref || '').toLowerCase();
-return (u.name || '').toLowerCase().indexOf(affSearch) !== -1 || (u.email || '').toLowerCase().indexOf(affSearch) !== -1 || ref.indexOf(affSearch) !== -1;
+return String(u.name || '').toLowerCase().indexOf(affSearch) !== -1 || String(u.email || '').toLowerCase().indexOf(affSearch) !== -1 || ref.indexOf(affSearch) !== -1;
 });
 const affPg = paginate(affFiltered, 'affiliators');
 
@@ -1892,10 +1892,10 @@ let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referra
 if (statusFilter) leads = leads.filter(l => String(l.status || '').toLowerCase() === statusFilter.toLowerCase());
 if (searchFilter) {
 leads = leads.filter(l => {
-if ((l.name || '').toLowerCase().indexOf(searchFilter) !== -1) return true;
+if (String(l.name || '').toLowerCase().indexOf(searchFilter) !== -1) return true;
 if (currentUser.isAdmin) {
 var aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
-if (aff && (aff.name || '').toLowerCase().indexOf(searchFilter) !== -1) return true;
+if (aff && String(aff.name || '').toLowerCase().indexOf(searchFilter) !== -1) return true;
 }
 return false;
 });
@@ -2107,13 +2107,13 @@ const orderSearchEl = document.getElementById('filterOrderSearch');
 const orderSearch = orderSearchEl ? orderSearchEl.value.toLowerCase() : '';
 const filteredOrders = DATA.orders.filter(function(o) {
 if (!orderSearch) return true;
-return (o.buyername || o.buyerName || '').toLowerCase().indexOf(orderSearch) !== -1 || (o.productname || o.productName || '').toLowerCase().indexOf(orderSearch) !== -1;
+return String(o.buyername || o.buyerName || '').toLowerCase().indexOf(orderSearch) !== -1 || String(o.productname || o.productName || '').toLowerCase().indexOf(orderSearch) !== -1;
 });
 const orderPg = paginate(filteredOrders, 'orders');
 document.getElementById('ordersBody').innerHTML = orderPg.items.map(o => {
 var alamat = [o.namajalangedung || o.namaJalanGedung, o.kecamatan, o.kotakabupaten || o.kotaKabupaten, o.provinsi, o.kodepos || o.kodePos].filter(Boolean).join(', ');
 var shipStatus = o.status || 'Pending';
-var statusClass = 'badge-' + shipStatus.toLowerCase();
+var statusClass = 'badge-' + String(shipStatus).toLowerCase();
 if (shipStatus === 'Diproses') statusClass = 'badge-diproses';
 else if (shipStatus === 'Dikirim') statusClass = 'badge-dikirim';
 else if (shipStatus === 'Diterima') statusClass = 'badge-diterima';
@@ -2163,7 +2163,7 @@ a.affId = k;
 return a;
 });
 // BARU: ringkasan ikut kata kunci yang sama dengan kolom cari di filter bar.
-if (commSearch) summaryArr = summaryArr.filter(function(a) { return a.name.toLowerCase().indexOf(commSearch) !== -1; });
+if (commSearch) summaryArr = summaryArr.filter(function(a) { return String(a.name || '').toLowerCase().indexOf(commSearch) !== -1; });
 summaryArr.sort(function(a, b) { return b.total - a.total; });
 
 var summaryHTML = '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;border:1.5px solid var(--border)">';
@@ -2206,7 +2206,7 @@ let commissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filt
 if (currentUser.isAdmin && commSearch) {
 commissions = commissions.filter(function(c) {
 var aff = DATA.users.find(function(u) { return String(u.id).trim() === String(c.affiliatorid || c.affiliatorId || '').trim(); });
-return aff && (aff.name || '').toLowerCase().indexOf(commSearch) !== -1;
+return aff && String(aff.name || '').toLowerCase().indexOf(commSearch) !== -1;
 });
 }
 const commPg = paginate(commissions, 'commissions');
@@ -2273,7 +2273,7 @@ const searchEl = document.getElementById('filterAuditSearch');
 const search = searchEl ? searchEl.value.toLowerCase() : '';
 const filtered = AuditLogData.filter(function(a) {
 if (!search) return true;
-return (a.actorname || '').toLowerCase().indexOf(search) !== -1 || (a.action || '').toLowerCase().indexOf(search) !== -1;
+return String(a.actorname || '').toLowerCase().indexOf(search) !== -1 || String(a.action || '').toLowerCase().indexOf(search) !== -1;
 });
 const pg = paginate(filtered, 'auditlog');
 const roleLabels = { admin: 'Admin', affiliate: 'Affiliator', publik: 'Publik' };
@@ -3095,7 +3095,7 @@ if (!currentUser || !currentUser.isAdmin) return;
 var rows = [];
 if (tableKey === 'products') {
 var search = (document.getElementById('filterProductSearch').value || '').toLowerCase();
-var list = DATA.products.filter(function(p) { return !search || (p.name || '').toLowerCase().indexOf(search) !== -1 || (p.category || '').toLowerCase().indexOf(search) !== -1; });
+var list = DATA.products.filter(function(p) { return !search || String(p.name || '').toLowerCase().indexOf(search) !== -1 || String(p.category || '').toLowerCase().indexOf(search) !== -1; });
 rows.push(['Nama Produk', 'Kategori', 'Harga', 'Status']);
 list.forEach(function(p) {
 var isAct = String(p.active).toLowerCase() === 'true' || String(p.active).toLowerCase() === 'yes' || String(p.status).toLowerCase() === 'active';
@@ -3105,8 +3105,8 @@ rows.push([p.name || '', p.category || '', p.price || 0, isAct ? 'Aktif' : 'Non-
 var search = (document.getElementById('filterAffiliatorSearch').value || '').toLowerCase();
 var list = DATA.users.filter(function(u) {
 if (!search) return true;
-var ref = (u.referralcode || u.referralCode || '').toLowerCase();
-return (u.name || '').toLowerCase().indexOf(search) !== -1 || (u.email || '').toLowerCase().indexOf(search) !== -1 || ref.indexOf(search) !== -1;
+var ref = String(u.referralcode || u.referralCode || '').toLowerCase();
+return String(u.name || '').toLowerCase().indexOf(search) !== -1 || String(u.email || '').toLowerCase().indexOf(search) !== -1 || ref.indexOf(search) !== -1;
 });
 rows.push(['Nama', 'Email', 'WhatsApp', 'Referral Code', 'Bank', 'Status']);
 list.forEach(function(u) { rows.push([u.name || '', u.email || '', u.phone || u.whatsapp || '', u.referralcode || u.referralCode || '', u.bank || '', u.status || 'Active']); });
@@ -3116,9 +3116,9 @@ var search = (document.getElementById('filterLeadSearch').value || '').toLowerCa
 var list = DATA.leads.filter(function(l) {
 if (statusFilter && String(l.status || '').toLowerCase() !== statusFilter.toLowerCase()) return false;
 if (search) {
-var nameMatch = (l.name || '').toLowerCase().indexOf(search) !== -1;
+var nameMatch = String(l.name || '').toLowerCase().indexOf(search) !== -1;
 var aff = DATA.users.find(function(u) { return (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode); });
-var affMatch = aff && (aff.name || '').toLowerCase().indexOf(search) !== -1;
+var affMatch = aff && String(aff.name || '').toLowerCase().indexOf(search) !== -1;
 if (!nameMatch && !affMatch) return false;
 }
 return true;
@@ -3129,7 +3129,7 @@ list.forEach(function(l) { rows.push([formatDate(l.date), l.name || '', l.contac
 var search = (document.getElementById('filterOrderSearch').value || '').toLowerCase();
 var list = DATA.orders.filter(function(o) {
 if (!search) return true;
-return (o.buyername || o.buyerName || '').toLowerCase().indexOf(search) !== -1 || (o.productname || o.productName || '').toLowerCase().indexOf(search) !== -1;
+return String(o.buyername || o.buyerName || '').toLowerCase().indexOf(search) !== -1 || String(o.productname || o.productName || '').toLowerCase().indexOf(search) !== -1;
 });
 rows.push(['Tanggal', 'Produk', 'Pembeli', 'Kontak', 'Alamat', 'Harga', 'Qty', 'Referral Code', 'Status']);
 list.forEach(function(o) {
@@ -3141,7 +3141,7 @@ var search = (document.getElementById('filterCommissionSearch').value || '').toL
 var list = DATA.commissions.filter(function(c) {
 if (!search) return true;
 var aff = DATA.users.find(function(u) { return String(u.id).trim() === String(c.affiliatorid || c.affiliatorId || '').trim(); });
-return aff && (aff.name || '').toLowerCase().indexOf(search) !== -1;
+return aff && String(aff.name || '').toLowerCase().indexOf(search) !== -1;
 });
 rows.push(['Tanggal', 'Affiliator', 'Tipe', 'Deskripsi', 'Jumlah', 'Status', 'Tgl Dibayar', 'Rekening Tujuan']);
 list.forEach(function(c) {
