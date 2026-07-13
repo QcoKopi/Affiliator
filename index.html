@@ -1885,8 +1885,23 @@ const statusFilter = document.getElementById('filterLeadStatus').value;
 const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
 
 let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
-if (statusFilter) leads = leads.filter(l => l.status === statusFilter);
-if (searchFilter) leads = leads.filter(l => (l.name || '').toLowerCase().includes(searchFilter));
+// BARU (fix bug): perbandingan status sekarang case-insensitive - sebelumnya
+// tombol aksi cepat (Valid/Reject/Convert) mengirim status huruf kecil, sedangkan
+// dropdown filter ini pakai huruf kapital, jadi filter status TIDAK PERNAH cocok
+// untuk lead yang statusnya diubah lewat tombol cepat.
+if (statusFilter) leads = leads.filter(l => String(l.status || '').toLowerCase() === statusFilter.toLowerCase());
+if (searchFilter) {
+leads = leads.filter(l => {
+if ((l.name || '').toLowerCase().includes(searchFilter)) return true;
+// BARU: admin juga bisa cari berdasarkan nama affiliator, bukan cuma nama lead -
+// berguna untuk lihat semua lead dari satu affiliator tertentu.
+if (currentUser.isAdmin) {
+var aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
+if (aff && (aff.name || '').toLowerCase().includes(searchFilter)) return true;
+}
+return false;
+});
+}
 const pg = paginate(leads, 'leads');
 
 var contactHeaderEl = document.getElementById('leadsContactHeader');
@@ -1969,9 +1984,9 @@ let actionBtn = '';
 if (currentUser.isAdmin) {
 let statusBtns = '';
 if (stat === 'pending') {
-statusBtns = '<button class="btn btn-sm btn-success" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'valid\')" title="Valid"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-danger" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'rejected\')" title="Reject"><i class="fas fa-times"></i></button>';
+statusBtns = '<button class="btn btn-sm btn-success" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'Valid\')" title="Valid"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-danger" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'Rejected\')" title="Reject"><i class="fas fa-times"></i></button>';
 } else if (stat === 'valid') {
-statusBtns = '<button class="btn btn-sm btn-primary" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'converted\')" title="Convert"><i class="fas fa-exchange-alt"></i></button>';
+statusBtns = '<button class="btn btn-sm btn-primary" onclick="updateLeadStatus(\'' + leadIdAttr + '\',\'Converted\')" title="Convert"><i class="fas fa-exchange-alt"></i></button>';
 }
 var hasOrder = DATA.orders.some(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
 var invoiceBtn = hasOrder ? ' <button class="btn btn-sm btn-outline" onclick="openInvoiceModal(\'' + leadIdAttr + '\')" title="Invoice" style="color:var(--info);border-color:var(--info)"><i class="fas fa-file-invoice"></i></button>' : '';
