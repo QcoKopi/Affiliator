@@ -1734,9 +1734,12 @@ params.imgMimeType = imgMimeType;
 params.img = existingImgUrl;
 }
 
-// FIX: pakai POST (bukan GET) karena imgBase64 bisa sangat besar dan akan
-// membuat URL terlalu panjang jika dikirim lewat query string -> error 403.
-const res = imgBase64 ? await callGASPost('saveProduct', params) : await callGASGet('saveProduct', params);
+// FIX: SELALU pakai POST (bukan cuma kalau ada gambar) - deskripsi produk yang
+// panjang, atau kombinasi varian ukuran+sangrai, juga bisa bikin URL query string
+// kepanjangan dan ditolak infrastruktur Google SEBELUM sampai ke kode kita
+// (muncul sebagai error "Verification failed is not valid JSON", bukan 403 seperti
+// kasus gambar, tapi akar masalahnya sama: URL lewat GET kepanjangan).
+const res = await callGASPost('saveProduct', params);
 if (res.success) {
 showToast(id ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!', 'success');
 await syncAllData();
@@ -1790,7 +1793,8 @@ active: newActive
 // FIX: sertakan data varian yang sudah ada supaya tidak ikut kehapus saat toggle status
 if (p.sizes) params.sizes = p.sizes;
 if (p.roasttypes || p.roastTypes) params.roastTypes = p.roasttypes || p.roastTypes;
-const res = await callGASGet('saveProduct', params);
+// FIX: sama seperti saveProduct - pakai POST supaya deskripsi/varian panjang tidak bikin URL kepanjangan
+const res = await callGASPost('saveProduct', params);
 if (res.success) {
 showToast('Status produk diubah ke: ' + (newActive === 'true' ? 'Aktif' : 'Non-Aktif'), 'success');
 await syncAllData();
@@ -2085,7 +2089,9 @@ if (transValue > 0) params.transactionValue = transValue;
 if (newContact) params.contact = newContact;
 if (newNotes !== (lead.notes || '')) params.notes = newNotes;
 
-const res = await callGASGet('updateLead', params);
+// FIX: pakai POST - field catatan bisa sampai 500 karakter, berisiko sama dengan
+// deskripsi produk kalau dikirim lewat GET (URL query string kepanjangan).
+const res = await callGASPost('updateLead', params);
 
 if (res && res.success) {
 closeModal('updateLeadModal');
