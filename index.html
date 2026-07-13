@@ -592,7 +592,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <option value="Converted">Converted</option>
 <option value="Rejected">Rejected</option>
 </select>
-<input type="text" class="form-input" id="filterLeadSearch" placeholder="Cari nama..." oninput="PaginationState.leads=1;renderLeads()" style="width:200px">
 <button class="btn btn-outline btn-sm admin-only" onclick="exportTableToCSV('leads')"><i class="fas fa-file-csv"></i> Export CSV</button>
 </div>
 </div>
@@ -1882,7 +1881,6 @@ if (affPgEl) affPgEl.innerHTML = paginationControlsHTML('affiliators', affPg.pag
 function renderLeads() {
 if (!currentUser) return;
 const statusFilter = document.getElementById('filterLeadStatus').value;
-const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
 
 let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
 // BARU (fix bug): perbandingan status sekarang case-insensitive - sebelumnya
@@ -1890,29 +1888,14 @@ let leads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referra
 // dropdown filter ini pakai huruf kapital, jadi filter status TIDAK PERNAH cocok
 // untuk lead yang statusnya diubah lewat tombol cepat.
 if (statusFilter) leads = leads.filter(l => String(l.status || '').toLowerCase() === statusFilter.toLowerCase());
-if (searchFilter) {
-leads = leads.filter(l => {
-if ((l.name || '').toLowerCase().includes(searchFilter)) return true;
-// BARU: admin juga bisa cari berdasarkan nama affiliator, bukan cuma nama lead -
-// berguna untuk lihat semua lead dari satu affiliator tertentu.
-if (currentUser.isAdmin) {
-var aff = DATA.users.find(u => (u.referralcode || u.referralCode) === (l.referralcode || l.referralCode));
-if (aff && (aff.name || '').toLowerCase().includes(searchFilter)) return true;
-}
-return false;
-});
-}
-const pg = paginate(leads, 'leads');
 
 var contactHeaderEl = document.getElementById('leadsContactHeader');
 if (contactHeaderEl) contactHeaderEl.textContent = currentUser.isAdmin ? 'Kontak' : 'Produk';
 
-// BARU: ringkasan total nilai transaksi per affiliator (khusus admin). Sekarang
-// dihitung dari array 'leads' yang SUDAH kena filter status+search di atas -
-// jadi kalau admin pilih status "Pending" di dropdown, ringkasan ini otomatis
-// ikut menampilkan total Pending, bukan dipatok Valid terus seperti sebelumnya.
-// Nama affiliator juga sekarang dropdown (bisa dicari) - bukan kartu semua orang
-// sekaligus, supaya tetap ringkas walau affiliatornya banyak.
+// BARU: ringkasan total nilai transaksi per affiliator (khusus admin). Dihitung
+// dari 'leads' yang sudah kena filter status (bukan dipatok Valid terus).
+// Kolom cari + dropdown di sini SEKARANG JUGA jadi filter untuk tabel di bawahnya
+// (poin 3) - pilih satu affiliator, tabel ikut menampilkan leads miliknya saja.
 if (currentUser.isAdmin) {
 var leadsAffSummary = {};
 for (var lsi = 0; lsi < leads.length; lsi++) {
@@ -1930,6 +1913,12 @@ var leadsSummaryArr = Object.keys(leadsAffSummary).map(function(k) { return lead
 leadsSummaryArr.sort(function(a, b) { return b.total - a.total; });
 window.__leadsSummaryData = leadsSummaryArr;
 
+// Kalau affiliator yang lagi difilter ternyata tidak ada lagi di daftar status
+// saat ini (mis. ganti filter status jadi kosong hasilnya di dia), reset filternya.
+if (LeadsAffFilterRef && !leadsSummaryArr.some(function(o) { return o.ref === LeadsAffFilterRef; })) {
+LeadsAffFilterRef = '';
+}
+
 var statusLabelForSummary = statusFilter || 'Semua Status';
 var leadsSummaryHTML = '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;border:1.5px solid var(--border)">';
 leadsSummaryHTML += '<p style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Total Transaksi per Affiliator <span style="font-weight:400;color:var(--text-light);font-size:0.8rem">(status: ' + escapeHtml(statusLabelForSummary) + ')</span></p>';
@@ -1937,8 +1926,9 @@ if (leadsSummaryArr.length === 0) {
 leadsSummaryHTML += '<p style="font-size:0.85rem;color:var(--text-light)">Tidak ada data untuk filter status saat ini.</p>';
 } else {
 leadsSummaryHTML += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">';
-leadsSummaryHTML += '<input type="text" class="form-input" id="leadsSummaryAffSearch" placeholder="Cari nama affiliator..." oninput="filterLeadsSummaryOptions()" style="flex:1;min-width:160px">';
-leadsSummaryHTML += '<select class="form-select" id="leadsSummaryAffSelect" onchange="renderLeadsSummarySelectedCard()" style="flex:1;min-width:160px"></select>';
+leadsSummaryHTML += '<input type="text" class="form-input" id="leadsSummaryAffSearch" placeholder="Cari nama affiliator..." value="' + escapeHtml(LeadsAffFilterSearch) + '" oninput="filterLeadsSummaryOptions()" style="flex:1;min-width:160px">';
+leadsSummaryHTML += '<select class="form-select" id="leadsSummaryAffSelect" onchange="selectLeadsSummaryAffiliator()" style="flex:1;min-width:160px"></select>';
+if (LeadsAffFilterRef) leadsSummaryHTML += '<button type="button" class="btn btn-outline btn-sm" onclick="LeadsAffFilterRef=\'\';renderLeads()" title="Tampilkan semua affiliator lagi"><i class="fas fa-times"></i> Reset</button>';
 leadsSummaryHTML += '</div><div id="leadsSummaryCardArea"></div>';
 }
 leadsSummaryHTML += '</div>';
@@ -1955,10 +1945,17 @@ var leadsTableContainer = leadsBodyEl.closest('.table-container') || leadsBodyEl
 leadsTableContainer.parentNode.insertBefore(leadsSummaryDiv, leadsTableContainer);
 }
 if (leadsSummaryArr.length > 0) filterLeadsSummaryOptions();
+
+// BARU (poin 3): kalau ada affiliator terpilih, tabel di bawah ikut tersaring.
+if (LeadsAffFilterRef) {
+leads = leads.filter(function(l) { return (l.referralcode || l.referralCode) === LeadsAffFilterRef; });
+}
 } else {
 var oldLeadsSummary = document.getElementById('leadsSummaryPanel');
 if (oldLeadsSummary) oldLeadsSummary.remove();
 }
+
+const pg = paginate(leads, 'leads');
 
 document.getElementById('leadsBody').innerHTML = pg.items.map(l => {
 const leadId = l.id || '';
@@ -2005,14 +2002,24 @@ function filterLeadsSummaryOptions() {
 var searchEl = document.getElementById('leadsSummaryAffSearch');
 var select = document.getElementById('leadsSummaryAffSelect');
 if (!select) return;
-var search = searchEl ? searchEl.value.toLowerCase() : '';
+// BARU: simpan ke variabel permanen supaya teksnya tidak hilang saat panel di-render ulang.
+LeadsAffFilterSearch = searchEl ? searchEl.value : '';
+var search = LeadsAffFilterSearch.toLowerCase();
 var data = window.__leadsSummaryData || [];
 var filtered = search ? data.filter(function(o) { return o.name.toLowerCase().indexOf(search) !== -1; }) : data;
-var prevVal = select.value;
 select.innerHTML = '<option value="">-- Pilih Affiliator (' + filtered.length + ') --</option>' + filtered.map(function(o) {
-return '<option value="' + escapeHtml(o.ref) + '"' + (o.ref === prevVal ? ' selected' : '') + '>' + escapeHtml(o.name) + ' (' + o.count + ')</option>';
+return '<option value="' + escapeHtml(o.ref) + '"' + (o.ref === LeadsAffFilterRef ? ' selected' : '') + '>' + escapeHtml(o.name) + ' (' + o.count + ')</option>';
 }).join('');
 renderLeadsSummarySelectedCard();
+}
+
+// BARU: dipanggil saat admin MEMILIH affiliator dari dropdown - bukan cuma
+// menampilkan kartu ringkasan, tapi juga menyaring tabel Leads di bawahnya (poin 3).
+function selectLeadsSummaryAffiliator() {
+var select = document.getElementById('leadsSummaryAffSelect');
+if (!select) return;
+LeadsAffFilterRef = select.value;
+renderLeads();
 }
 
 function renderLeadsSummarySelectedCard() {
@@ -3066,6 +3073,11 @@ btn.innerHTML = originalHTML;
 // paginationControlsHTML(...) ke wadah div#xxxPagination.
 var PAGE_SIZE = 20;
 var PaginationState = { products: 1, affiliators: 1, leads: 1, orders: 1, commissions: 1, auditlog: 1, coupons: 1 };
+// BARU: state pencarian & filter affiliator di halaman Leads disimpan di variabel
+// terpisah (bukan cuma di dalam elemen <input> yang ikut dibuat ulang tiap render),
+// supaya teks yang diketik/pilihan affiliator tidak hilang saat tabel di-render ulang.
+var LeadsAffFilterSearch = '';
+var LeadsAffFilterRef = '';
 
 function paginate(arr, key) {
 if (!PaginationState[key]) PaginationState[key] = 1;
@@ -3154,10 +3166,10 @@ rows.push(['Nama', 'Email', 'WhatsApp', 'Referral Code', 'Bank', 'Status']);
 list.forEach(function(u) { rows.push([u.name || '', u.email || '', u.phone || u.whatsapp || '', u.referralcode || u.referralCode || '', u.bank || '', u.status || 'Active']); });
 } else if (tableKey === 'leads') {
 var statusFilter = document.getElementById('filterLeadStatus').value;
-var search = (document.getElementById('filterLeadSearch').value || '').toLowerCase();
 var list = DATA.leads.filter(function(l) {
-if (statusFilter && l.status !== statusFilter) return false;
-if (search && (l.name || '').toLowerCase().indexOf(search) === -1) return false;
+if (statusFilter && String(l.status || '').toLowerCase() !== statusFilter.toLowerCase()) return false;
+// BARU: ikut filter affiliator yang lagi dipilih di panel ringkasan, sama seperti yang ditampilkan di tabel.
+if (LeadsAffFilterRef && (l.referralcode || l.referralCode) !== LeadsAffFilterRef) return false;
 return true;
 });
 rows.push(['Tanggal', 'Nama Lead', 'Kontak', 'Referral Code', 'Nilai Transaksi', 'Status']);
