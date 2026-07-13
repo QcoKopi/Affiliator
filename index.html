@@ -525,7 +525,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-box"></i> Manajemen Data Produk</div>
 <div class="filter-bar">
-<input type="text" class="form-input" id="filterProductSearch" placeholder="Cari nama/kategori..." oninput="PaginationState.products=1;renderProducts()" style="width:200px">
+<input type="text" class="form-input" id="filterProductSearch" placeholder="Cari nama/kategori..." oninput="PaginationState.products=1;renderProducts()" onkeyup="PaginationState.products=1;renderProducts()" style="width:200px">
 <button class="btn btn-outline btn-sm" onclick="exportTableToCSV('products')"><i class="fas fa-file-csv"></i> Export CSV</button>
 <button class="btn btn-primary btn-sm" onclick="openProductModal()"><i class="fas fa-plus"></i> Tambah Produk Baru</button>
 </div>
@@ -562,7 +562,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-users"></i> Daftar Affiliators</div>
 <div class="filter-bar">
-<input type="text" class="form-input" id="filterAffiliatorSearch" placeholder="Cari nama/email/kode..." oninput="PaginationState.affiliators=1;renderAffiliators()" style="width:200px">
+<input type="text" class="form-input" id="filterAffiliatorSearch" placeholder="Cari nama/email/kode..." oninput="PaginationState.affiliators=1;renderAffiliators()" onkeyup="PaginationState.affiliators=1;renderAffiliators()" style="width:200px">
 <button class="btn btn-outline btn-sm" onclick="exportTableToCSV('affiliators')"><i class="fas fa-file-csv"></i> Export CSV</button>
 <span style="font-size:0.85rem;color:var(--text-light)" id="affiliatorCount">0 affiliator</span>
 </div>
@@ -592,7 +592,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <option value="Converted">Converted</option>
 <option value="Rejected">Rejected</option>
 </select>
-<input type="text" class="form-input" id="filterLeadSearch" placeholder="Cari nama lead/affiliator..." oninput="PaginationState.leads=1;renderLeads()" style="width:200px">
+<input type="text" class="form-input" id="filterLeadSearch" placeholder="Cari nama lead/affiliator..." oninput="PaginationState.leads=1;renderLeads()" onkeyup="PaginationState.leads=1;renderLeads()" style="width:200px">
 <button class="btn btn-outline btn-sm admin-only" onclick="exportTableToCSV('leads')"><i class="fas fa-file-csv"></i> Export CSV</button>
 </div>
 </div>
@@ -614,7 +614,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-shopping-cart"></i> Riwayat Transaksi Penjualan (Orders)</div>
 <div class="filter-bar">
-<input type="text" class="form-input" id="filterOrderSearch" placeholder="Cari pembeli/produk..." oninput="PaginationState.orders=1;renderOrders()" style="width:200px">
+<input type="text" class="form-input" id="filterOrderSearch" placeholder="Cari pembeli/produk..." oninput="PaginationState.orders=1;renderOrders()" onkeyup="PaginationState.orders=1;renderOrders()" style="width:200px">
 <button class="btn btn-outline btn-sm" onclick="exportTableToCSV('orders')"><i class="fas fa-file-csv"></i> Export CSV</button>
 </div>
 </div>
@@ -636,7 +636,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-money-bill-wave"></i> Daftar Pencairan Komisi Affiliator</div>
 <div class="filter-bar">
-<input type="text" class="form-input admin-only" id="filterCommissionSearch" placeholder="Cari affiliator..." oninput="PaginationState.commissions=1;renderCommissions()" style="width:200px">
+<input type="text" class="form-input admin-only" id="filterCommissionSearch" placeholder="Cari affiliator..." oninput="PaginationState.commissions=1;renderCommissions()" onkeyup="PaginationState.commissions=1;renderCommissions()" style="width:200px">
 <button class="btn btn-outline btn-sm admin-only" onclick="exportTableToCSV('commissions')"><i class="fas fa-file-csv"></i> Export CSV</button>
 </div>
 </div>
@@ -658,7 +658,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-history"></i> Audit Trail - Riwayat Perubahan</div>
 <div class="filter-bar">
-<input type="text" class="form-input" id="filterAuditSearch" placeholder="Cari pelaku/aksi..." oninput="PaginationState.auditlog=1;renderAuditLogCurrentPage()" style="width:200px">
+<input type="text" class="form-input" id="filterAuditSearch" placeholder="Cari pelaku/aksi..." oninput="PaginationState.auditlog=1;renderAuditLogCurrentPage()" onkeyup="PaginationState.auditlog=1;renderAuditLogCurrentPage()" style="width:200px">
 </div>
 </div>
 <div class="card-body">
@@ -680,7 +680,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-header">
 <div class="card-title"><i class="fas fa-tags"></i> Kupon Diskon</div>
 <div class="filter-bar">
-<input type="text" class="form-input" id="filterCouponSearch" placeholder="Cari kode kupon..." oninput="PaginationState.coupons=1;renderCoupons()" style="width:200px">
+<input type="text" class="form-input" id="filterCouponSearch" placeholder="Cari kode kupon..." oninput="PaginationState.coupons=1;renderCouponsCurrentPage()" onkeyup="PaginationState.coupons=1;renderCouponsCurrentPage()" style="width:200px">
 <button class="btn btn-primary btn-sm" onclick="openCouponModal()"><i class="fas fa-plus"></i> Buat Kupon Baru</button>
 </div>
 </div>
