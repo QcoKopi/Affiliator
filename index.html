@@ -1907,40 +1907,39 @@ const pg = paginate(leads, 'leads');
 var contactHeaderEl = document.getElementById('leadsContactHeader');
 if (contactHeaderEl) contactHeaderEl.textContent = currentUser.isAdmin ? 'Kontak' : 'Produk';
 
-// BARU: ringkasan total nilai transaksi VALID per affiliator (khusus admin, karena
-// affiliator cuma melihat leads miliknya sendiri saja di halaman ini).
-if (currentUser.isAdmin && DATA.leads.length > 0) {
+// BARU: ringkasan total nilai transaksi per affiliator (khusus admin). Sekarang
+// dihitung dari array 'leads' yang SUDAH kena filter status+search di atas -
+// jadi kalau admin pilih status "Pending" di dropdown, ringkasan ini otomatis
+// ikut menampilkan total Pending, bukan dipatok Valid terus seperti sebelumnya.
+// Nama affiliator juga sekarang dropdown (bisa dicari) - bukan kartu semua orang
+// sekaligus, supaya tetap ringkas walau affiliatornya banyak.
+if (currentUser.isAdmin) {
 var leadsAffSummary = {};
-for (var lsi = 0; lsi < DATA.leads.length; lsi++) {
-var ld = DATA.leads[lsi];
-if (String(ld.status || '').toLowerCase() !== 'valid') continue;
+for (var lsi = 0; lsi < leads.length; lsi++) {
+var ld = leads[lsi];
 var ldRef = ld.referralcode || ld.referralCode || '';
 if (!ldRef) continue;
 if (!leadsAffSummary[ldRef]) {
 var ldAff = DATA.users.find(function(u) { return String(u.referralcode || u.referralCode || '').toLowerCase() === String(ldRef).toLowerCase(); });
-leadsAffSummary[ldRef] = { name: ldAff ? ldAff.name : ldRef, total: 0, count: 0 };
+leadsAffSummary[ldRef] = { ref: ldRef, name: ldAff ? ldAff.name : ldRef, total: 0, count: 0 };
 }
 leadsAffSummary[ldRef].total += parseFloat(ld.transactionvalue || ld.transactionValue) || 0;
 leadsAffSummary[ldRef].count += 1;
 }
 var leadsSummaryArr = Object.keys(leadsAffSummary).map(function(k) { return leadsAffSummary[k]; });
 leadsSummaryArr.sort(function(a, b) { return b.total - a.total; });
+window.__leadsSummaryData = leadsSummaryArr;
 
+var statusLabelForSummary = statusFilter || 'Semua Status';
 var leadsSummaryHTML = '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;border:1.5px solid var(--border)">';
-leadsSummaryHTML += '<p style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Total Transaksi Valid per Affiliator</p>';
+leadsSummaryHTML += '<p style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Total Transaksi per Affiliator <span style="font-weight:400;color:var(--text-light);font-size:0.8rem">(status: ' + escapeHtml(statusLabelForSummary) + ')</span></p>';
 if (leadsSummaryArr.length === 0) {
-leadsSummaryHTML += '<p style="font-size:0.85rem;color:var(--text-light)">Belum ada transaksi valid.</p>';
+leadsSummaryHTML += '<p style="font-size:0.85rem;color:var(--text-light)">Tidak ada data untuk filter status saat ini.</p>';
 } else {
-leadsSummaryHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">';
-for (var lsj = 0; lsj < leadsSummaryArr.length; lsj++) {
-var ls = leadsSummaryArr[lsj];
-leadsSummaryHTML += '<div style="background:var(--card-bg);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border)">';
-leadsSummaryHTML += '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.25rem">' + escapeHtml(ls.name) + '</div>';
-leadsSummaryHTML += '<div style="font-size:0.8rem;color:var(--text-light)">' + ls.count + ' transaksi valid</div>';
-leadsSummaryHTML += '<div style="font-size:0.85rem;font-weight:600;color:var(--primary-dark);margin-top:0.25rem">Rp ' + formatNumber(ls.total) + '</div>';
-leadsSummaryHTML += '</div>';
-}
-leadsSummaryHTML += '</div>';
+leadsSummaryHTML += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">';
+leadsSummaryHTML += '<input type="text" class="form-input" id="leadsSummaryAffSearch" placeholder="Cari nama affiliator..." oninput="filterLeadsSummaryOptions()" style="flex:1;min-width:160px">';
+leadsSummaryHTML += '<select class="form-select" id="leadsSummaryAffSelect" onchange="renderLeadsSummarySelectedCard()" style="flex:1;min-width:160px"></select>';
+leadsSummaryHTML += '</div><div id="leadsSummaryCardArea"></div>';
 }
 leadsSummaryHTML += '</div>';
 
@@ -1951,13 +1950,11 @@ if (existingLeadsSummary) existingLeadsSummary.remove();
 var leadsSummaryDiv = document.createElement('div');
 leadsSummaryDiv.id = 'leadsSummaryPanel';
 leadsSummaryDiv.innerHTML = leadsSummaryHTML;
-// BARU (fix layout): sebelumnya disisipkan sebagai child langsung dari <table>
-// (HTML tidak valid, bikin CSS Grid di dalamnya gagal dapat lebar yang benar
-// sehingga memanjang ke bawah). Sekarang disisipkan sebelum .table-container,
-// jadi jadi elemen blok biasa di dalam .card-body.
+// (fix layout) disisipkan sebelum .table-container, bukan di dalam <table>.
 var leadsTableContainer = leadsBodyEl.closest('.table-container') || leadsBodyEl.parentNode;
 leadsTableContainer.parentNode.insertBefore(leadsSummaryDiv, leadsTableContainer);
 }
+if (leadsSummaryArr.length > 0) filterLeadsSummaryOptions();
 } else {
 var oldLeadsSummary = document.getElementById('leadsSummaryPanel');
 if (oldLeadsSummary) oldLeadsSummary.remove();
@@ -2000,6 +1997,38 @@ return '<tr><td>' + formatDate(l.date) + '</td><td><strong>' + escapeHtml(l.name
 }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada leads</td></tr>';
 var leadsPgEl = document.getElementById('leadsPagination');
 if (leadsPgEl) leadsPgEl.innerHTML = paginationControlsHTML('leads', pg.page, pg.totalPages, pg.total);
+}
+
+// BARU: isi ulang opsi dropdown affiliator di panel ringkasan Leads sesuai kata
+// kunci pencarian (cocok sebagian, bukan harus persis sama).
+function filterLeadsSummaryOptions() {
+var searchEl = document.getElementById('leadsSummaryAffSearch');
+var select = document.getElementById('leadsSummaryAffSelect');
+if (!select) return;
+var search = searchEl ? searchEl.value.toLowerCase() : '';
+var data = window.__leadsSummaryData || [];
+var filtered = search ? data.filter(function(o) { return o.name.toLowerCase().indexOf(search) !== -1; }) : data;
+var prevVal = select.value;
+select.innerHTML = '<option value="">-- Pilih Affiliator (' + filtered.length + ') --</option>' + filtered.map(function(o) {
+return '<option value="' + escapeHtml(o.ref) + '"' + (o.ref === prevVal ? ' selected' : '') + '>' + escapeHtml(o.name) + ' (' + o.count + ')</option>';
+}).join('');
+renderLeadsSummarySelectedCard();
+}
+
+function renderLeadsSummarySelectedCard() {
+var select = document.getElementById('leadsSummaryAffSelect');
+var area = document.getElementById('leadsSummaryCardArea');
+if (!select || !area) return;
+var ref = select.value;
+if (!ref) { area.innerHTML = '<p style="font-size:0.85rem;color:var(--text-light)">Pilih affiliator di atas untuk lihat totalnya.</p>'; return; }
+var data = window.__leadsSummaryData || [];
+var item = data.find(function(o) { return o.ref === ref; });
+if (!item) { area.innerHTML = ''; return; }
+area.innerHTML = '<div style="background:var(--card-bg);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);max-width:280px">' +
+'<div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem">' + escapeHtml(item.name) + '</div>' +
+'<div style="font-size:0.8rem;color:var(--text-light)">' + item.count + ' transaksi</div>' +
+'<div style="font-size:0.95rem;font-weight:600;color:var(--primary-dark);margin-top:0.25rem">Rp ' + formatNumber(item.total) + '</div>' +
+'</div>';
 }
 
 // BARU: notifikasi WA ke affiliator saat status lead-nya berubah (mengikuti pola
@@ -2160,20 +2189,15 @@ a.affId = k;
 return a;
 });
 summaryArr.sort(function(a, b) { return b.total - a.total; });
+window.__commSummaryData = summaryArr;
 
 var summaryHTML = '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;border:1.5px solid var(--border)">';
 summaryHTML += '<p style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem"><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Ringkasan Komisi per Affiliator</p>';
-summaryHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem">';
-for (var j = 0; j < summaryArr.length; j++) {
-var s = summaryArr[j];
-summaryHTML += '<div style="background:var(--card-bg);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border)">';
-summaryHTML += '<div style="font-weight:600;font-size:0.85rem;margin-bottom:0.25rem">' + escapeHtml(s.name) + '</div>';
-summaryHTML += '<div style="font-size:0.8rem;color:var(--success)"><i class="fas fa-check-circle"></i> Dibayar: Rp ' + formatNumber(s.paid) + '</div>';
-summaryHTML += '<div style="font-size:0.8rem;color:var(--warning)"><i class="fas fa-clock"></i> Belum: Rp ' + formatNumber(s.unpaid) + '</div>';
-summaryHTML += '<div style="font-size:0.85rem;font-weight:600;color:var(--primary-dark);margin-top:0.25rem">Total: Rp ' + formatNumber(s.total) + '</div>';
+summaryHTML += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem">';
+summaryHTML += '<input type="text" class="form-input" id="commSummaryAffSearch" placeholder="Cari nama affiliator..." oninput="filterCommSummaryOptions()" style="flex:1;min-width:160px">';
+summaryHTML += '<select class="form-select" id="commSummaryAffSelect" onchange="renderCommSummarySelectedCard()" style="flex:1;min-width:160px"></select>';
+summaryHTML += '</div><div id="commSummaryCardArea"></div>';
 summaryHTML += '</div>';
-}
-summaryHTML += '</div></div>';
 
 var commCard = document.getElementById('commissionsBody');
 if (commCard) {
@@ -2182,12 +2206,11 @@ if (existingSummary) existingSummary.remove();
 var summaryDiv = document.createElement('div');
 summaryDiv.id = 'commSummaryPanel';
 summaryDiv.innerHTML = summaryHTML;
-// BARU (fix layout): sama seperti panel Leads - sisipkan sebelum .table-container
-// supaya jadi elemen blok biasa, bukan child langsung dari <table> (yang bikin
-// CSS Grid di dalamnya gagal dapat lebar yang benar dan memanjang ke bawah).
+// (fix layout) disisipkan sebelum .table-container, bukan di dalam <table>.
 var commTableContainer = commCard.closest('.table-container') || commCard.parentNode;
 commTableContainer.parentNode.insertBefore(summaryDiv, commTableContainer);
 }
+filterCommSummaryOptions();
 }
 
 let commissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === currentUser.id);
@@ -2230,6 +2253,39 @@ return '<tr><td>' + formatDate(c.date) + '</td><td><strong>' + escapeHtml(aff ? 
 }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
 var commPgEl = document.getElementById('commissionsPagination');
 if (commPgEl) commPgEl.innerHTML = paginationControlsHTML('commissions', commPg.page, commPg.totalPages, commPg.total);
+}
+
+// BARU: isi ulang opsi dropdown affiliator di panel Ringkasan Komisi sesuai kata
+// kunci pencarian (cocok sebagian, bukan harus persis sama).
+function filterCommSummaryOptions() {
+var searchEl = document.getElementById('commSummaryAffSearch');
+var select = document.getElementById('commSummaryAffSelect');
+if (!select) return;
+var search = searchEl ? searchEl.value.toLowerCase() : '';
+var data = window.__commSummaryData || [];
+var filtered = search ? data.filter(function(o) { return o.name.toLowerCase().indexOf(search) !== -1; }) : data;
+var prevVal = select.value;
+select.innerHTML = '<option value="">-- Pilih Affiliator (' + filtered.length + ') --</option>' + filtered.map(function(o) {
+return '<option value="' + escapeHtml(o.affId) + '"' + (o.affId === prevVal ? ' selected' : '') + '>' + escapeHtml(o.name) + '</option>';
+}).join('');
+renderCommSummarySelectedCard();
+}
+
+function renderCommSummarySelectedCard() {
+var select = document.getElementById('commSummaryAffSelect');
+var area = document.getElementById('commSummaryCardArea');
+if (!select || !area) return;
+var affId = select.value;
+if (!affId) { area.innerHTML = '<p style="font-size:0.85rem;color:var(--text-light)">Pilih affiliator di atas untuk lihat rincian komisinya.</p>'; return; }
+var data = window.__commSummaryData || [];
+var item = data.find(function(o) { return o.affId === affId; });
+if (!item) { area.innerHTML = ''; return; }
+area.innerHTML = '<div style="background:var(--card-bg);padding:0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);max-width:280px">' +
+'<div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem">' + escapeHtml(item.name) + '</div>' +
+'<div style="font-size:0.8rem;color:var(--success)"><i class="fas fa-check-circle"></i> Dibayar: Rp ' + formatNumber(item.paid) + '</div>' +
+'<div style="font-size:0.8rem;color:var(--warning)"><i class="fas fa-clock"></i> Belum: Rp ' + formatNumber(item.unpaid) + '</div>' +
+'<div style="font-size:0.95rem;font-weight:600;color:var(--primary-dark);margin-top:0.25rem">Total: Rp ' + formatNumber(item.total) + '</div>' +
+'</div>';
 }
 
 // BARU: Audit Trail - dimuat sesuai permintaan (bukan bagian syncAllData) karena
