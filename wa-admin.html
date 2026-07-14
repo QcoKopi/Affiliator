@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCO WhatsApp Chatbot Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6B4F3A;
+            --primary-light: #8B7355;
+            --secondary: #D4A574;
+            --accent: #C4956A;
+            --bg: #F5F0EB;
+            --card-bg: #FFFFFF;
+            --text: #2D2D2D;
+            --text-light: #6B6B6B;
+            --border: #E0D5C8;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --info: #2196F3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary) 0%, #5A3F2E 100%);
+            color: white;
+            padding: 24px 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 i {
+            font-size: 24px;
+            color: var(--secondary);
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .nav-menu {
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: var(--secondary);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .nav-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 24px 32px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+        }
+
+        .stat-card .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .stat-icon.blue { background: #E3F2FD; color: var(--info); }
+        .stat-card .stat-icon.green { background: #E8F5E9; color: var(--success); }
+        .stat-card .stat-icon.orange { background: #FFF3E0; color: var(--warning); }
+        .stat-card .stat-icon.red { background: #FFEBEE; color: var(--danger); }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* Content Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-new { background: #E3F2FD; color: var(--info); }
+        .badge-hot { background: #FFF3E0; color: var(--warning); }
+        .badge-converted { background: #E8F5E9; color: var(--success); }
+        .badge-closed { background: #F5F5F5; color: var(--text-light); }
+
+        /* Template Editor */
+        .template-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #FAFAFA;
+        }
+
+        .template-item .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .template-item .template-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        .template-item .template-trigger {
+            font-size: 12px;
+            color: var(--text-light);
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .template-item textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            resize: vertical;
+            background: white;
+        }
+
+        .template-item textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Test Message */
+        .test-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--info); }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-dark {
+            border-color: var(--border);
+            border-top-color: var(--primary);
+        }
+
+        /* Section hide/show */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Status indicator */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.online { background: var(--success); }
+        .status-dot.offline { background: var(--danger); }
+        .status-dot.warning { background: var(--warning); }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fab fa-whatsapp"></i> QCO Chatbot</h1>
+            <p>WhatsApp Admin Panel</p>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="showSection('dashboard')">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="showSection('leads')">
+                <i class="fas fa-users"></i>
+                <span>Leads</span>
+            </div>
+            <div class="nav-item" onclick="showSection('templates')">
+                <i class="fas fa-message"></i>
+                <span>Templates</span>
+            </div>
+            <div class="nav-item" onclick="showSection('test')">
+                <i class="fas fa-paper-plane"></i>
+                <span>Test Message</span>
+            </div>
+            <div class="nav-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="header">
+                <h2>Dashboard</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-message"></i></div>
+                    <div class="stat-value" id="stat-total-messages">0</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-user-plus"></i></div>
+                    <div class="stat-value" id="stat-new-leads">0</div>
+                    <div class="stat-label">New Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-fire"></i></div>
+                    <div class="stat-value" id="stat-hot-leads">0</div>
+                    <div class="stat-label">Hot Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-value" id="stat-today">0</div>
+                    <div class="stat-label">Today</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-robot"></i> Chatbot Status</h3>
+                    <span class="badge badge-converted"><span class="status-dot online"></span>Online</span>
+                </div>
+                <p style="color: var(--text-light); font-size: 14px; line-height: 1.6;">
+                    <strong>Webhook URL:</strong> <span id="webhook-url">Connected</span><br>
+                    <strong>Phone Number:</strong> +62 852-1889-4015<br>
+                    <strong>Business Account:</strong> QKopi<br>
+                    <strong>Last Activity:</strong> <span id="last-activity">-</span>
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Phone</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-activity">
+                            <tr><td colspan="4" style="text-align:center; color: var(--text-light);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads Section -->
+        <div id="leads" class="section">
+            <div class="header">
+                <h2>Leads Management</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportLeads()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshLeads()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Phone</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-table">
+                            <tr><td colspan="6" style="text-align:center; color: var(--text-light);">Loading leads...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Section -->
+        <div id="templates" class="section">
+            <div class="header">
+                <h2>Chatbot Templates</h2>
+                <div class="header-actions">
+                    <button class="btn btn-success" onclick="saveTemplates()">
+                        <i class="fas fa-save"></i> Save All
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Auto-Reply Messages</h3>
+                    <p style="color: var(--text-light); font-size: 13px;">Edit teks balasan chatbot. Gunakan \n untuk baris baru.</p>
+                </div>
+
+                <div id="templates-list">
+                    <!-- Templates will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section -->
+        <div id="test" class="section">
+            <div class="header">
+                <h2>Test Message</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Send Test Message</h3>
+                </div>
+                <div class="test-form">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="test-phone" placeholder="6285xxxxxxxxxx" value="6285121341998">
+                    </div>
+                    <div class="form-group">
+                        <label>Template</label>
+                        <select id="test-template" onchange="updateTestMessage()">
+                            <option value="menu">Main Menu</option>
+                            <option value="price">Price Info</option>
+                            <option value="catalog">Product Catalog</option>
+                            <option value="order">Order Form</option>
+                            <option value="affiliator">Affiliator Info</option>
+                            <option value="about">About QCO</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendTestMessage()">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Message Preview</label>
+                    <textarea id="test-message-preview" style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px;" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <div class="header">
+                <h2>Settings</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Google Sheets Configuration</h3>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Spreadsheet ID</label>
+                    <input type="text" id="settings-sheet-id" value="1sPQBEr5lU2-WI-qecQwzRaqhSW_a2FqCQm0D7B7-lEQ" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Leads Sheet Name</label>
+                    <input type="text" id="settings-leads-sheet" value="Leads_WA" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Templates Sheet Name</label>
+                    <input type="text" id="settings-templates-sheet" value="Chatbot_Templates" readonly style="background: #f5f5f5;">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>WhatsApp Configuration</h3>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Phone Number ID</label>
+                    <input type="text" value="1225192170673894" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Business Account ID</label>
+                    <input type="text" value="1038052461973788" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Admin Phone</label>
+                    <input type="text" id="settings-admin-phone" value="6285121341998">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Commission Rate</label>
+                    <input type="number" id="settings-commission" value="0.05" step="0.01">
+                </div>
+                <button class="btn btn-success" onclick="saveSettings()">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Success!</span>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+        const CONFIG = {
+            SPREADSHEET_ID: '1sPQBEr5lU2-WI-qecQwzRaqhSW_a2FqCQm0D7B7-lEQ',
+            SHEET_LEADS: 'Leads_WA',
+            SHEET_TEMPLATES: 'Chatbot_Templates',
+            // GAS API URL untuk baca/tulis spreadsheet
+            GAS_API_URL: 'https://script.google.com/macros/s/AKfycbxjpjriTFS9Ki9XkSCeMzLTwLX5S4F7TCzlboSiiHv1cbyDWHVsEPWJRvsPURdkCEM/exec'
+        };
+
+        // ============================================================================
+        // DEFAULT TEMPLATES
+        // ============================================================================
+        const DEFAULT_TEMPLATES = {
+            menu: {
+                name: 'Main Menu',
+                trigger: 'Halo, Hi, Menu, Help',
+                text: '⭐ *Selamat Datang di QCO Kopi!* ☕\n\nSaya asisten digital yang siap membantu Anda.\n\n*Ketik angka atau kata kunci:*\n\n1️⃣ *HARGA* — Info harga kopi\n2️⃣ *KATALOG* — Lihat produk\n3️⃣ *PESAN* — Mulai pemesanan\n4️⃣ *AFFILIATOR* — Jadi affiliator\n5️⃣ *KOMISI* — Cek komisi Anda\n6️⃣ *STATUS* — Cek status pesanan\n7️⃣ *INFO* — Tentang QCO Kopi\n8️⃣ *ADMIN* — Hubungi admin\n\nBalas *MENU* kapan saja untuk kembali ke menu ini.'
+            },
+            price: {
+                name: 'Price Info',
+                trigger: 'Harga, Price, Berapa',
+                text: '💰 *HARGA KOPI QCO* 💰\n\n☕ *Arabika Premium*\n   Rp 150.000/kg\n\n☕ *Robusta Premium*\n   Rp 120.000/kg\n\n☕ *Houseblend Signature*\n   Rp 180.000/kg\n\n💡 *Harga belum termasuk ongkir*\n💡 *Diskon 5% untuk pembelian >10kg*\n\nKetik *PESAN* untuk membeli\natau *KATALOG* untuk detail produk.'
+            },
+            catalog: {
+                name: 'Product Catalog',
+                trigger: 'Katalog, Produk, Product, Catalog',
+                text: '📋 *KATALOG KOPI QCO* 📋\n\n1️⃣ *Arabika Premium*\n   Asal: Gayo, Aceh\n   Proses: Washed\n   Notes: Floral, Citrus, Chocolate\n   Harga: Rp 150.000/kg\n\n2️⃣ *Robusta Premium*\n   Asal: Lampung\n   Proses: Natural\n   Notes: Bold, Nutty, Caramel\n   Harga: Rp 120.000/kg\n\n3️⃣ *Houseblend Signature*\n   Campuran Arabika & Robusta\n   Ratio: 70:30\n   Harga: Rp 180.000/kg\n\nKetik *PESAN [nama produk]* untuk order\nContoh: *PESAN Arabika Premium*'
+            },
+            order: {
+                name: 'Order Form',
+                trigger: 'Pesan, Order, Beli, Buy',
+                text: '🛒 *FORMULIR PEMESANAN* 🛒\n\nSilakan isi data berikut dengan format:\n\n*NAMA:* [nama Anda]\n*ALAMAT:* [alamat lengkap]\n*PRODUK:* [Arabika/Robusta/Houseblend]\n*JUMLAH:* [kg]\n*CATATAN:* [opsional]\n\nContoh:\nNAMA: Budi Santoso\nALAMAT: Jl. Mawar No. 5, Jakarta\nPRODUK: Arabika Premium\nJUMLAH: 5\n\nAtau langsung pesan via web:\nhttps://qcokopi.github.io/Affiliator/landing.html'
+            },
+            affiliator: {
+                name: 'Affiliator Info',
+                trigger: 'Affiliator, Daftar, Join, Jualan',
+                text: '🤝 *JADI AFFILIATOR QCO* 🤝\n\nDapatkan komisi *5%* dari setiap penjualan!\n\n*Keuntungan:*\n✅ Komisi 5% per transaksi\n✅ Link referral unik\n✅ QR Code untuk promosi\n✅ Dashboard real-time\n✅ Payout bulanan\n\n*Cara daftar:*\n1. Kunjungi: https://qcokopi.github.io/Affiliator/landing.html\n2. Klik "Daftar Affiliator"\n3. Isi formulir\n4. Dapatkan link referral Anda!\n\nAtau balas *DAFTAR* untuk bantuan admin.'
+            },
+            commission: {
+                name: 'Check Commission',
+                trigger: 'Komisi, Commission, Bonus',
+                text: '💰 *KOMISI ANDA* 💰\n\nSilakan balas dengan kode affiliator Anda\natau ketik *DAFTAR* untuk jadi affiliator.'
+            },
+            status: {
+                name: 'Order Status',
+                trigger: 'Status, Tracking, Cek',
+                text: '📦 *CEK STATUS PESANAN* 📦\n\nSilakan balas dengan format:\n\n*STATUS [kode pesanan]*\n\nContoh: *STATUS QCO-2026-001*\n\nAtau hubungi admin untuk bantuan.'
+            },
+            about: {
+                name: 'About QCO',
+                trigger: 'Info, Tentang, About',
+                text: '☕ *TENTANG QCO KOPI* ☕\n\nQCO (QBridge Coffee Origin) adalah platform\nperdagangan kopi yang menghubungkan petani\ndan prosesor UMKM Indonesia dengan pasar global.\n\n*Visi:*\nTransparansi harga dan kesejahteraan petani\n\n*Produk:*\n✅ Arabika Premium (Gayo, Aceh)\n✅ Robusta Premium (Lampung)\n✅ Houseblend Signature\n\n*Kontak:*\n📧 info@qcoid.com\n🌐 https://www.qcoid.com\n\nKetik *HARGA* atau *KATALOG* untuk melihat produk.'
+            },
+            admin: {
+                name: 'Contact Admin',
+                trigger: 'Admin, CS, Bantuan, Help',
+                text: '👨‍💼 *HUBUNGI ADMIN* 👨‍💼\n\nAdmin kami siap membantu Anda:\n\n📞 WhatsApp: +62 812-9931-998\n📧 Email: info@qcoid.com\n🌐 Website: https://www.qcoid.com\n\nJam operasional:\nSenin - Jumat: 09.00 - 17.00 WIB\nSabtu: 09.00 - 14.00 WIB\n\nPesan Anda telah diteruskan ke admin.\nAdmin akan membalas secepatnya.'
+            },
+            default: {
+                name: 'Default Reply',
+                trigger: 'Any unknown message',
+                text: 'Maaf, saya tidak mengerti pesan Anda. 😅\n\nKetik *MENU* untuk melihat daftar perintah,\natau *ADMIN* untuk bantuan langsung.'
+            }
+        };
+
+        // ============================================================================
+        // NAVIGATION
+        // ============================================================================
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+
+            if (sectionId === 'templates') loadTemplates();
+            if (sectionId === 'leads') loadLeads();
+            if (sectionId === 'dashboard') loadDashboard();
+        }
+
+        // ============================================================================
+        // TOAST
+        // ============================================================================
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toast.className = 'toast ' + type;
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ============================================================================
+        // DASHBOARD
+        // ============================================================================
+        async function loadDashboard() {
+            try {
+                const leads = await fetchLeads();
+                const today = new Date().toDateString();
+
+                document.getElementById('stat-total-messages').textContent = leads.length;
+                document.getElementById('stat-new-leads').textContent = leads.filter(l => l.status === 'new').length;
+                document.getElementById('stat-hot-leads').textContent = leads.filter(l => l.status === 'hot').length;
+                document.getElementById('stat-today').textContent = leads.filter(l => new Date(l.timestamp).toDateString() === today).length;
+
+                // Recent activity
+                const recent = leads.slice(-5).reverse();
+                const tbody = document.getElementById('recent-activity');
+                tbody.innerHTML = recent.map(l => `
+                    <tr>
+                        <td>${new Date(l.timestamp).toLocaleString('id-ID')}</td>
+                        <td>${l.phone}</td>
+                        <td>${l.message.substring(0, 50)}${l.message.length > 50 ? '...' : ''}</td>
+                        <td><span class="badge badge-${l.status}">${l.status}</span></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="4" style="text-align:center;">No recent activity</td></tr>';
+
+                document.getElementById('last-activity').textContent = recent.length > 0 ? new Date(recent[0].timestamp).toLocaleString('id-ID') : '-';
+            } catch (e) {
+                console.error('Dashboard error:', e);
+            }
+        }
+
+        function refreshData() {
+            loadDashboard();
+            showToast('Dashboard refreshed');
+        }
+
+        // ============================================================================
+        // LEADS
+        // ============================================================================
+        async function fetchLeads() {
+            // In production, this would fetch from GAS API
+            // For now, return sample data or fetch from localStorage
+            const stored = localStorage.getItem('wa_leads');
+            if (stored) return JSON.parse(stored);
+
+            // Sample data for demo
+            return [
+                { timestamp: '2026-07-13T19:04:10', phone: '6285121341998', message: 'Halo', status: 'new', source: 'WA_BOT' },
+                { timestamp: '2026-07-13T19:05:22', phone: '6285121341998', message: 'Harga', status: 'hot', source: 'WA_BOT' },
+                { timestamp: '2026-07-13T19:06:15', phone: '6285121341998', message: 'Pesan Arabika 5kg', status: 'hot', source: 'WA_BOT' }
+            ];
+        }
+
+        async function loadLeads() {
+            const leads = await fetchLeads();
+            const tbody = document.getElementById('leads-table');
+            tbody.innerHTML = leads.map(l => `
+                <tr>
+                    <td>${new Date(l.timestamp).toLocaleString('id-ID')}</td>
+                    <td>${l.phone}</td>
+                    <td>${l.message}</td>
+                    <td><span class="badge badge-${l.status}">${l.status}</span></td>
+                    <td>${l.source}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="updateLeadStatus('${l.phone}', 'converted')">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="6" style="text-align:center;">No leads yet</td></tr>';
+        }
+
+        function refreshLeads() {
+            loadLeads();
+            showToast('Leads refreshed');
+        }
+
+        function exportLeads() {
+            fetchLeads().then(leads => {
+                const csv = 'Timestamp,Phone,Message,Status,Source\n' +
+                    leads.map(l => `${l.timestamp},${l.phone},"${l.message}",${l.status},${l.source}`).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'qco_leads_' + new Date().toISOString().split('T')[0] + '.csv';
+                a.click();
+                showToast('Leads exported');
+            });
+        }
+
+        function updateLeadStatus(phone, status) {
+            showToast(`Lead ${phone} marked as ${status}`);
+        }
+
+        // ============================================================================
+        // TEMPLATES
+        // ============================================================================
+        function loadTemplates() {
+            const stored = localStorage.getItem('wa_templates');
+            const templates = stored ? JSON.parse(stored) : DEFAULT_TEMPLATES;
+
+            const container = document.getElementById('templates-list');
+            container.innerHTML = Object.entries(templates).map(([key, template]) => `
+                <div class="template-item">
+                    <div class="template-header">
+                        <span class="template-name">${template.name}</span>
+                        <span class="template-trigger">${template.trigger}</span>
+                    </div>
+                    <textarea id="template-${key}" rows="4">${template.text}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function saveTemplates() {
+            const templates = {};
+            Object.keys(DEFAULT_TEMPLATES).forEach(key => {
+                const textarea = document.getElementById(`template-${key}`);
+                if (textarea) {
+                    templates[key] = {
+                        ...DEFAULT_TEMPLATES[key],
+                        text: textarea.value
+                    };
+                }
+            });
+
+            localStorage.setItem('wa_templates', JSON.stringify(templates));
+            showToast('Templates saved successfully');
+        }
+
+        // ============================================================================
+        // TEST MESSAGE
+        // ============================================================================
+        function updateTestMessage() {
+            const template = document.getElementById('test-template').value;
+            const stored = localStorage.getItem('wa_templates');
+            const templates = stored ? JSON.parse(stored) : DEFAULT_TEMPLATES;
+
+            if (template === 'custom') {
+                document.getElementById('test-message-preview').value = 'Type your custom message here...';
+                document.getElementById('test-message-preview').readOnly = false;
+            } else if (templates[template]) {
+                document.getElementById('test-message-preview').value = templates[template].text;
+                document.getElementById('test-message-preview').readOnly = true;
+            }
+        }
+
+        async function sendTestMessage() {
+            const phone = document.getElementById('test-phone').value;
+            const message = document.getElementById('test-message-preview').value;
+
+            if (!phone || !message) {
+                showToast('Please fill phone and message', 'error');
+                return;
+            }
+
+            showToast('Sending test message...', 'info');
+
+            // In production, this would call GAS API to send message
+            // For demo, simulate success
+            setTimeout(() => {
+                showToast(`Test message sent to ${phone}`);
+            }, 1500);
+        }
+
+        // ============================================================================
+        // SETTINGS
+        // ============================================================================
+        function saveSettings() {
+            const adminPhone = document.getElementById('settings-admin-phone').value;
+            const commission = document.getElementById('settings-commission').value;
+
+            localStorage.setItem('wa_admin_phone', adminPhone);
+            localStorage.setItem('wa_commission', commission);
+
+            showToast('Settings saved');
+        }
+
+        // ============================================================================
+        // INIT
+        // ============================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            updateTestMessage();
+        });
+    </script>
+</body>
+</html>
