@@ -1098,6 +1098,10 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="form-group"><label class="form-label">Harga Produk (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invPrice" oninput="calculateInvoiceTotal()"></div>
 <div class="form-group"><label class="form-label">Ongkir (Rp) <small style="color:var(--danger)">*editable</small></label><input type="number" class="form-input" id="invOngkir" value="0" oninput="calculateInvoiceTotal()"></div>
 </div>
+<div class="form-group" id="invCouponGroup" style="display:none">
+<label class="form-label">Diskon Kupon (Rp) <small id="invCouponCodeLabel" style="color:var(--success)"></small></label>
+<input type="number" class="form-input" id="invDiscount" value="0" oninput="calculateInvoiceTotal()">
+</div>
 <div class="invoice-total-row" style="text-align:right">Total: <span id="invTotal">Rp 0</span></div>
 <div class="form-group" style="margin-top:1rem"><label class="form-label">Preview Invoice (WhatsApp)</label><div class="invoice-preview" id="invPreview"></div></div>
 </div>
@@ -3027,6 +3031,23 @@ document.getElementById('invQty').value = order.qty || 1;
 document.getElementById('invPrice').value = order.price || 0;
 document.getElementById('invOngkir').value = order.ongkir || 0;
 
+// BARU (fix): diskon kupon tercatat di Lead (order tetap simpan harga asli), jadi
+// dicari dari sana - kalau lead ini pakai kupon, field diskon otomatis terisi dan
+// ikut dihitung ke Total, supaya invoice yang dikirim cocok dengan yang sudah dibayar.
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+var couponCode = lead ? (lead.couponcode || '') : '';
+var discountAmount = lead ? (parseFloat(lead.discountamount) || 0) : 0;
+var couponGroup = document.getElementById('invCouponGroup');
+if (couponCode && discountAmount > 0) {
+couponGroup.style.display = 'block';
+document.getElementById('invDiscount').value = Math.round(discountAmount);
+document.getElementById('invCouponCodeLabel').textContent = '(kupon: ' + couponCode + ')';
+} else {
+couponGroup.style.display = 'none';
+document.getElementById('invDiscount').value = 0;
+document.getElementById('invCouponCodeLabel').textContent = '';
+}
+
 calculateInvoiceTotal();
 document.getElementById('invoiceModal').classList.add('active');
 }
@@ -3035,16 +3056,19 @@ function calculateInvoiceTotal() {
 var price = parseFloat(document.getElementById('invPrice').value) || 0;
 var qty = parseInt(document.getElementById('invQty').value) || 1;
 var ongkir = parseFloat(document.getElementById('invOngkir').value) || 0;
-var total = (price * qty) + ongkir;
+var discount = parseFloat(document.getElementById('invDiscount').value) || 0;
+var total = Math.max(0, (price * qty) + ongkir - discount);
 document.getElementById('invTotal').textContent = 'Rp ' + formatNumber(total);
 
 var name = document.getElementById('invName').value;
 var product = document.getElementById('invProduct').value;
+var discountLine = discount > 0 ? ('Diskon Kupon: -Rp ' + formatNumber(discount) + '\n') : '';
 document.getElementById('invPreview').textContent =
 'Halo ' + name + ', berikut invoice pesanan Anda:\n\n' +
 'Produk: ' + product + ' x' + qty + '\n' +
 'Harga: Rp ' + formatNumber(price) + '\n' +
 'Ongkir: Rp ' + formatNumber(ongkir) + '\n' +
+discountLine +
 'Total: Rp ' + formatNumber(total) + '\n\n' +
 'Terima kasih telah berbelanja di Kopi Nusantara!';
 
@@ -3061,12 +3085,15 @@ var product = document.getElementById('invProduct').value;
 var qty = document.getElementById('invQty').value;
 var price = parseFloat(document.getElementById('invPrice').value) || 0;
 var ongkir = parseFloat(document.getElementById('invOngkir').value) || 0;
+var discount = parseFloat(document.getElementById('invDiscount').value) || 0;
 var address = document.getElementById('invAddress').value;
 
+var discountLine = discount > 0 ? ('Diskon Kupon: -Rp ' + formatNumber(discount) + '\n') : '';
 var message = 'Halo ' + name + ', berikut invoice pesanan Anda dari Kopi Nusantara:\n\n' +
 'Produk: ' + product + ' x' + qty + '\n' +
 'Harga: Rp ' + formatNumber(price) + '\n' +
 'Ongkir: Rp ' + formatNumber(ongkir) + '\n' +
+discountLine +
 'Total: Rp ' + formatNumber(total) + '\n' +
 'Alamat: ' + address + '\n\n' +
 'Mohon lakukan pembayaran dan konfirmasi ke nomor ini. Terima kasih!';
