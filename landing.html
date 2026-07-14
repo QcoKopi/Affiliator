@@ -136,9 +136,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="form-row"><div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789"></div><div class="form-group"><label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12"></div></div>
 <div class="form-row"><div class="form-group"><label class="form-label">Provinsi <span class="required">*</span></label><select class="form-input" id="buyerProvince" onchange="onProvinceChange()"><option value="">Pilih Provinsi...</option></select></div><div class="form-group"><label class="form-label">Kota / Kabupaten <span class="required">*</span></label><select class="form-input" id="buyerCity2" onchange="onCityChange()" disabled><option value="">Pilih Kota...</option></select></div></div>
 <div class="form-row"><div class="form-group"><label class="form-label">Kecamatan <span class="required">*</span></label><select class="form-input" id="buyerDistrict" onchange="onDistrictChange()" disabled><option value="">Pilih Kecamatan...</option></select></div><div class="form-group"><label class="form-label">Kelurahan <span class="required">*</span></label><select class="form-input" id="buyerKelurahan" onchange="onVillageChange()" disabled><option value="">Pilih Kelurahan...</option></select></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><select class="form-input" id="buyerPostal" disabled><option value="">Pilih Kode Pos...</option></select></div><div class="form-group"><label class="form-label">Kota (auto)</label><input type="text" class="form-input" id="buyerCity" placeholder="Otomatis" readonly style="background:var(--bg);color:var(--text-light)"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">Kode Pos <span class="required">*</span></label><select class="form-input" id="buyerPostal" onchange="calculateShipping()" disabled><option value="">Pilih Kode Pos...</option></select></div><div class="form-group"><label class="form-label">Kota (auto)</label><input type="text" class="form-input" id="buyerCity" placeholder="Otomatis" readonly style="background:var(--bg);color:var(--text-light)"></div></div>
 <div class="form-group" id="shippingSection" style="display:none">
-<label class="form-label">Ongkos Kirim <span class="required">*</span></label>
+<label class="form-label" style="display:flex;justify-content:space-between;align-items:center">Ongkos Kirim <span class="required">*</span> <button type="button" class="btn btn-outline btn-sm" onclick="calculateShipping()" style="padding:0.25rem 0.6rem;font-size:0.75rem"><i class="fas fa-sync-alt"></i> Hitung Ulang</button></label>
 <div id="shippingOptionsArea" style="background:var(--bg);border-radius:var(--radius-sm);padding:0.75rem;border:1.5px solid var(--border)"></div>
 <div id="grandTotalArea" style="text-align:right;margin-top:0.5rem;font-weight:700;font-size:1rem;display:none">Total Keseluruhan: <span id="grandTotalValue">Rp 0</span></div>
 </div>
@@ -892,6 +892,16 @@ document.getElementById('buyerProvince').innerHTML = '<option value="">Gagal mem
 }
 }
 
+// BARU (fix): sembunyikan & reset ongkir yang lama setiap kali salah satu field
+// alamat berubah - sebelumnya kalau pembeli ganti Provinsi/Kota/Kecamatan SETELAH
+// sempat pilih ongkir, pilihan ongkir lama (untuk alamat lama) tetap "nyangkut"
+// dan bisa ke-submit walau sudah tidak sesuai alamat barunya.
+function resetShippingSection(){
+SelectedShipping=null;
+document.getElementById('shippingSection').style.display='none';
+document.getElementById('grandTotalArea').style.display='none';
+}
+
 async function onProvinceChange(){
 var provSel = document.getElementById('buyerProvince');
 var citySel = document.getElementById('buyerCity2');
@@ -899,6 +909,7 @@ var distSel = document.getElementById('buyerDistrict');
 var villSel = document.getElementById('buyerKelurahan');
 var postSel = document.getElementById('buyerPostal');
 var autoCity = document.getElementById('buyerCity');
+resetShippingSection();
 
 // Reset child dropdowns
 citySel.innerHTML = '<option value="">Pilih Kota...</option>'; citySel.disabled = true;
@@ -936,6 +947,7 @@ var distSel = document.getElementById('buyerDistrict');
 var villSel = document.getElementById('buyerKelurahan');
 var postSel = document.getElementById('buyerPostal');
 var autoCity = document.getElementById('buyerCity');
+resetShippingSection();
 
 distSel.innerHTML = '<option value="">Pilih Kecamatan...</option>'; distSel.disabled = true;
 villSel.innerHTML = '<option value="">Pilih Kelurahan...</option>'; villSel.disabled = true;
@@ -966,6 +978,7 @@ distSel.innerHTML = '<option value="">Gagal memuat</option>';
 
 async function onDistrictChange(){
 var distSel = document.getElementById('buyerDistrict');
+resetShippingSection();
 var villSel = document.getElementById('buyerKelurahan');
 var postSel = document.getElementById('buyerPostal');
 
@@ -995,6 +1008,8 @@ villSel.innerHTML = '<option value="">Gagal memuat</option>';
 
 async function onVillageChange(){
 var villSel = document.getElementById('buyerKelurahan');
+var distSel = document.getElementById('buyerDistrict');
+var citySel = document.getElementById('buyerCity2');
 var postSel = document.getElementById('buyerPostal');
 
 postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disabled = true;
@@ -1002,49 +1017,44 @@ postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>'; postSel.disab
 if(!villSel.value) return;
 
 var villName = villSel.value.split('|')[1];
+var distName = distSel&&distSel.value?distSel.value.split('|')[1]:'';
+var cityName = citySel&&citySel.value?citySel.value.split('|')[1]:'';
+// BARU (fix): gabungkan kelurahan+kecamatan+kota sebagai kata kunci pencarian -
+// nama kelurahan sering kembar di kota berbeda, jadi digabung supaya lebih presisi
+// (sama seperti fix sebelumnya untuk pencarian lokasi asal).
+var searchKeyword = [villName, distName, cityName].filter(Boolean).join(', ');
 
-// Coba ambil kode pos dari API kodepos
+// BARU (fix): kode pos sekarang dicari lewat backend kita sendiri (yang meneruskan
+// ke Biteship Maps API) - menggantikan kodepos.vercel.app (API pihak ketiga gratisan
+// yang keandalannya tidak terjamin, sering bikin jatuh ke input manual).
 postSel.innerHTML = '<option value="">Memuat kode pos...</option>';
 try{
-var res = await fetch('https://kodepos.vercel.app/search/?q=' + encodeURIComponent(villName));
+var res = await fetch(CONFIG.GAS_URL+'?action=getPostalCodes&keyword='+encodeURIComponent(searchKeyword)+'&_ts='+Date.now(),{cache:'no-store'});
 var data = await res.json();
 postSel.innerHTML = '<option value="">Pilih Kode Pos...</option>';
-if(data.data && data.data.length > 0){
-// Filter hasil yang sesuai dengan kelurahan
-var found = [];
-for(var i = 0; i < data.data.length; i++){
-if(data.data[i].village && data.data[i].village.toLowerCase() === villName.toLowerCase()){
-found.push(data.data[i]);
-}
-}
-// Kalau tidak ada exact match, pakai semua hasil
-if(found.length === 0) found = data.data;
-// Deduplicate kode pos
-var seen = {};
-for(var i = 0; i < found.length; i++){
-var kp = found[i].postalcode || found[i].postal_code || '';
-if(kp && !seen[kp]){
-seen[kp] = true;
+if(data.success && data.results && data.results.length > 0){
+for(var i = 0; i < data.results.length; i++){
 var opt = document.createElement('option');
-opt.value = kp;
-opt.textContent = villName + ' - ' + kp;
+opt.value = data.results[i].postalCode;
+opt.textContent = data.results[i].label;
 postSel.appendChild(opt);
-}
 }
 }
 // Kalau tetap kosong, fallback ke input manual
 if(postSel.options.length <= 1){
-postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
+postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" onchange="calculateShipping()" required>';
 }else{
 postSel.disabled = false;
 }
 }catch(e){
 // Fallback: ganti select jadi input text
-postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" required>';
+postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" onchange="calculateShipping()" required>';
 }
-// BARU (fitur ongkir): hitung ongkos kirim otomatis begitu kelurahan (alamat
-// paling spesifik yang kita punya) sudah dipilih pembeli.
-calculateShipping();
+// BARU (fix): ongkir sekarang dihitung berdasarkan KODE POS langsung (dipakai
+// Biteship), bukan lagi teks kecamatan (RajaOngkir sudah tidak dipakai) - jadi
+// pemicunya dipindah ke saat Kode Pos benar-benar dipilih/diisi (lihat onchange
+// di elemen buyerPostal), BUKAN di sini karena kode posnya belum tentu terisi
+// di titik ini (baru selesai dimuat opsinya, belum tentu ada yang dipilih).
 }
 
 // BARU (fitur ongkir): total berat belanjaan dalam gram, dari label ukuran produk
@@ -1072,28 +1082,29 @@ document.getElementById('grandTotalArea').style.display='none';
 
 if(Cart.length===0){section.style.display='none';return;}
 
-const kecamatanSel=document.getElementById('buyerDistrict');
-const kotaSel=document.getElementById('buyerCity2');
-const kecamatanText=kecamatanSel&&kecamatanSel.value?kecamatanSel.value.split('|')[1]:'';
-const kotaText=kotaSel&&kotaSel.value?kotaSel.value.split('|')[1]:'';
-if(!kecamatanText){section.style.display='none';return;}
+// BARU (fix): Biteship pakai KODE POS langsung, bukan teks kecamatan seperti
+// RajaOngkir dulu - jadi diambil dari field Kode Pos, bukan Kecamatan/Kota lagi.
+const postalEl=document.getElementById('buyerPostal');
+const destinationPostal=postalEl?String(postalEl.value||'').replace(/\D/g,''):'';
+if(!destinationPostal){section.style.display='none';return;}
 
-const destinationKeyword=[kecamatanText,kotaText].filter(Boolean).join(', ');
 const weight=getCartTotalWeight();
+const itemValue=Math.round(getCartTotal());
 
 section.style.display='block';
 area.innerHTML='<div style="text-align:center;padding:0.5rem;color:var(--text-light);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Menghitung ongkos kirim...</div>';
 
 try{
-const res=await fetch(CONFIG.GAS_URL+'?action=getShippingRates&destination='+encodeURIComponent(destinationKeyword)+'&weight='+weight+'&_ts='+Date.now(),{cache:'no-store'});
+const res=await fetch(CONFIG.GAS_URL+'?action=getShippingRates&destinationPostal='+encodeURIComponent(destinationPostal)+'&weight='+weight+'&itemValue='+itemValue+'&_ts='+Date.now(),{cache:'no-store'});
 const data=await res.json();
 if(data.success&&data.options&&data.options.length>0){
 window.__shippingOptionsCache=data.options;
-area.innerHTML=data.options.map((opt,idx)=>{
-return '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;cursor:pointer;border-bottom:1px solid var(--border)"><input type="radio" name="shippingOption" onchange="selectShippingOption('+idx+')"><span style="flex:1"><strong>'+escapeHtml(opt.courier)+' - '+escapeHtml(opt.service)+'</strong><br><small style="color:var(--text-light)">Estimasi '+escapeHtml(String(opt.etd))+' hari</small></span><strong>Rp '+formatNumber(opt.cost)+'</strong></label>';
+var calcInfo='<div style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px dashed var(--border)">Dihitung untuk kode pos: <strong>'+escapeHtml(destinationPostal)+'</strong>, berat total <strong>'+weight+' gram</strong></div>';
+area.innerHTML=calcInfo+data.options.map((opt,idx)=>{
+return '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;cursor:pointer;border-bottom:1px solid var(--border)"><input type="radio" name="shippingOption" onchange="selectShippingOption('+idx+')"><span style="flex:1"><strong>'+escapeHtml(opt.courier)+' - '+escapeHtml(opt.service)+'</strong><br><small style="color:var(--text-light)">Estimasi '+escapeHtml(String(opt.etd))+'</small></span><strong>Rp '+formatNumber(opt.cost)+'</strong></label>';
 }).join('');
 }else{
-area.innerHTML='<p style="color:var(--danger);font-size:0.85rem;margin:0">'+escapeHtml(data.error||'Ongkir tidak tersedia untuk alamat ini, coba pilih ulang kecamatan')+'</p>';
+area.innerHTML='<p style="color:var(--danger);font-size:0.85rem;margin:0">'+escapeHtml(data.error||'Ongkir tidak tersedia untuk kode pos ini')+'</p>';
 }
 }catch(e){
 area.innerHTML='<p style="color:var(--danger);font-size:0.85rem;margin:0">Gagal menghitung ongkir, coba lagi</p>';
