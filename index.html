@@ -718,6 +718,22 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <button class="btn btn-outline" onclick="previewGuideContent()" style="margin-left:0.5rem"><i class="fas fa-eye"></i> Lihat Preview</button>
 </div>
 </div>
+
+<!-- INFO REKENING UNTUK INVOICE (BARU, admin-only) -->
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-university"></i> Info Rekening untuk Invoice</div>
+</div>
+<div class="card-body">
+<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Rekening tujuan pembayaran ini (rekening toko, bukan rekening affiliator) akan otomatis ditampilkan di setiap Invoice yang dikirim ke pembeli.</p>
+<div class="form-row">
+<div class="form-group"><label class="form-label">Nama Bank</label><input type="text" class="form-input" id="invBankNameEdit" placeholder="Contoh: BCA" maxlength="50"></div>
+<div class="form-group"><label class="form-label">Nomor Rekening</label><input type="text" class="form-input" id="invBankAccountEdit" placeholder="Contoh: 1234567890" maxlength="34"></div>
+</div>
+<div class="form-group"><label class="form-label">Atas Nama</label><input type="text" class="form-input" id="invAccountHolderEdit" placeholder="Contoh: PT/CV Nama Toko" maxlength="100"></div>
+<button class="btn btn-primary" id="btnSaveInvBank" onclick="saveInvoiceBankInfoForm()"><i class="fas fa-save"></i> Simpan Rekening</button>
+</div>
+</div>
 </div>
 
 <!-- MODAL PANDUAN (BARU) - 2 bagian ditumpuk atas-bawah, BUKAN sebelah-menyebelah -->
@@ -2541,6 +2557,48 @@ if (content) {
 document.getElementById('guideInfoEdit').value = content.info;
 document.getElementById('guidePanduanEdit').value = content.panduan;
 }
+await loadInvoiceBankInfoForm();
+}
+
+// BARU: info rekening tujuan pembayaran (toko, bukan affiliator) - dipakai di Invoice.
+var InvoiceBankInfoCache = null;
+
+async function loadInvoiceBankInfoForm() {
+if (!currentUser || !currentUser.isAdmin) return;
+try {
+var res = await callGASGet('getInvoiceBankInfo', {});
+if (res.success && res.data) {
+InvoiceBankInfoCache = res.data;
+document.getElementById('invBankNameEdit').value = res.data.bankName || '';
+document.getElementById('invBankAccountEdit').value = res.data.accountNumber || '';
+document.getElementById('invAccountHolderEdit').value = res.data.accountHolder || '';
+}
+} catch(e) { /* diam-diam, form tetap kosong kalau gagal fetch */ }
+}
+
+async function saveInvoiceBankInfoForm() {
+var bankName = document.getElementById('invBankNameEdit').value.trim();
+var accountNumber = document.getElementById('invBankAccountEdit').value.trim();
+var accountHolder = document.getElementById('invAccountHolderEdit').value.trim();
+
+var btn = document.getElementById('btnSaveInvBank');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+try {
+var res = await callGASPost('saveInvoiceBankInfo', { bankName: bankName, accountNumber: accountNumber, accountHolder: accountHolder });
+if (res.success) {
+showToast('Info rekening berhasil disimpan!', 'success');
+InvoiceBankInfoCache = { bankName: bankName, accountNumber: accountNumber, accountHolder: accountHolder };
+} else {
+showToast(res.error || 'Gagal menyimpan', 'error');
+}
+} catch(e) {
+showToast('Koneksi bermasalah', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
 }
 
 async function saveGuideContentForm() {
@@ -3013,7 +3071,7 @@ sel.disabled = false;
 // ==================== INVOICE WHATSAPP (Admin) ====================
 // FIX: openInvoiceModal / calculateInvoiceTotal / sendInvoiceWA dipanggil dari
 // tombol invoice di halaman Leads tapi tidak pernah terdefinisi.
-function openInvoiceModal(leadId) {
+async function openInvoiceModal(leadId) {
 var order = DATA.orders.find(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
 if (!order) { showToast('Data order untuk lead ini tidak ditemukan', 'error'); return; }
 
@@ -3048,6 +3106,10 @@ document.getElementById('invDiscount').value = 0;
 document.getElementById('invCouponCodeLabel').textContent = '';
 }
 
+// BARU: muat info rekening tujuan pembayaran (lazy-load - baru fetch kalau admin
+// belum pernah buka halaman Kelola Panduan di sesi ini, jadi belum ke-cache).
+if (!InvoiceBankInfoCache) { await loadInvoiceBankInfoForm(); }
+
 calculateInvoiceTotal();
 document.getElementById('invoiceModal').classList.add('active');
 }
@@ -3070,9 +3132,20 @@ document.getElementById('invPreview').textContent =
 'Ongkir: Rp ' + formatNumber(ongkir) + '\n' +
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n\n' +
+buildBankInfoText() +
 'Terima kasih telah berbelanja di Kopi Nusantara!';
 
 return total;
+}
+
+// BARU: baris info rekening tujuan pembayaran, dipakai bersama oleh preview
+// (calculateInvoiceTotal) dan pesan WA sungguhan (sendInvoiceWA). Kalau admin
+// belum pernah isi info rekening sama sekali, baris ini otomatis kosong (tidak
+// menampilkan info rekening kosong/setengah-setengah yang membingungkan pembeli).
+function buildBankInfoText() {
+var b = InvoiceBankInfoCache;
+if (!b || !b.bankName || !b.accountNumber) return '';
+return 'Transfer ke:\n' + b.bankName + ' - ' + b.accountNumber + (b.accountHolder ? ' a.n. ' + b.accountHolder : '') + '\n\n';
 }
 
 function sendInvoiceWA() {
@@ -3096,6 +3169,7 @@ var message = 'Halo ' + name + ', berikut invoice pesanan Anda dari Kopi Nusanta
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n' +
 'Alamat: ' + address + '\n\n' +
+buildBankInfoText() +
 'Mohon lakukan pembayaran dan konfirmasi ke nomor ini. Terima kasih!';
 
 var cleanPhone = phone.replace(/\D/g, '');
