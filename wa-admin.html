@@ -104,7 +104,6 @@ button{cursor:pointer;font-family:inherit}
 <div class="nav-menu">
 <div class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
 <div class="nav-item" data-section="persona" onclick="showSection('persona')"><i class="fas fa-robot"></i> Persona Bot</div>
-<div class="nav-item" data-section="promo" onclick="showSection('promo')"><i class="fas fa-tags"></i> Promo Aktif</div>
 <div class="nav-item" data-section="testbot" onclick="showSection('testbot')"><i class="fas fa-comments"></i> Uji Coba Bot</div>
 <div class="nav-item" data-section="takeover" onclick="showSection('takeover')"><i class="fas fa-hand-paper"></i> Ambil Alih <span id="takeoverBadge" style="background:var(--danger);color:white;border-radius:10px;padding:1px 7px;font-size:0.7rem;margin-left:auto;display:none">0</span></div>
 <div class="nav-item" data-section="history" onclick="showSection('history')"><i class="fas fa-history"></i> Riwayat Eskalasi</div>
@@ -144,20 +143,6 @@ button{cursor:pointer;font-family:inherit}
 <div style="display:flex;gap:0.6rem;margin-top:1rem">
 <button class="btn btn-primary" id="btnSavePrompt" onclick="savePrompt()"><i class="fas fa-save"></i> Simpan Perubahan</button>
 <button class="btn btn-outline" onclick="resetPrompt()"><i class="fas fa-undo"></i> Kembalikan ke Bawaan</button>
-</div>
-</div>
-</div>
-
-<!-- Promo Aktif -->
-<div id="section-promo" class="section" style="display:none">
-<div class="header"><h2>Promo Aktif</h2></div>
-<div class="card">
-<h3>Promo yang sedang berlangsung</h3>
-<p class="hint">Tulis promo yang sedang jalan dalam bahasa biasa - bot akan otomatis tahu dan bisa sampaikan ke pembeli kalau relevan (misal saat mereka nanya harga/checkout). Kosongkan &amp; simpan kalau sedang tidak ada promo.</p>
-<textarea id="promoText" rows="8" placeholder="Contoh:&#10;- Gratis ongkir untuk pembelian di atas Rp300.000&#10;- Beli 2 Arabika 1kg, gratis 1 Arabika 250gr, berlaku sampai akhir bulan"></textarea>
-<div style="display:flex;gap:0.6rem;margin-top:1rem">
-<button class="btn btn-primary" id="btnSavePromo" onclick="savePromo()"><i class="fas fa-save"></i> Simpan Promo</button>
-<button class="btn btn-outline" onclick="clearPromo()"><i class="fas fa-times"></i> Kosongkan (Tidak Ada Promo)</button>
 </div>
 </div>
 </div>
@@ -246,7 +231,7 @@ const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjk
 // BARU (verifikasi deployment): versi yang DIHARAPKAN (sesuai file WA-Bot.gs &
 // Code.gs yang dikirim BERSAMAAN dengan wa-admin.html ini). Kalau versi live
 // beda, berarti salah satu project belum di-redeploy - tampil peringatan otomatis.
-const EXPECTED_VERSION = '2026-07-15-2210-fix-checksalespassword-success';
+const EXPECTED_VERSION = '2026-07-15-2300-promo-moved-to-main-app';
 
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
@@ -274,7 +259,6 @@ checkDeploymentVersion(res); // BARU (verifikasi deployment)
 applyTierVisibility();
 if(currentTier === 'admin'){
 loadPromptIntoUI();
-loadPromoIntoUI();
 }
 loadEscalatedList();
 loadEscalationHistory();
@@ -289,7 +273,7 @@ dashboardPassword='';
 // BARU (2 tingkat akses): sembunyikan menu yang bukan wewenang tier sales -
 // staff sales/marketing cuma perlu lihat Dashboard, Ambil Alih, dan Riwayat.
 function applyTierVisibility(){
-const adminOnlySections = ['persona', 'promo', 'testbot', 'salesmgmt'];
+const adminOnlySections = ['persona', 'testbot', 'salesmgmt'];
 if(currentTier === 'sales'){
 adminOnlySections.forEach(id=>{
 const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
@@ -527,28 +511,7 @@ showToast(res.error || 'Gagal reset', 'error');
 }
 }
 
-// ==================== PROMO AKTIF ====================
-async function loadPromoIntoUI(){
-const res = await callAdminAction('getActivePromo', {});
-if(res.success) document.getElementById('promoText').value = res.promo || '';
-}
-
-async function savePromo(){
-const promo = document.getElementById('promoText').value.trim();
-const btn = document.getElementById('btnSavePromo');
-btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-const res = await callAdminAction('saveActivePromo', {promo: promo});
-btn.disabled = false;
-btn.innerHTML = '<i class="fas fa-save"></i> Simpan Promo';
-showToast(res.success ? (res.message || 'Tersimpan') : (res.error || 'Gagal menyimpan'), res.success ? 'success' : 'error');
-}
-
-async function clearPromo(){
-if(!confirm('Kosongkan promo aktif? Bot tidak akan menyebutkan promo apa pun sampai diisi lagi.')) return;
-document.getElementById('promoText').value = '';
-await savePromo();
-}
+// (Fungsi promo DIHAPUS - sudah dipindah ke index.html/sistem utama)
 
 // ==================== AMBIL ALIH PERCAKAPAN ====================
 let selectedTakeoverPhone = null;
