@@ -218,7 +218,7 @@ button{cursor:pointer;font-family:inherit}
 <div id="section-salesmgmt" class="section" style="display:none">
 <div class="header"><h2>Kelola Sales/Marketing</h2></div>
 <div class="card">
-<p class="hint">Daftar staff yang boleh dipilih sebagai "yang menangani" saat menyelesaikan eskalasi. Staff baru juga bisa mendaftarkan diri sendiri saat login pertama kali - daftar ini cuma untuk kelola/hapus.</p>
+<p class="hint">Tambahkan staff di sini - tiap orang dapat password sendiri (tampil sekali saat dibuat/direset, salin & kirim langsung ke orangnya). Mereka login pakai password itu, dan sistem otomatis tahu identitasnya - tidak bisa mengaku jadi orang lain.</p>
 <div style="display:flex;gap:0.6rem;margin-bottom:1.5rem">
 <input type="text" id="newSalesName" placeholder="Nama staff baru">
 <button class="btn btn-primary" onclick="addSalesUser()" style="white-space:nowrap"><i class="fas fa-plus"></i> Tambah</button>
@@ -230,17 +230,8 @@ button{cursor:pointer;font-family:inherit}
 </div>
 </div>
 
-<!-- Modal pilih identitas (khusus tier sales) -->
-<div class="modal-overlay" id="identityModal">
-<div class="modal-box">
-<h2><i class="fas fa-id-badge"></i> Siapa Anda?</h2>
-<p class="hint">Pilih nama Anda dari daftar - ini dipakai untuk mencatat siapa yang menangani tiap eskalasi.</p>
-<select id="identitySelect"></select>
-<div style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem">Nama belum ada di daftar? Ketik nama baru di bawah ini:</div>
-<input type="text" id="identityNewName" placeholder="Nama lengkap Anda">
-<button class="btn btn-primary" style="width:100%" onclick="confirmIdentity()">Lanjut</button>
-</div>
-</div>
+<!-- Modal pilih identitas DIHAPUS - identitas sekarang otomatis dari password
+     individual yang dipakai login (lihat doLogin), bukan lagi dipilih bebas. -->
 
 <div class="toast" id="toast"></div>
 
@@ -255,7 +246,6 @@ let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
 let currentTier = null;
 let currentSalesIdentity = null;
-let salesUsersCache = [];
 
 function doLogin(){
 const pw = document.getElementById('loginPassword').value;
@@ -266,6 +256,11 @@ dashboardPassword = pw;
 callAdminAction('getStats', {}).then(res=>{
 if(res.success){
 currentTier = res.tier;
+// REVISI (akuntabilitas sungguhan): identitas SEKARANG otomatis ditentukan
+// dari password yang dipakai login (server yang cocokkan ke staff mana),
+// bukan lagi dipilih bebas dari dropdown - supaya tidak bisa "mengaku" jadi
+// orang lain.
+currentSalesIdentity = res.identity || null;
 document.getElementById('loginScreen').style.display='none';
 document.getElementById('app').style.display='block';
 renderStats(res.stats);
@@ -276,11 +271,7 @@ loadPromoIntoUI();
 }
 loadEscalatedList();
 loadEscalationHistory();
-// BARU (registry sales): tier sales WAJIB pilih identitas dulu sebelum lanjut -
-// dipakai untuk pencatatan siapa yang tangani eskalasi.
-if(currentTier === 'sales'){
-showIdentityModal();
-}
+document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + (currentSalesIdentity || (currentTier === 'admin' ? 'Admin' : 'Sales/Marketing'));
 }else{
 document.getElementById('loginError').style.display='block';
 dashboardPassword='';
@@ -306,7 +297,6 @@ const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
 if(nav) nav.style.display = 'flex';
 });
 }
-document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + (currentTier === 'admin' ? 'Admin' : 'Sales/Marketing');
 }
 
 function doLogout(){
@@ -320,42 +310,9 @@ document.getElementById('loginPassword').value = '';
 }
 
 // ==================== IDENTITAS SALES ====================
-async function showIdentityModal(){
-const res = await callAdminAction('getSalesUsers', {});
-salesUsersCache = res.success ? (res.users || []) : [];
-const select = document.getElementById('identitySelect');
-select.innerHTML = '<option value="">-- Pilih dari daftar --</option>' +
-salesUsersCache.map(u=>'<option value="'+u.id+'">'+u.name+'</option>').join('');
-document.getElementById('identityNewName').value = '';
-document.getElementById('identityModal').classList.add('active');
-}
+// (showIdentityModal & confirmIdentity DIHAPUS - identitas sekarang otomatis
+// dari password individual yang dipakai login, lihat doLogin di atas)
 
-async function confirmIdentity(){
-const selectedId = document.getElementById('identitySelect').value;
-const newName = document.getElementById('identityNewName').value.trim();
-
-if(!selectedId && !newName){
-showToast('Pilih dari daftar atau ketik nama baru', 'error');
-return;
-}
-
-if(newName){
-// Daftarkan nama baru dulu
-const res = await callAdminAction('saveSalesUser', {name: newName});
-if(!res.success){
-showToast(res.error || 'Gagal mendaftarkan nama', 'error');
-return;
-}
-currentSalesIdentity = newName;
-}else{
-const found = salesUsersCache.find(u=>u.id===selectedId);
-currentSalesIdentity = found ? found.name : null;
-}
-
-document.getElementById('identityModal').classList.remove('active');
-document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + currentSalesIdentity + ' (Sales/Marketing)';
-showToast('Selamat bertugas, ' + currentSalesIdentity + '!', 'success');
-}
 
 // ==================== KELOLA SALES (admin-only) ====================
 async function loadSalesUsersManagement(){
@@ -366,15 +323,33 @@ container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal me
 return;
 }
 if(res.users.length === 0){
-container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Belum ada staff terdaftar - akan otomatis terdaftar saat mereka login pertama kali & isi nama baru, atau tambahkan manual di atas.</p>';
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Belum ada staff terdaftar - tambahkan lewat form di atas.</p>';
 return;
 }
 container.innerHTML = res.users.map(u=>
 '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem">'+
 '<span>'+u.name+'</span>'+
-'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash-alt"></i></button>'+
+'<div style="display:flex;gap:6px">'+
+'<button class="btn btn-sm btn-outline" onclick="resetSalesUserPassword(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Reset password"><i class="fas fa-key"></i></button>'+
+'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Hapus"><i class="fas fa-trash-alt"></i></button>'+
+'</div>'+
 '</div>'
 ).join('');
+}
+
+// BARU: tampilkan password yang baru dibuat/direset dalam kotak yang tetap
+// kelihatan sampai ditutup manual (bukan toast yang hilang sendiri dalam 3
+// detik) - supaya sempat disalin & dikirim ke orangnya.
+function showGeneratedPassword(name, password){
+const box = document.createElement('div');
+box.className = 'modal-overlay active';
+box.innerHTML = '<div class="modal-box">'+
+'<h2><i class="fas fa-key"></i> Password untuk '+name+'</h2>'+
+'<p class="hint">Salin dan kirimkan ke orangnya lewat chat pribadi/telepon - password ini TIDAK akan ditampilkan lagi setelah ditutup.</p>'+
+'<input type="text" readonly value="'+password+'" style="font-family:monospace;font-size:1.1rem;text-align:center;font-weight:600" onclick="this.select()">'+
+'<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Sudah Disalin, Tutup</button>'+
+'</div>';
+document.body.appendChild(box);
 }
 
 async function addSalesUser(){
@@ -383,15 +358,25 @@ if(!name){showToast('Nama wajib diisi', 'error'); return}
 const res = await callAdminAction('saveSalesUser', {name: name});
 if(res.success){
 document.getElementById('newSalesName').value = '';
-showToast('Staff ditambahkan', 'success');
 loadSalesUsersManagement();
+showGeneratedPassword(res.name, res.password);
 }else{
 showToast(res.error || 'Gagal menambahkan', 'error');
 }
 }
 
+async function resetSalesUserPassword(id, name){
+if(!confirm('Reset password untuk "'+name+'"? Password lama otomatis tidak berlaku lagi.')) return;
+const res = await callAdminAction('resetSalesUserPassword', {id: id});
+if(res.success){
+showGeneratedPassword(name, res.password);
+}else{
+showToast(res.error || 'Gagal reset password', 'error');
+}
+}
+
 async function deactivateSalesUser(id, name){
-if(!confirm('Hapus "'+name+'" dari daftar? Riwayat eskalasi yang sudah tercatat atas nama ini TIDAK akan berubah.')) return;
+if(!confirm('Hapus "'+name+'" dari daftar? Riwayat eskalasi yang sudah tercatat atas nama ini TIDAK akan berubah, tapi orang ini tidak akan bisa login lagi.')) return;
 const res = await callAdminAction('deleteSalesUser', {id: id});
 if(res.success){
 showToast('Staff dihapus dari daftar', 'success');
