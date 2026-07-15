@@ -117,6 +117,7 @@ button{cursor:pointer;font-family:inherit}
 </div>
 
 <div class="main">
+<div id="versionWarning" style="display:none;background:#FFF3E0;color:#8B5E00;border:1px solid #FFB74D;border-radius:8px;padding:0.8rem 1rem;margin-bottom:1rem;font-size:0.85rem"></div>
 
 <!-- Dashboard -->
 <div id="section-dashboard" class="section">
@@ -242,6 +243,10 @@ button{cursor:pointer;font-family:inherit}
 // KONFIGURASI - GANTI URL INI ke deployment WA-Bot.gs Anda
 // ============================================================================
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjkW2OuIatPM3KK5HghbKgK9HaSAF7kKZhipAvQ78uMXJD92fI/exec';
+// BARU (verifikasi deployment): versi yang DIHARAPKAN (sesuai file WA-Bot.gs &
+// Code.gs yang dikirim BERSAMAAN dengan wa-admin.html ini). Kalau versi live
+// beda, berarti salah satu project belum di-redeploy - tampil peringatan otomatis.
+const EXPECTED_VERSION = '2026-07-15-sales-registry-v2';
 
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
@@ -265,6 +270,7 @@ currentSalesIdentity = res.identity || null;
 document.getElementById('loginScreen').style.display='none';
 document.getElementById('app').style.display='block';
 renderStats(res.stats);
+checkDeploymentVersion(res); // BARU (verifikasi deployment)
 applyTierVisibility();
 if(currentTier === 'admin'){
 loadPromptIntoUI();
@@ -331,6 +337,7 @@ container.innerHTML = res.users.map(u=>
 '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem">'+
 '<span>'+u.name+' <small style="color:var(--text-light)">('+(u.phone||'no HP belum diisi')+')</small></span>'+
 '<div style="display:flex;gap:6px">'+
+'<button class="btn btn-sm btn-outline" onclick="showEditSalesUserModal(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\',\''+(u.phone||'')+'\')" title="Edit"><i class="fas fa-pen"></i></button>'+
 '<button class="btn btn-sm btn-outline" onclick="resetSalesUserPassword(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Reset password"><i class="fas fa-key"></i></button>'+
 '<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Hapus"><i class="fas fa-trash-alt"></i></button>'+
 '</div>'+
@@ -351,6 +358,34 @@ box.innerHTML = '<div class="modal-box">'+
 '<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Sudah Disalin, Tutup</button>'+
 '</div>';
 document.body.appendChild(box);
+}
+
+// BARU: edit nama/nomor HP staff yang sudah terdaftar - password TIDAK berubah.
+function showEditSalesUserModal(id, currentName, currentPhone){
+const box = document.createElement('div');
+box.className = 'modal-overlay active';
+box.innerHTML = '<div class="modal-box">'+
+'<h2><i class="fas fa-pen"></i> Edit Staff</h2>'+
+'<p class="hint">Password TIDAK ikut berubah - kalau perlu ganti password, pakai tombol reset password (ikon kunci) terpisah.</p>'+
+'<input type="text" id="editSalesName" value="'+currentName+'" placeholder="Nama">'+
+'<input type="text" id="editSalesPhone" value="'+currentPhone+'" placeholder="No WA">'+
+'<button class="btn btn-primary" style="width:100%" onclick="submitEditSalesUser(\''+id+'\')">Simpan Perubahan</button>'+
+'</div>';
+document.body.appendChild(box);
+}
+
+async function submitEditSalesUser(id){
+const name = document.getElementById('editSalesName').value.trim();
+const phone = document.getElementById('editSalesPhone').value.trim();
+if(!name || !phone){showToast('Nama dan nomor WA wajib diisi', 'error'); return}
+const res = await callAdminAction('editSalesUser', {id: id, name: name, phone: phone});
+if(res.success){
+document.querySelector('.modal-overlay.active').remove();
+showToast('Perubahan tersimpan', 'success');
+loadSalesUsersManagement();
+}else{
+showToast(res.error || 'Gagal menyimpan perubahan', 'error');
+}
 }
 
 async function addSalesUser(){
@@ -432,6 +467,27 @@ function renderStats(stats){
 document.getElementById('statTotal').textContent = stats.totalOrders || 0;
 document.getElementById('statPending').textContent = stats.pending || 0;
 document.getElementById('statToday').textContent = stats.today || 0;
+}
+
+// BARU (verifikasi deployment): bandingkan versi live (dikirim WA-Bot.gs lewat
+// getStats) dengan versi yang diharapkan (EXPECTED_VERSION, sesuai file yang
+// dikirim bersamaan) - kalau beda, tampilkan peringatan supaya tidak bingung
+// kenapa fitur baru "tidak muncul"/error aneh padahal sudah update file.
+function checkDeploymentVersion(res){
+const banner = document.getElementById('versionWarning');
+const problems = [];
+if(res.waBotVersion && res.waBotVersion !== EXPECTED_VERSION){
+problems.push('WA-Bot.gs: live=' + res.waBotVersion + ', seharusnya=' + EXPECTED_VERSION);
+}
+if(res.mainGasVersion && res.mainGasVersion !== EXPECTED_VERSION){
+problems.push('Code.gs: live=' + res.mainGasVersion + ', seharusnya=' + EXPECTED_VERSION);
+}
+if(problems.length > 0){
+banner.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <strong>Ada project yang belum di-redeploy versi terbaru!</strong><br>' + problems.join('<br>') + '<br>Redeploy dari Apps Script editor: Deploy > Manage deployments > edit > New version > Deploy.';
+banner.style.display = 'block';
+}else{
+banner.style.display = 'none';
+}
 }
 
 // ==================== PERSONA BOT ====================
