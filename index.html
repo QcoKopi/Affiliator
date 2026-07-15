@@ -734,6 +734,21 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <button class="btn btn-primary" id="btnSaveInvBank" onclick="saveInvoiceBankInfoForm()"><i class="fas fa-save"></i> Simpan Rekening</button>
 </div>
 </div>
+
+<!-- PROMO AKTIF (BARU, admin-only, dipindah dari dashboard bot WA) -->
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-tags"></i> Promo Aktif</div>
+</div>
+<div class="card-body">
+<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Tulis promo yang sedang berlangsung dalam bahasa biasa - <strong>chatbot WhatsApp otomatis membacanya</strong> dan bisa menyampaikan ke pembeli kalau relevan (misal saat mereka tanya harga/checkout). Kosongkan &amp; simpan kalau sedang tidak ada promo.</p>
+<div class="form-group">
+<textarea class="form-textarea" id="activePromoEdit" rows="6" maxlength="2000" style="font-family:inherit" placeholder="Contoh:&#10;- Gratis ongkir untuk pembelian di atas Rp300.000&#10;- Beli 2 Arabika 1kg, gratis 1 Arabika 250gr, berlaku sampai akhir bulan"></textarea>
+</div>
+<button class="btn btn-primary" id="btnSavePromo" onclick="saveActivePromoForm()"><i class="fas fa-save"></i> Simpan Promo</button>
+<button class="btn btn-outline" onclick="clearActivePromoForm()" style="margin-left:0.5rem"><i class="fas fa-times"></i> Kosongkan</button>
+</div>
+</div>
 </div>
 
 <!-- MODAL PANDUAN (BARU) - 2 bagian ditumpuk atas-bawah, BUKAN sebelah-menyebelah -->
@@ -2630,6 +2645,7 @@ document.getElementById('guideInfoEdit').value = content.info;
 document.getElementById('guidePanduanEdit').value = content.panduan;
 }
 await loadInvoiceBankInfoForm();
+await loadActivePromoForm();
 }
 
 // BARU: info rekening tujuan pembayaran (toko, bukan affiliator) - dipakai di Invoice.
@@ -2671,6 +2687,41 @@ showToast('Koneksi bermasalah', 'error');
 btn.disabled = false;
 btn.innerHTML = originalHTML;
 }
+}
+
+// BARU (dipindah dari dashboard bot WA): promo aktif - dibaca otomatis oleh
+// chatbot WhatsApp lewat action publik 'getActivePromo' (lihat Code.gs).
+async function loadActivePromoForm() {
+if (!currentUser || !currentUser.isAdmin) return;
+try {
+var res = await callGASGet('getActivePromo', {});
+if (res.success) {
+document.getElementById('activePromoEdit').value = res.promo || '';
+}
+} catch(e) { /* diam-diam, form tetap kosong kalau gagal fetch */ }
+}
+
+async function saveActivePromoForm() {
+var promo = document.getElementById('activePromoEdit').value.trim();
+var btn = document.getElementById('btnSavePromo');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+try {
+var res = await callGASPost('saveActivePromo', { promo: promo });
+showToast(res.success ? (res.message || 'Promo berhasil disimpan!') : (res.error || 'Gagal menyimpan'), res.success ? 'success' : 'error');
+} catch(e) {
+showToast('Koneksi bermasalah', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
+}
+
+async function clearActivePromoForm() {
+if (!confirm('Kosongkan promo aktif? Bot tidak akan menyebutkan promo apa pun sampai diisi lagi.')) return;
+document.getElementById('activePromoEdit').value = '';
+await saveActivePromoForm();
 }
 
 async function saveGuideContentForm() {
