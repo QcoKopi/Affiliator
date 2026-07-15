@@ -120,7 +120,7 @@ button{cursor:pointer;font-family:inherit}
 
 <!-- Dashboard -->
 <div id="section-dashboard" class="section">
-<div class="header"><h2>Dashboard</h2><button class="btn btn-outline" onclick="loadStats()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="header"><h2>Dashboard</h2><button class="btn btn-outline" id="btnRefreshStats" onclick="loadStats()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
 <div class="stat-grid">
 <div class="stat-box"><div class="num" id="statTotal">-</div><div class="label">Total Order via WA</div></div>
 <div class="stat-box"><div class="num" id="statPending">-</div><div class="label">Menunggu Diproses</div></div>
@@ -164,7 +164,7 @@ button{cursor:pointer;font-family:inherit}
 
 <!-- Ambil Alih -->
 <div id="section-takeover" class="section" style="display:none">
-<div class="header"><h2>Ambil Alih Percakapan</h2><button class="btn btn-outline" onclick="loadEscalatedList()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="header"><h2>Ambil Alih Percakapan</h2><button class="btn btn-outline" id="btnRefreshTakeover" onclick="loadEscalatedList()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
 <div class="card">
 <p class="hint">Daftar pembeli yang percakapannya sudah dialihkan bot ke Anda (komplain, pertanyaan di luar kemampuan bot, dll). Bot <strong>berhenti membalas otomatis</strong> ke nomor yang ada di sini - balas manual dari sini, atau klik "Kembalikan ke Bot" kalau sudah selesai.</p>
 <div id="escalatedList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
@@ -186,7 +186,7 @@ button{cursor:pointer;font-family:inherit}
 
 <!-- Riwayat Eskalasi -->
 <div id="section-history" class="section" style="display:none">
-<div class="header"><h2>Riwayat Eskalasi</h2><button class="btn btn-outline" onclick="loadEscalationHistory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="header"><h2>Riwayat Eskalasi</h2><button class="btn btn-outline" id="btnRefreshHistory" onclick="loadEscalationHistory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
 <div class="card">
 <p class="hint">Semua eskalasi yang pernah terjadi - termasuk yang sudah selesai ditangani, oleh siapa, dan kapan. Berguna untuk memastikan tidak ada pembeli yang terlewat.</p>
 <div style="margin-bottom:1rem">
@@ -231,7 +231,12 @@ const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjk
 // BARU (verifikasi deployment): versi yang DIHARAPKAN (sesuai file WA-Bot.gs &
 // Code.gs yang dikirim BERSAMAAN dengan wa-admin.html ini). Kalau versi live
 // beda, berarti salah satu project belum di-redeploy - tampil peringatan otomatis.
-const EXPECTED_VERSION = '2026-07-15-2300-promo-moved-to-main-app';
+// BARU (fix desain): dulu SATU EXPECTED_VERSION dipakai buat bandingkan KEDUA
+// project - tapi Code.gs dan WA-Bot.gs tidak selalu berubah bersamaan, jadi
+// kalau cuma satu yang diupdate, yang satunya lagi salah kena tandai "ketinggalan"
+// padahal dia memang tidak berubah. Sekarang dipisah, masing-masing independen.
+const EXPECTED_CODE_VERSION = '2026-07-15-2300-promo-moved-to-main-app';
+const EXPECTED_WABOT_VERSION = '2026-07-16-0010-lead-inactivity-10-max-30';
 
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
@@ -443,9 +448,26 @@ if(id==='salesmgmt') loadSalesUsersManagement();
 }
 
 // ==================== DASHBOARD ====================
+// BARU: helper tampilkan status loading di tombol - supaya jelas kelihatan
+// tombol beneran ke-klik & sedang bekerja, bukan diam tanpa respons visual.
+function setButtonLoading(btnId, isLoading){
+const btn = document.getElementById(btnId);
+if(!btn) return;
+if(isLoading){
+btn.dataset.originalHtml = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+}else{
+btn.disabled = false;
+if(btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+}
+}
+
 async function loadStats(){
+setButtonLoading('btnRefreshStats', true);
 const res = await callAdminAction('getStats', {});
 if(res.success) renderStats(res.stats);
+setButtonLoading('btnRefreshStats', false);
 }
 function renderStats(stats){
 document.getElementById('statTotal').textContent = stats.totalOrders || 0;
@@ -454,17 +476,18 @@ document.getElementById('statToday').textContent = stats.today || 0;
 }
 
 // BARU (verifikasi deployment): bandingkan versi live (dikirim WA-Bot.gs lewat
-// getStats) dengan versi yang diharapkan (EXPECTED_VERSION, sesuai file yang
-// dikirim bersamaan) - kalau beda, tampilkan peringatan supaya tidak bingung
-// kenapa fitur baru "tidak muncul"/error aneh padahal sudah update file.
+// getStats) dengan versi yang diharapkan masing-masing project (EXPECTED_CODE_VERSION
+// & EXPECTED_WABOT_VERSION, independen satu sama lain) - kalau beda, tampilkan
+// peringatan supaya tidak bingung kenapa fitur baru "tidak muncul"/error aneh
+// padahal sudah update file.
 function checkDeploymentVersion(res){
 const banner = document.getElementById('versionWarning');
 const problems = [];
-if(res.waBotVersion && res.waBotVersion !== EXPECTED_VERSION){
-problems.push('WA-Bot.gs: live=' + res.waBotVersion + ', seharusnya=' + EXPECTED_VERSION);
+if(res.waBotVersion && res.waBotVersion !== EXPECTED_WABOT_VERSION){
+problems.push('WA-Bot.gs: live=' + res.waBotVersion + ', seharusnya=' + EXPECTED_WABOT_VERSION);
 }
-if(res.mainGasVersion && res.mainGasVersion !== EXPECTED_VERSION){
-problems.push('Code.gs: live=' + res.mainGasVersion + ', seharusnya=' + EXPECTED_VERSION);
+if(res.mainGasVersion && res.mainGasVersion !== EXPECTED_CODE_VERSION){
+problems.push('Code.gs: live=' + res.mainGasVersion + ', seharusnya=' + EXPECTED_CODE_VERSION);
 }
 if(problems.length > 0){
 banner.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <strong>Ada project yang belum di-redeploy versi terbaru!</strong><br>' + problems.join('<br>') + '<br>Redeploy dari Apps Script editor: Deploy > Manage deployments > edit > New version > Deploy.';
@@ -531,7 +554,9 @@ return '';
 }
 
 async function loadEscalatedList(){
+setButtonLoading('btnRefreshTakeover', true);
 const res = await callAdminAction('getEscalatedConversations', {});
+setButtonLoading('btnRefreshTakeover', false);
 console.log('[Ambil Alih] respons dari server:', res); // BARU: buat debug cepat lewat F12 Console
 const container = document.getElementById('escalatedList');
 if(!res.success){
@@ -647,7 +672,9 @@ showToast(res.error || 'Gagal', 'error');
 // ==================== RIWAYAT ESKALASI ====================
 async function loadEscalationHistory(){
 const filter = document.getElementById('historyFilter') ? document.getElementById('historyFilter').value : 'all';
+setButtonLoading('btnRefreshHistory', true);
 const res = await callAdminAction('getEscalationHistory', {filter: filter});
+setButtonLoading('btnRefreshHistory', false);
 const container = document.getElementById('historyList');
 if(!res.success){
 container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
