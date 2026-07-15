@@ -128,7 +128,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="section" id="formSection" style="background:var(--card-bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
 <h2 class="section-title">Formulir Pemesanan</h2>
 <p class="section-subtitle">Isi data Anda untuk pemesanan</p>
-<p style="text-align:center;margin-top:-1.25rem;margin-bottom:2rem;font-size:0.9rem;color:var(--text-light)">Apabila membutuhkan produk lainnya atau lebih nyaman order via WA, silahkan kontak WA <a href="https://wa.me/6285219976534" id="waOrderLink" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:none"><i class="fab fa-whatsapp"></i> 085219976534</a></p>
+<p style="text-align:center;margin-top:-1.25rem;margin-bottom:2rem;font-size:0.9rem;color:var(--text-light)">Apabila membutuhkan produk lainnya atau lebih nyaman order via WA, silahkan kontak WA <a href="https://wa.me/6285218894015" id="waOrderLink" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:none"><i class="fab fa-whatsapp"></i> 085218894015</a></p>
 <div class="form-section">
 <div class="cart-summary"><div class="cart-summary-title"><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</div><div id="cartSummaryContent"><div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div></div></div>
 <input type="hidden" id="refCode">
@@ -740,7 +740,12 @@ const link=document.getElementById('waOrderLink');
 if(!link)return;
 const ref=getRefCode();
 const text=ref?('Halo, saya mau pesan kopi (Ref:'+ref+')'):'Halo, saya mau pesan kopi';
-link.href='https://wa.me/6285219976534?text='+encodeURIComponent(text);
+// BARU (fix): nomor ini WAJIB sama persis dengan nomor bisnis yang menjalankan
+// WA-Bot.gs (852-1889-4015 / WA_PHONE_NUMBER_ID 1185855637945874) - kalau beda,
+// pembeli yang klik tombol ini akan chat ke nomor yang TIDAK menjalankan bot sama
+// sekali, jadi seluruh alur "WA via landing" (termasuk tangkap kode referral) tidak
+// akan pernah berjalan.
+link.href='https://wa.me/6285218894015?text='+encodeURIComponent(text);
 }
 
 async function loadAffiliatorInfo(){
