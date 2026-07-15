@@ -101,6 +101,7 @@ button{cursor:pointer;font-family:inherit}
 <div class="nav-item" data-section="promo" onclick="showSection('promo')"><i class="fas fa-tags"></i> Promo Aktif</div>
 <div class="nav-item" data-section="testbot" onclick="showSection('testbot')"><i class="fas fa-comments"></i> Uji Coba Bot</div>
 <div class="nav-item" data-section="takeover" onclick="showSection('takeover')"><i class="fas fa-hand-paper"></i> Ambil Alih <span id="takeoverBadge" style="background:var(--danger);color:white;border-radius:10px;padding:1px 7px;font-size:0.7rem;margin-left:auto;display:none">0</span></div>
+<div class="nav-item" data-section="history" onclick="showSection('history')"><i class="fas fa-history"></i> Riwayat Eskalasi</div>
 </div>
 </div>
 
@@ -179,9 +180,26 @@ button{cursor:pointer;font-family:inherit}
 <input type="text" id="adminReplyInput" placeholder="Ketik balasan Anda..." onkeydown="if(event.key==='Enter')sendAdminReplyNow()">
 <button class="btn btn-primary" onclick="sendAdminReplyNow()"><i class="fas fa-paper-plane"></i></button>
 </div>
-<div style="margin-top:1rem">
-<button class="btn btn-outline" onclick="resumeBotNow()"><i class="fas fa-robot"></i> Kembalikan ke Bot</button>
+<div style="margin-top:1rem;display:flex;gap:0.6rem">
+<button class="btn btn-primary" onclick="markResolvedFromReplyPanel()"><i class="fas fa-check-circle"></i> Tandai Selesai</button>
+<button class="btn btn-outline" onclick="resumeBotNow()"><i class="fas fa-robot"></i> Kembalikan ke Bot (tanpa tandai selesai)</button>
 </div>
+</div>
+</div>
+
+<!-- Riwayat Eskalasi -->
+<div id="section-history" class="section" style="display:none">
+<div class="header"><h2>Riwayat Eskalasi</h2><button class="btn btn-outline" onclick="loadEscalationHistory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="card">
+<p class="hint">Semua eskalasi yang pernah terjadi - termasuk yang sudah selesai ditangani, oleh siapa, dan kapan. Berguna untuk memastikan tidak ada pembeli yang terlewat.</p>
+<div style="margin-bottom:1rem">
+<select id="historyFilter" class="form-input" style="max-width:220px;padding:0.5rem;border:1.5px solid var(--border);border-radius:8px" onchange="loadEscalationHistory()">
+<option value="all">Semua</option>
+<option value="open">Belum Selesai</option>
+<option value="resolved">Sudah Selesai</option>
+</select>
+</div>
+<div id="historyList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
 </div>
 </div>
 
@@ -195,12 +213,12 @@ button{cursor:pointer;font-family:inherit}
 // ============================================================================
 // KONFIGURASI - GANTI URL INI ke deployment WA-Bot.gs Anda
 // ============================================================================
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjkW2OuIatPM3KK5HghbKgK9HaSAF7kKZhipAvQ78uMXJD92fI/exec';
+const GAS_API_URL = 'ISI_DI_SINI';
 
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
+let currentTier = null;
 
-// ==================== LOGIN ====================
 function doLogin(){
 const pw = document.getElementById('loginPassword').value;
 if(!pw){return}
@@ -209,17 +227,42 @@ if(!pw){return}
 dashboardPassword = pw;
 callAdminAction('getStats', {}).then(res=>{
 if(res.success){
+currentTier = res.tier;
 document.getElementById('loginScreen').style.display='none';
 document.getElementById('app').style.display='block';
 renderStats(res.stats);
+applyTierVisibility();
+if(currentTier === 'admin'){
 loadPromptIntoUI();
 loadPromoIntoUI();
+}
 loadEscalatedList();
+loadEscalationHistory();
 }else{
 document.getElementById('loginError').style.display='block';
 dashboardPassword='';
 }
 }).catch(()=>{document.getElementById('loginError').style.display='block'});
+}
+
+// BARU (2 tingkat akses): sembunyikan menu yang bukan wewenang tier sales -
+// staff sales/marketing cuma perlu lihat Dashboard, Ambil Alih, dan Riwayat.
+function applyTierVisibility(){
+const adminOnlySections = ['persona', 'promo', 'testbot'];
+if(currentTier === 'sales'){
+adminOnlySections.forEach(id=>{
+const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
+if(nav) nav.style.display = 'none';
+});
+// Kalau sales login & lagi di section admin-only (tidak mungkin normalnya, tapi
+// jaga-jaga), lempar ke dashboard.
+showSection('dashboard');
+}else{
+adminOnlySections.forEach(id=>{
+const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
+if(nav) nav.style.display = 'flex';
+});
+}
 }
 
 // ==================== PEMANGGIL API ====================
@@ -250,6 +293,7 @@ document.getElementById('section-'+id).style.display='block';
 document.querySelector('.nav-item[data-section="'+id+'"]').classList.add('active');
 if(id==='dashboard') loadStats();
 if(id==='takeover') loadEscalatedList();
+if(id==='history') loadEscalationHistory();
 }
 
 // ==================== DASHBOARD ====================
@@ -425,6 +469,52 @@ loadEscalatedList();
 }else{
 showToast(res.error || 'Gagal', 'error');
 }
+}
+
+// BARU (log eskalasi permanen): tandai selesai LANGSUNG dari panel balas cepat -
+// wajib isi nama (akuntabilitas), otomatis kembalikan bot aktif juga.
+async function markResolvedFromReplyPanel(){
+if(!selectedTakeoverPhone) return;
+const name = prompt('Nama Anda (untuk catatan siapa yang menangani ini):');
+if(!name || !name.trim()) { showToast('Nama wajib diisi', 'error'); return; }
+const res = await callAdminAction('markEscalationResolved', {phone: selectedTakeoverPhone, resolvedBy: name.trim()});
+if(res.success){
+showToast('Ditandai selesai oleh ' + name.trim(), 'success');
+document.getElementById('replyPanel').style.display = 'none';
+selectedTakeoverPhone = null;
+loadEscalatedList();
+loadEscalationHistory();
+}else{
+showToast(res.error || 'Gagal', 'error');
+}
+}
+
+// ==================== RIWAYAT ESKALASI ====================
+async function loadEscalationHistory(){
+const filter = document.getElementById('historyFilter') ? document.getElementById('historyFilter').value : 'all';
+const res = await callAdminAction('getEscalationHistory', {filter: filter});
+const container = document.getElementById('historyList');
+if(!res.success){
+container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
+return;
+}
+if(res.escalations.length === 0){
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Tidak ada data</p>';
+return;
+}
+container.innerHTML = res.escalations.map(e=>{
+const isOpen = String(e.status).toLowerCase() === 'open';
+const badge = isOpen
+? '<span class="badge" style="background:#FFF3E0;color:var(--warning)">Belum Selesai</span>'
+: '<span class="badge badge-custom">Selesai</span>';
+const resolvedInfo = !isOpen ? '<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem">Ditangani oleh <strong>'+(e.resolvedby||'-')+'</strong> pada '+new Date(e.resolvedat).toLocaleString('id-ID')+'</div>' : '';
+return '<div style="padding:0.9rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.6rem">'+
+'<div style="display:flex;justify-content:space-between;align-items:start"><strong>'+e.phone+'</strong>'+badge+'</div>'+
+'<div style="font-size:0.85rem;color:var(--text-light);margin-top:0.3rem">'+(e.reason||'-')+'</div>'+
+'<div style="font-size:0.78rem;color:var(--text-light);margin-top:0.3rem">Eskalasi: '+new Date(e.escalatedat).toLocaleString('id-ID')+'</div>'+
+resolvedInfo+
+'</div>';
+}).join('');
 }
 
 
