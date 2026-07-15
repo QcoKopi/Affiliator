@@ -254,7 +254,7 @@ let currentTier = null;
 let currentSalesIdentity = null;
 
 function doLogin(){
-const pw = document.getElementById('loginPassword').value;
+const pw = document.getElementById('loginPassword').value.trim();
 if(!pw){return}
 // Validasi dilakukan oleh server saat panggilan action pertama (getStats) -
 // kalau password salah, server yang menolak, bukan dicek di sini.
