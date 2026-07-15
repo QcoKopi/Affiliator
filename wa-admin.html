@@ -17,6 +17,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* ===== Layar Login ===== */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary) 0%,#5A3F2E 100%)}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:500}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--card-bg);border-radius:16px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-box h2{color:var(--primary);font-size:1.15rem;margin-bottom:0.5rem}
+.modal-box p.hint{margin-bottom:1rem}
+.modal-box select,.modal-box input{width:100%;padding:0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.9rem;margin-bottom:0.75rem}
 .login-card{background:var(--card-bg);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
 .login-card h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;margin-bottom:0.25rem;color:var(--primary)}
 .login-card p{color:var(--text-light);font-size:0.85rem;margin-bottom:1.5rem}
@@ -27,7 +33,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* ===== App ===== */
 #app{display:none}
-.sidebar{position:fixed;left:0;top:0;width:250px;height:100vh;background:linear-gradient(180deg,var(--primary) 0%,#5A3F2E 100%);color:white;padding:24px 0;z-index:100}
+.sidebar{position:fixed;left:0;top:0;width:250px;height:100vh;background:linear-gradient(180deg,var(--primary) 0%,#5A3F2E 100%);color:white;padding:24px 0;z-index:100;display:flex;flex-direction:column}
 .sidebar-header{padding:0 24px 24px;border-bottom:1px solid rgba(255,255,255,0.1)}
 .sidebar-header h1{font-size:19px;font-weight:700;display:flex;align-items:center;gap:10px}
 .sidebar-header h1 i{font-size:22px;color:var(--secondary)}
@@ -102,6 +108,11 @@ button{cursor:pointer;font-family:inherit}
 <div class="nav-item" data-section="testbot" onclick="showSection('testbot')"><i class="fas fa-comments"></i> Uji Coba Bot</div>
 <div class="nav-item" data-section="takeover" onclick="showSection('takeover')"><i class="fas fa-hand-paper"></i> Ambil Alih <span id="takeoverBadge" style="background:var(--danger);color:white;border-radius:10px;padding:1px 7px;font-size:0.7rem;margin-left:auto;display:none">0</span></div>
 <div class="nav-item" data-section="history" onclick="showSection('history')"><i class="fas fa-history"></i> Riwayat Eskalasi</div>
+<div class="nav-item" data-section="salesmgmt" onclick="showSection('salesmgmt')"><i class="fas fa-users"></i> Kelola Sales</div>
+</div>
+<div style="margin-top:auto;padding:16px 24px;border-top:1px solid rgba(255,255,255,0.1)">
+<div id="loggedInAs" style="font-size:0.78rem;opacity:0.7;margin-bottom:0.6rem"></div>
+<div class="nav-item" style="padding:10px 0;opacity:0.85" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Keluar</div>
 </div>
 </div>
 
@@ -203,6 +214,31 @@ button{cursor:pointer;font-family:inherit}
 </div>
 </div>
 
+<!-- Kelola Sales (admin-only) -->
+<div id="section-salesmgmt" class="section" style="display:none">
+<div class="header"><h2>Kelola Sales/Marketing</h2></div>
+<div class="card">
+<p class="hint">Daftar staff yang boleh dipilih sebagai "yang menangani" saat menyelesaikan eskalasi. Staff baru juga bisa mendaftarkan diri sendiri saat login pertama kali - daftar ini cuma untuk kelola/hapus.</p>
+<div style="display:flex;gap:0.6rem;margin-bottom:1.5rem">
+<input type="text" id="newSalesName" placeholder="Nama staff baru">
+<button class="btn btn-primary" onclick="addSalesUser()" style="white-space:nowrap"><i class="fas fa-plus"></i> Tambah</button>
+</div>
+<div id="salesUsersList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Modal pilih identitas (khusus tier sales) -->
+<div class="modal-overlay" id="identityModal">
+<div class="modal-box">
+<h2><i class="fas fa-id-badge"></i> Siapa Anda?</h2>
+<p class="hint">Pilih nama Anda dari daftar - ini dipakai untuk mencatat siapa yang menangani tiap eskalasi.</p>
+<select id="identitySelect"></select>
+<div style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.5rem">Nama belum ada di daftar? Ketik nama baru di bawah ini:</div>
+<input type="text" id="identityNewName" placeholder="Nama lengkap Anda">
+<button class="btn btn-primary" style="width:100%" onclick="confirmIdentity()">Lanjut</button>
 </div>
 </div>
 
@@ -218,6 +254,8 @@ const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjk
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
 let currentTier = null;
+let currentSalesIdentity = null;
+let salesUsersCache = [];
 
 function doLogin(){
 const pw = document.getElementById('loginPassword').value;
@@ -238,6 +276,11 @@ loadPromoIntoUI();
 }
 loadEscalatedList();
 loadEscalationHistory();
+// BARU (registry sales): tier sales WAJIB pilih identitas dulu sebelum lanjut -
+// dipakai untuk pencatatan siapa yang tangani eskalasi.
+if(currentTier === 'sales'){
+showIdentityModal();
+}
 }else{
 document.getElementById('loginError').style.display='block';
 dashboardPassword='';
@@ -248,7 +291,7 @@ dashboardPassword='';
 // BARU (2 tingkat akses): sembunyikan menu yang bukan wewenang tier sales -
 // staff sales/marketing cuma perlu lihat Dashboard, Ambil Alih, dan Riwayat.
 function applyTierVisibility(){
-const adminOnlySections = ['persona', 'promo', 'testbot'];
+const adminOnlySections = ['persona', 'promo', 'testbot', 'salesmgmt'];
 if(currentTier === 'sales'){
 adminOnlySections.forEach(id=>{
 const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
@@ -263,7 +306,101 @@ const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
 if(nav) nav.style.display = 'flex';
 });
 }
+document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + (currentTier === 'admin' ? 'Admin' : 'Sales/Marketing');
 }
+
+function doLogout(){
+if(!confirm('Keluar dari dashboard?')) return;
+dashboardPassword = '';
+currentTier = null;
+currentSalesIdentity = null;
+document.getElementById('app').style.display = 'none';
+document.getElementById('loginScreen').style.display = 'flex';
+document.getElementById('loginPassword').value = '';
+}
+
+// ==================== IDENTITAS SALES ====================
+async function showIdentityModal(){
+const res = await callAdminAction('getSalesUsers', {});
+salesUsersCache = res.success ? (res.users || []) : [];
+const select = document.getElementById('identitySelect');
+select.innerHTML = '<option value="">-- Pilih dari daftar --</option>' +
+salesUsersCache.map(u=>'<option value="'+u.id+'">'+u.name+'</option>').join('');
+document.getElementById('identityNewName').value = '';
+document.getElementById('identityModal').classList.add('active');
+}
+
+async function confirmIdentity(){
+const selectedId = document.getElementById('identitySelect').value;
+const newName = document.getElementById('identityNewName').value.trim();
+
+if(!selectedId && !newName){
+showToast('Pilih dari daftar atau ketik nama baru', 'error');
+return;
+}
+
+if(newName){
+// Daftarkan nama baru dulu
+const res = await callAdminAction('saveSalesUser', {name: newName});
+if(!res.success){
+showToast(res.error || 'Gagal mendaftarkan nama', 'error');
+return;
+}
+currentSalesIdentity = newName;
+}else{
+const found = salesUsersCache.find(u=>u.id===selectedId);
+currentSalesIdentity = found ? found.name : null;
+}
+
+document.getElementById('identityModal').classList.remove('active');
+document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + currentSalesIdentity + ' (Sales/Marketing)';
+showToast('Selamat bertugas, ' + currentSalesIdentity + '!', 'success');
+}
+
+// ==================== KELOLA SALES (admin-only) ====================
+async function loadSalesUsersManagement(){
+const res = await callAdminAction('getSalesUsers', {});
+const container = document.getElementById('salesUsersList');
+if(!res.success){
+container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
+return;
+}
+if(res.users.length === 0){
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Belum ada staff terdaftar - akan otomatis terdaftar saat mereka login pertama kali & isi nama baru, atau tambahkan manual di atas.</p>';
+return;
+}
+container.innerHTML = res.users.map(u=>
+'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem">'+
+'<span>'+u.name+'</span>'+
+'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash-alt"></i></button>'+
+'</div>'
+).join('');
+}
+
+async function addSalesUser(){
+const name = document.getElementById('newSalesName').value.trim();
+if(!name){showToast('Nama wajib diisi', 'error'); return}
+const res = await callAdminAction('saveSalesUser', {name: name});
+if(res.success){
+document.getElementById('newSalesName').value = '';
+showToast('Staff ditambahkan', 'success');
+loadSalesUsersManagement();
+}else{
+showToast(res.error || 'Gagal menambahkan', 'error');
+}
+}
+
+async function deactivateSalesUser(id, name){
+if(!confirm('Hapus "'+name+'" dari daftar? Riwayat eskalasi yang sudah tercatat atas nama ini TIDAK akan berubah.')) return;
+const res = await callAdminAction('deleteSalesUser', {id: id});
+if(res.success){
+showToast('Staff dihapus dari daftar', 'success');
+loadSalesUsersManagement();
+}else{
+showToast(res.error || 'Gagal menghapus', 'error');
+}
+}
+
 
 // ==================== PEMANGGIL API ====================
 async function callAdminAction(action, extraParams){
@@ -294,6 +431,7 @@ document.querySelector('.nav-item[data-section="'+id+'"]').classList.add('active
 if(id==='dashboard') loadStats();
 if(id==='takeover') loadEscalatedList();
 if(id==='history') loadEscalationHistory();
+if(id==='salesmgmt') loadSalesUsersManagement();
 }
 
 // ==================== DASHBOARD ====================
@@ -475,11 +613,18 @@ showToast(res.error || 'Gagal', 'error');
 // wajib isi nama (akuntabilitas), otomatis kembalikan bot aktif juga.
 async function markResolvedFromReplyPanel(){
 if(!selectedTakeoverPhone) return;
-const name = prompt('Nama Anda (untuk catatan siapa yang menangani ini):');
+// BARU (registry sales): pakai identitas yang sudah dipilih saat login (tier
+// sales) otomatis - tidak perlu tanya ulang tiap kali. Admin (yang tidak lewat
+// alur pilih identitas) tetap ditanya manual seperti sebelumnya.
+let name = currentSalesIdentity;
+if(!name){
+name = prompt('Nama Anda (untuk catatan siapa yang menangani ini):');
 if(!name || !name.trim()) { showToast('Nama wajib diisi', 'error'); return; }
-const res = await callAdminAction('markEscalationResolved', {phone: selectedTakeoverPhone, resolvedBy: name.trim()});
+name = name.trim();
+}
+const res = await callAdminAction('markEscalationResolved', {phone: selectedTakeoverPhone, resolvedBy: name});
 if(res.success){
-showToast('Ditandai selesai oleh ' + name.trim(), 'success');
+showToast('Ditandai selesai oleh ' + name, 'success');
 document.getElementById('replyPanel').style.display = 'none';
 selectedTakeoverPhone = null;
 loadEscalatedList();
@@ -488,6 +633,7 @@ loadEscalationHistory();
 showToast(res.error || 'Gagal', 'error');
 }
 }
+
 
 // ==================== RIWAYAT ESKALASI ====================
 async function loadEscalationHistory(){
