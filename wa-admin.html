@@ -218,9 +218,10 @@ button{cursor:pointer;font-family:inherit}
 <div id="section-salesmgmt" class="section" style="display:none">
 <div class="header"><h2>Kelola Sales/Marketing</h2></div>
 <div class="card">
-<p class="hint">Tambahkan staff di sini - tiap orang dapat password sendiri (tampil sekali saat dibuat/direset, salin & kirim langsung ke orangnya). Mereka login pakai password itu, dan sistem otomatis tahu identitasnya - tidak bisa mengaku jadi orang lain.</p>
+<p class="hint">Tambahkan staff di sini - tiap orang dapat password sendiri (tampil sekali saat dibuat/direset, salin & kirim langsung ke orangnya). Mereka login pakai password itu, dan sistem otomatis tahu identitasnya - tidak bisa mengaku jadi orang lain. Nomor WA wajib diisi supaya eskalasi & reminder bisa terkirim LANGSUNG ke orangnya, tidak perlu diteruskan admin manual.</p>
 <div style="display:flex;gap:0.6rem;margin-bottom:1.5rem">
-<input type="text" id="newSalesName" placeholder="Nama staff baru">
+<input type="text" id="newSalesName" placeholder="Nama staff baru" style="flex:1.2">
+<input type="text" id="newSalesPhone" placeholder="No WA (contoh: 6281234567890)" style="flex:1">
 <button class="btn btn-primary" onclick="addSalesUser()" style="white-space:nowrap"><i class="fas fa-plus"></i> Tambah</button>
 </div>
 <div id="salesUsersList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
@@ -328,7 +329,7 @@ return;
 }
 container.innerHTML = res.users.map(u=>
 '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem">'+
-'<span>'+u.name+'</span>'+
+'<span>'+u.name+' <small style="color:var(--text-light)">('+(u.phone||'no HP belum diisi')+')</small></span>'+
 '<div style="display:flex;gap:6px">'+
 '<button class="btn btn-sm btn-outline" onclick="resetSalesUserPassword(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Reset password"><i class="fas fa-key"></i></button>'+
 '<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Hapus"><i class="fas fa-trash-alt"></i></button>'+
@@ -354,10 +355,13 @@ document.body.appendChild(box);
 
 async function addSalesUser(){
 const name = document.getElementById('newSalesName').value.trim();
+const phone = document.getElementById('newSalesPhone').value.trim();
 if(!name){showToast('Nama wajib diisi', 'error'); return}
-const res = await callAdminAction('saveSalesUser', {name: name});
+if(!phone){showToast('Nomor WA wajib diisi', 'error'); return}
+const res = await callAdminAction('saveSalesUser', {name: name, phone: phone});
 if(res.success){
 document.getElementById('newSalesName').value = '';
+document.getElementById('newSalesPhone').value = '';
 loadSalesUsersManagement();
 showGeneratedPassword(res.name, res.password);
 }else{
@@ -509,6 +513,7 @@ return '';
 
 async function loadEscalatedList(){
 const res = await callAdminAction('getEscalatedConversations', {});
+console.log('[Ambil Alih] respons dari server:', res); // BARU: buat debug cepat lewat F12 Console
 const container = document.getElementById('escalatedList');
 if(!res.success){
 container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
