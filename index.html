@@ -3436,8 +3436,7 @@ document.getElementById('invPreview').textContent =
 'Ongkir: Rp ' + formatNumber(ongkir) + '\n' +
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n\n' +
-buildXenditLinkText() +
-buildBankInfoText() +
+(currentInvoiceXenditUrl ? buildXenditLinkText() : buildBankInfoText()) +
 'Terima kasih telah berbelanja di Kopi Nusantara!';
 
 return total;
@@ -3448,7 +3447,7 @@ return total;
 // ada link - sama sekali tidak mengubah tampilan invoice yang lama.
 function buildXenditLinkText() {
 if (!currentInvoiceXenditUrl) return '';
-return 'Bayar online (VA/e-wallet/QRIS/kartu):\n' + currentInvoiceXenditUrl + '\n\nAtau transfer manual:\n';
+return 'Klik link berikut untuk pilihan pembayaran (QRIS, Transfer, e-Wallet):\n' + currentInvoiceXenditUrl + '\n\n';
 }
 
 // BARU: baris info rekening tujuan pembayaran, dipakai bersama oleh preview
@@ -3482,8 +3481,7 @@ var message = 'Halo ' + name + ', berikut invoice pesanan Anda dari Kopi Nusanta
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n' +
 'Alamat: ' + address + '\n\n' +
-buildXenditLinkText() +
-buildBankInfoText() +
+(currentInvoiceXenditUrl ? buildXenditLinkText() : buildBankInfoText()) +
 'Mohon lakukan pembayaran dan konfirmasi ke nomor ini. Terima kasih!';
 
 var cleanPhone = phone.replace(/\D/g, '');
