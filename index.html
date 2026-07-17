@@ -409,6 +409,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <ul class="sidebar-menu">
 <li><a class="active" onclick="showPage('dashboard')" data-page="dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
 <li><a onclick="openGuideModal()" style="cursor:pointer"><i class="fas fa-book-open"></i> Panduan</a></li>
+<li><a onclick="openContactUsModal()" style="cursor:pointer"><i class="fas fa-comment-dots"></i> Contact Us</a></li>
 <li class="admin-only"><a onclick="showPage('products')" data-page="products"><i class="fas fa-box"></i> Manage Products</a></li>
 <li class="admin-only"><a onclick="showPage('affiliators')" data-page="affiliators"><i class="fas fa-users"></i> Affiliators</a></li>
 <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
@@ -761,6 +762,23 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 <div class="modal-footer">
 <button class="btn btn-primary" onclick="closeModal('guideModal')" style="width:100%"><i class="fas fa-check"></i> Mengerti, Mulai Berjualan!</button>
+</div>
+</div>
+</div>
+
+<!-- MODAL CONTACT US (BARU) - chat langsung ke asisten AI yang sama dengan bot WhatsApp -->
+<div class="modal-overlay" id="contactUsModal" style="z-index:10007">
+<div class="modal" style="max-width:480px">
+<div class="modal-header"><h3><i class="fas fa-comment-dots"></i> Contact Us</h3><button class="modal-close" onclick="closeModal('contactUsModal')">&times;</button></div>
+<div class="modal-body" style="padding:1rem">
+<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:0.75rem"><i class="fas fa-robot"></i> Chat dengan asisten kami - sama seperti asisten WhatsApp QCO Kopi.</p>
+<div id="contactUsChatWindow" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);height:360px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem">
+<div style="align-self:center;color:var(--text-light);font-size:0.78rem;font-style:italic">Ketik pesan untuk mulai chat</div>
+</div>
+<div style="display:flex;gap:0.6rem">
+<input type="text" class="form-input" id="contactUsInput" placeholder="Ketik pesan Anda..." style="flex:1" onkeydown="if(event.key==='Enter')sendContactUsMessage()">
+<button class="btn btn-primary" id="btnContactUsSend" onclick="sendContactUsMessage()"><i class="fas fa-paper-plane"></i></button>
+</div>
 </div>
 </div>
 </div>
@@ -2626,6 +2644,56 @@ if (!content) { showToast('Gagal memuat konten panduan', 'error'); return; }
 document.getElementById('guideInfoSection').textContent = personalizeGuideText(content.info);
 document.getElementById('guidePanduanSection').textContent = personalizeGuideText(content.panduan);
 document.getElementById('guideModal').classList.add('active');
+}
+
+// ==================== CONTACT US - CHAT KE CHATBOT (BARU) ====================
+// Dipakai halaman ini SAJA - riwayat percakapan disimpan di variabel biasa
+// (bukan localStorage, sesuai batasan artifact), jadi reset tiap refresh halaman.
+let contactUsHistory = null;
+
+function openContactUsModal() {
+document.getElementById('contactUsModal').classList.add('active');
+document.getElementById('contactUsInput').focus();
+}
+
+function addContactUsBubble(text, sender) {
+const win = document.getElementById('contactUsChatWindow');
+const bubble = document.createElement('div');
+const isUser = sender === 'user';
+bubble.style.cssText = 'align-self:' + (isUser ? 'flex-end' : 'flex-start') + ';max-width:80%;padding:0.6rem 0.9rem;border-radius:12px;font-size:0.88rem;line-height:1.4;white-space:pre-wrap;' +
+(isUser ? 'background:var(--primary);color:white;border-bottom-right-radius:2px' : 'background:var(--card-bg);border:1px solid var(--border);border-bottom-left-radius:2px');
+bubble.textContent = text;
+win.appendChild(bubble);
+win.scrollTop = win.scrollHeight;
+return bubble;
+}
+
+async function sendContactUsMessage() {
+const input = document.getElementById('contactUsInput');
+const message = input.value.trim();
+if (!message) return;
+input.value = '';
+addContactUsBubble(message, 'user');
+
+const btn = document.getElementById('btnContactUsSend');
+btn.disabled = true;
+const typingBubble = addContactUsBubble('Mengetik...', 'bot');
+
+const params = { message: message };
+if (contactUsHistory) params.history = contactUsHistory;
+
+const res = await callGASPost('chatWithBot', params);
+
+typingBubble.remove();
+btn.disabled = false;
+
+if (res.success) {
+addContactUsBubble(res.reply, 'bot');
+contactUsHistory = res.history;
+} else {
+addContactUsBubble('Maaf, terjadi gangguan. Coba lagi sebentar.', 'bot');
+Debug.log('Contact Us error:', res.error);
+}
 }
 
 // Dipanggil sekali tiap kali affiliator login (bukan admin, dan bukan tiap
