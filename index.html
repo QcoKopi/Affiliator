@@ -1158,6 +1158,16 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 </div>
 <div class="invoice-total-row" style="text-align:right">Total: <span id="invTotal">Rp 0</span></div>
 <div class="form-group" style="margin-top:1rem"><label class="form-label">Preview Invoice (WhatsApp)</label><div class="invoice-preview" id="invPreview"></div></div>
+
+<!-- PEMBAYARAN (BARU - integrasi Xendit) -->
+<div class="form-group" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+<label class="form-label">Status Pembayaran</label>
+<div id="invPaymentStatus" style="margin-bottom:0.75rem"></div>
+<div id="invPaymentActions" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+<button class="btn btn-primary btn-sm" id="btnCreateXenditLink" onclick="createXenditPaymentLinkForInvoice()"><i class="fas fa-link"></i> Buat Link Pembayaran Xendit</button>
+<button class="btn btn-outline btn-sm" onclick="markInvoicePaidManually()"><i class="fas fa-check-circle"></i> Tandai Sudah Dibayar (Manual)</button>
+</div>
+</div>
 </div>
 <div class="modal-footer" style="flex-wrap:wrap;gap:0.5rem">
 <button class="btn btn-outline" onclick="closeModal('invoiceModal')">Tutup</button>
@@ -3369,6 +3379,7 @@ if (!order) { showToast('Data order untuk lead ini tidak ditemukan', 'error'); r
 
 document.getElementById('invOrderId').value = order.id || '';
 document.getElementById('invLeadId').value = leadId;
+renderInvoicePaymentStatus(leadId);
 document.getElementById('invName').value = order.buyername || order.buyerName || '-';
 document.getElementById('invPhone').value = order.buyerphone || order.buyerPhone || '';
 document.getElementById('invEmail').value = order.buyeremail || order.buyerEmail || '';
@@ -3425,10 +3436,19 @@ document.getElementById('invPreview').textContent =
 'Ongkir: Rp ' + formatNumber(ongkir) + '\n' +
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n\n' +
+buildXenditLinkText() +
 buildBankInfoText() +
 'Terima kasih telah berbelanja di Kopi Nusantara!';
 
 return total;
+}
+
+// BARU: kalau link pembayaran Xendit sudah dibuat untuk invoice ini, sertakan
+// di pesan (jadi opsi bayar online tanpa transfer manual). Kosong kalau belum
+// ada link - sama sekali tidak mengubah tampilan invoice yang lama.
+function buildXenditLinkText() {
+if (!currentInvoiceXenditUrl) return '';
+return 'Bayar online (VA/e-wallet/QRIS/kartu):\n' + currentInvoiceXenditUrl + '\n\nAtau transfer manual:\n';
 }
 
 // BARU: baris info rekening tujuan pembayaran, dipakai bersama oleh preview
@@ -3462,6 +3482,7 @@ var message = 'Halo ' + name + ', berikut invoice pesanan Anda dari Kopi Nusanta
 discountLine +
 'Total: Rp ' + formatNumber(total) + '\n' +
 'Alamat: ' + address + '\n\n' +
+buildXenditLinkText() +
 buildBankInfoText() +
 'Mohon lakukan pembayaran dan konfirmasi ke nomor ini. Terima kasih!';
 
@@ -3471,6 +3492,80 @@ else if (cleanPhone.indexOf('62') !== 0) cleanPhone = '62' + cleanPhone;
 
 window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message), '_blank');
 closeModal('invoiceModal');
+}
+
+// ==================== PEMBAYARAN XENDIT (BARU) ====================
+// BARU: hasil link Xendit yang barusan dibuat (kalau ada) - dipakai supaya
+// pesan invoice yang dikirim otomatis menyertakan link ini, tanpa admin perlu
+// salin-tempel manual.
+var currentInvoiceXenditUrl = '';
+
+function renderInvoicePaymentStatus(leadId) {
+currentInvoiceXenditUrl = '';
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+var el = document.getElementById('invPaymentStatus');
+var status = lead ? String(lead.paymentstatus || '').toLowerCase() : '';
+
+if (status === 'paid') {
+el.innerHTML = '<span class="badge" style="background:#E8F5E9;color:var(--success)"><i class="fas fa-check-circle"></i> Sudah Dibayar' + (lead.paymentmethod ? ' (' + lead.paymentmethod + ')' : '') + '</span>';
+document.getElementById('invPaymentActions').style.display = 'none';
+} else if (status === 'pending') {
+currentInvoiceXenditUrl = lead.xenditinvoiceurl || '';
+el.innerHTML = '<span class="badge" style="background:#FFF3E0;color:var(--warning)"><i class="fas fa-clock"></i> Menunggu Pembayaran (Xendit)</span>' +
+(currentInvoiceXenditUrl ? ' <a href="' + currentInvoiceXenditUrl + '" target="_blank" style="font-size:0.8rem;margin-left:0.5rem">Lihat link</a>' : '');
+document.getElementById('invPaymentActions').style.display = 'flex';
+} else if (status === 'expired') {
+el.innerHTML = '<span class="badge" style="background:#FFEBEE;color:var(--danger)"><i class="fas fa-times-circle"></i> Link Kedaluwarsa - buat link baru</span>';
+document.getElementById('invPaymentActions').style.display = 'flex';
+} else {
+el.innerHTML = '<span style="color:var(--text-light);font-size:0.85rem">Belum ada pembayaran tercatat</span>';
+document.getElementById('invPaymentActions').style.display = 'flex';
+}
+}
+
+async function createXenditPaymentLinkForInvoice() {
+var leadId = document.getElementById('invLeadId').value;
+var total = calculateInvoiceTotal();
+if (total <= 0) { showToast('Total invoice harus lebih dari 0', 'error'); return; }
+
+var btn = document.getElementById('btnCreateXenditLink');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuat link...';
+
+var email = document.getElementById('invEmail').value.trim();
+var res = await callGASPost('createXenditPaymentLink', { leadId: leadId, amount: total, buyerEmail: email });
+
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+
+if (res.success) {
+currentInvoiceXenditUrl = res.invoiceUrl;
+showToast('Link pembayaran berhasil dibuat!', 'success');
+// BARU: update cache lokal supaya status langsung kelihatan tanpa perlu refresh manual
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+if (lead) { lead.paymentstatus = 'pending'; lead.xenditinvoiceurl = res.invoiceUrl; lead.paymentmethod = 'xendit'; }
+renderInvoicePaymentStatus(leadId);
+calculateInvoiceTotal(); // refresh preview supaya link ikut muncul di teks
+} else {
+showToast(res.error || 'Gagal membuat link pembayaran', 'error');
+}
+}
+
+async function markInvoicePaidManually() {
+var leadId = document.getElementById('invLeadId').value;
+if (!confirm('Tandai pesanan ini sudah dibayar (transfer manual)? Komisi affiliator (kalau ada) akan otomatis dihitung.')) return;
+
+var res = await callGASPost('markLeadPaidManually', { leadId: leadId });
+if (res.success) {
+showToast('Berhasil ditandai lunas' + (res.alreadyProcessed ? ' (sudah lunas sebelumnya)' : ''), 'success');
+var lead = DATA.leads.find(function(l) { return String(l.id) === String(leadId); });
+if (lead) { lead.paymentstatus = 'paid'; lead.paymentmethod = 'manual'; lead.status = 'Valid'; }
+renderInvoicePaymentStatus(leadId);
+refreshAllData();
+} else {
+showToast(res.error || 'Gagal menandai lunas', 'error');
+}
 }
 
 // ==================== SUBMIT PENDAFTARAN AFFILIATOR ====================
