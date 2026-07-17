@@ -132,6 +132,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 <div class="form-section">
 <div class="cart-summary"><div class="cart-summary-title"><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</div><div id="cartSummaryContent"><div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem">Belum ada produk dipilih</div></div></div>
 <input type="hidden" id="refCode">
+<!-- BARU: kode pelanggan - isi otomatis untuk yang pernah simpan data sebelumnya -->
+<div class="form-group" style="background:var(--bg);border-radius:var(--radius-sm);padding:0.9rem 1rem;margin-bottom:1rem;border:1px solid var(--border)">
+<label class="form-label" style="font-size:0.82rem"><i class="fas fa-id-card"></i> Sudah pernah belanja &amp; simpan data? Masukkan kode Anda</label>
+<div style="display:flex;gap:0.5rem">
+<input type="text" class="form-input" id="customerCodeInput" placeholder="Contoh: A1B2C3" style="text-transform:uppercase" maxlength="6">
+<button class="btn btn-outline" onclick="applyCustomerCode()" style="width:auto;padding:0.6rem 1rem;white-space:nowrap"><i class="fas fa-magic"></i> Isi Otomatis</button>
+</div>
+</div>
 <div class="form-row"><div class="form-group"><label class="form-label">Nama Lengkap <span class="required">*</span></label><input type="text" class="form-input" id="buyerName" placeholder="Nama Anda"></div><div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="buyerEmail" placeholder="email@anda.com"></div></div>
 <div class="form-row"><div class="form-group"><label class="form-label">No. WhatsApp <span class="required">*</span></label><input type="tel" class="form-input" id="buyerPhone" placeholder="08123456789"></div><div class="form-group"><label class="form-label">Nama Jalan / Gedung <span class="required">*</span></label><input type="text" class="form-input" id="buyerStreet" placeholder="Jl. Mawar No. 12"></div></div>
 <div class="form-row"><div class="form-group"><label class="form-label">Provinsi <span class="required">*</span></label><select class="form-input" id="buyerProvince" onchange="onProvinceChange()"><option value="">Pilih Provinsi...</option></select></div><div class="form-group"><label class="form-label">Kota / Kabupaten <span class="required">*</span></label><select class="form-input" id="buyerCity2" onchange="onCityChange()" disabled><option value="">Pilih Kota...</option></select></div></div>
@@ -153,6 +161,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 
 <div class="success-modal-overlay" id="successModal">
 <div class="success-modal"><i class="fas fa-check-circle" style="font-size:4rem;color:var(--success);margin-bottom:1rem;display:block"></i><h2 style="color:var(--primary-dark);margin-bottom:0.5rem">Pesanan Terkirim!</h2><p style="color:var(--text-light);margin-bottom:1.5rem">Tim kami akan menghubungi Anda via WhatsApp dalam 1x24 jam.</p><button class="btn btn-primary" onclick="closeSuccessModal()" style="width:auto;padding:0.75rem 2rem"><i class="fas fa-home"></i> Kembali</button></div>
+</div>
+
+<!-- MODAL PEMBAYARAN XENDIT (BARU) - iframe langsung di halaman, tidak buka tab baru -->
+<div class="success-modal-overlay" id="paymentModal" style="align-items:flex-start;padding:1rem 0">
+<div class="success-modal" style="max-width:480px;width:95%;padding:0;overflow:hidden;display:flex;flex-direction:column;height:90vh;max-height:700px">
+<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+<strong style="color:var(--primary-dark)"><i class="fas fa-lock"></i> Pembayaran Aman</strong>
+<button onclick="closePaymentModal()" style="background:none;border:none;font-size:1.3rem;color:var(--text-light);cursor:pointer;line-height:1">&times;</button>
+</div>
+<div id="paymentModalStatus" style="padding:0.6rem 1.25rem;background:#FFF3E0;font-size:0.8rem;color:#B45309;flex-shrink:0"><i class="fas fa-spinner fa-spin"></i> Menunggu pembayaran...</div>
+<iframe id="paymentIframe" style="flex:1;border:none;width:100%" src="about:blank"></iframe>
+</div>
+</div>
+
+<!-- MODAL SIMPAN DATA PELANGGAN (BARU) - muncul setelah pembayaran berhasil -->
+<div class="success-modal-overlay" id="saveCustomerModal">
+<div class="success-modal">
+<i class="fas fa-check-circle" style="font-size:4rem;color:var(--success);margin-bottom:1rem;display:block"></i>
+<h2 style="color:var(--primary-dark);margin-bottom:0.5rem">Pembayaran Berhasil!</h2>
+<p style="color:var(--text-light);margin-bottom:1.25rem">Pesanan Anda sedang diproses. Mau simpan data Anda supaya belanja lagi lain kali lebih gampang (isi otomatis)?</p>
+<div id="saveCustomerCodeResult" style="display:none;background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem">
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.3rem">Kode Anda (simpan baik-baik):</p>
+<p style="font-size:1.5rem;font-weight:700;color:var(--primary-dark);letter-spacing:2px;margin:0" id="saveCustomerCodeValue">------</p>
+</div>
+<div id="saveCustomerButtons" style="display:flex;gap:0.6rem;justify-content:center">
+<button class="btn btn-primary" onclick="doSaveCustomerProfile()" style="width:auto;padding:0.75rem 1.5rem"><i class="fas fa-save"></i> Ya, Simpan</button>
+<button class="btn btn-outline" onclick="closeSaveCustomerModal()" style="width:auto;padding:0.75rem 1.5rem">Tidak, Terima Kasih</button>
+</div>
+<button class="btn btn-primary" onclick="closeSaveCustomerModal()" style="width:auto;padding:0.75rem 2rem;display:none" id="saveCustomerDoneBtn"><i class="fas fa-home"></i> Kembali</button>
+</div>
 </div>
 
 <script>
@@ -404,6 +442,29 @@ const result=await response.json();
 return !!(result&&result.success);
 }catch(e){
 return false;
+}
+}
+
+// BARU: sama seperti syncToGAS di atas, tapi kembalikan HASIL LENGKAP (bukan
+// cuma true/false) - dibutuhkan untuk action baru yang perlu baca data balik
+// (invoiceUrl, kode pelanggan, status pembayaran, dst), bukan cuma tahu berhasil/tidak.
+async function callGASFull(action,data){
+try{
+const body=new URLSearchParams();
+body.append('action',action);
+for(let key in data){
+if(data[key]!==undefined&&data[key]!==null){
+body.append(key,typeof data[key]==='object'?JSON.stringify(data[key]):String(data[key]||''));
+}
+}
+const response=await Promise.race([
+fetch(CONFIG.GAS_URL,{method:'POST',body:body}),
+new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout')),20000))
+]);
+if(!response.ok)return{success:false,error:'Koneksi bermasalah'};
+return await response.json();
+}catch(e){
+return{success:false,error:e.message||'Koneksi bermasalah'};
 }
 }
 
@@ -869,21 +930,28 @@ size:item.sizeLabel||'',roastType:item.roastLabel||''
 await syncToGAS('addOrder',orderData);
 }
 
-if(finalTotal>0){
-await syncToGAS('updateLead',{id:leadId,transactionValue:finalTotal});
-}
+// BARU (fix bug): baris updateLead di sini SEBELUMNYA mengirim finalTotal
+// (harga SEBELUM diskon) - Code.gs menghitung ulang transactionValue dari
+// total mentah Orders (juga belum dipotong diskon), jadi diam-diam MENIMPA
+// nilai totalAfterDiscount yang sudah benar dari addLead di atas. Baris ini
+// DIHAPUS sepenuhnya - addLead saja sudah cukup, sudah menghitung diskon
+// dengan benar di server (lihat handleAddLead > couponCode).
 
 btn.disabled=false;
 btn.innerHTML=btnOriginal;
 
 if(leadOk){
-document.getElementById('successModal').classList.add('active');
 clearCart();
 ['buyerName','buyerEmail','buyerPhone','buyerStreet','buyerCity'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
-// Reset semua dropdown wilayah ke default
 resetWilayahDropdowns();
 document.querySelectorAll('.product-btn').forEach(b=>{b.className='product-btn';b.innerHTML='<i class="fas fa-cart-plus"></i> Tambah ke Keranjang'});
-showToast('Pesanan berhasil dikirim!','success');
+// BARU: simpan data pembeli sementara - dipakai KALAU nanti mereka pilih
+// "Ya, Simpan" di modal setelah pembayaran berhasil.
+__lastOrderCustomerData={name:name,email:email,phone:phone,namaJalanGedung:street,provinsi:province,kotaKabupaten:city,kecamatan:district,kelurahan:kelurahan,kodePos:postal};
+// BARU: langsung buka modal pembayaran Xendit (grand total = harga setelah
+// diskon + ongkir) - tidak perlu lagi nunggu admin kirim invoice manual.
+const grandTotal=Math.round(totalAfterDiscount+shippingCost);
+await openPaymentModal(leadId,grandTotal,email);
 }else{
 showToast('Pesanan disimpan lokal. Sinkronasi ke server akan dilakukan otomatis.','warning');
 }
@@ -891,6 +959,94 @@ if(typeof grecaptcha!=='undefined'){try{grecaptcha.reset()}catch(e){}}
 }
 
 function closeSuccessModal(){document.getElementById('successModal').classList.remove('active')}
+
+// ==================== PEMBAYARAN XENDIT INLINE (BARU) ====================
+let __lastOrderCustomerData=null;
+
+async function openPaymentModal(leadId,amount,buyerEmail){
+const invRes=await callGASFull('createXenditInvoicePublic',{leadId:leadId,amount:amount,buyerEmail:buyerEmail});
+if(!invRes.success){
+// Fallback: Xendit belum siap/gagal buat invoice - tetap terima pesanannya,
+// admin akan follow up manual seperti alur lama (bukan blocker checkout).
+showToast('Pesanan diterima! Admin akan menghubungi Anda untuk pembayaran.','warning');
+document.getElementById('successModal').classList.add('active');
+return;
+}
+document.getElementById('paymentIframe').src=invRes.invoiceUrl;
+document.getElementById('paymentModalStatus').innerHTML='<i class="fas fa-spinner fa-spin"></i> Menunggu pembayaran...';
+document.getElementById('paymentModal').classList.add('active');
+startPaymentPolling(leadId);
+}
+
+function closePaymentModal(){
+document.getElementById('paymentModal').classList.remove('active');
+document.getElementById('paymentIframe').src='about:blank';
+if(window.__currentPaymentPoll)clearInterval(window.__currentPaymentPoll);
+}
+
+// BARU: cek status pembayaran tiap 4 detik selama modal terbuka - begitu
+// webhook Xendit memproses pembayaran di belakang layar (lihat Code.gs),
+// halaman ini otomatis tahu tanpa pembeli perlu refresh manual.
+function startPaymentPolling(leadId){
+if(window.__currentPaymentPoll)clearInterval(window.__currentPaymentPoll);
+let pollCount=0;
+const maxPolls=150; // 150 x 4 detik = 10 menit maksimal
+window.__currentPaymentPoll=setInterval(async()=>{
+pollCount++;
+const res=await callGASFull('getLeadPaymentStatus',{leadId:leadId});
+if(res.success&&res.paymentstatus==='paid'){
+clearInterval(window.__currentPaymentPoll);
+closePaymentModal();
+openSaveCustomerModal();
+}else if(pollCount>=maxPolls){
+clearInterval(window.__currentPaymentPoll);
+document.getElementById('paymentModalStatus').innerHTML='<i class="fas fa-clock"></i> Sesi menunggu berakhir. Kalau sudah bayar, admin akan konfirmasi manual via WhatsApp.';
+}
+},4000);
+}
+
+// ==================== SIMPAN DATA PELANGGAN (BARU) ====================
+function openSaveCustomerModal(){
+document.getElementById('saveCustomerButtons').style.display='flex';
+document.getElementById('saveCustomerCodeResult').style.display='none';
+document.getElementById('saveCustomerDoneBtn').style.display='none';
+document.getElementById('saveCustomerModal').classList.add('active');
+}
+
+async function doSaveCustomerProfile(){
+if(!__lastOrderCustomerData){closeSaveCustomerModal();return}
+const res=await callGASFull('saveCustomerProfile',__lastOrderCustomerData);
+if(res.success){
+document.getElementById('saveCustomerCodeValue').textContent=res.code;
+document.getElementById('saveCustomerCodeResult').style.display='block';
+document.getElementById('saveCustomerButtons').style.display='none';
+document.getElementById('saveCustomerDoneBtn').style.display='inline-block';
+}else{
+showToast(res.error||'Gagal menyimpan data','error');
+}
+}
+
+function closeSaveCustomerModal(){
+document.getElementById('saveCustomerModal').classList.remove('active');
+document.getElementById('successModal').classList.add('active');
+}
+
+// BARU: isi otomatis field nama/email/HP/alamat jalan dari kode pelanggan yang
+// tersimpan. Field wilayah (provinsi/kota/kecamatan/kelurahan/kode pos) SENGAJA
+// tidak diisi otomatis - itu dropdown bertingkat yang perlu API call berurutan,
+// jadi pembeli tinggal pilih ulang manual (cuma beberapa klik, tidak berat).
+async function applyCustomerCode(){
+const code=document.getElementById('customerCodeInput').value.trim().toUpperCase();
+if(!code){showToast('Masukkan kode terlebih dahulu','error');return}
+const res=await callGASFull('getCustomerByCode',{code:code});
+if(!res.success){showToast(res.error||'Kode tidak ditemukan','error');return}
+const d=res.data;
+if(d.name)document.getElementById('buyerName').value=d.name;
+if(d.email)document.getElementById('buyerEmail').value=d.email;
+if(d.phone)document.getElementById('buyerPhone').value=d.phone;
+if(d.namaJalanGedung)document.getElementById('buyerStreet').value=d.namaJalanGedung;
+showToast('Data ditemukan! Nama, email, HP & alamat jalan terisi otomatis. Mohon pilih ulang Provinsi/Kota/Kecamatan/Kelurahan (dropdown wilayah).','success');
+}
 
 // ==================== API WILAYAH INDONESIA ====================
 const WILAYAH_API = 'https://www.emsifa.com/api-wilayah-indonesia/api';
