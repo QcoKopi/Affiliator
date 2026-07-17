@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCO WhatsApp Bot Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+--primary:#6B4F3A;--primary-light:#8B7355;--secondary:#D4A574;--accent:#C4956A;
+--bg:#F5F0EB;--card-bg:#FFFFFF;--text:#2D2D2D;--text-light:#6B6B6B;--border:#E0D5C8;
+--success:#4CAF50;--warning:#FF9800;--danger:#F44336;--info:#2196F3;--radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ===== Layar Login ===== */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary) 0%,#5A3F2E 100%)}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:500}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--card-bg);border-radius:16px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-box h2{color:var(--primary);font-size:1.15rem;margin-bottom:0.5rem}
+.modal-box p.hint{margin-bottom:1rem}
+.modal-box select,.modal-box input{width:100%;padding:0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.9rem;margin-bottom:0.75rem}
+.login-card{background:var(--card-bg);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-card h1{font-size:1.3rem;display:flex;align-items:center;gap:10px;margin-bottom:0.25rem;color:var(--primary)}
+.login-card p{color:var(--text-light);font-size:0.85rem;margin-bottom:1.5rem}
+.login-card input{width:100%;padding:0.85rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.95rem;margin-bottom:1rem}
+.login-card button{width:100%;padding:0.85rem;background:var(--primary);color:white;border:none;border-radius:8px;font-family:inherit;font-weight:600;font-size:0.95rem;cursor:pointer;transition:opacity 0.2s}
+.login-card button:hover{opacity:0.9}
+#loginError{color:var(--danger);font-size:0.85rem;margin-top:0.75rem;display:none}
+
+/* ===== App ===== */
+#app{display:none}
+.sidebar{position:fixed;left:0;top:0;width:250px;height:100vh;background:linear-gradient(180deg,var(--primary) 0%,#5A3F2E 100%);color:white;padding:24px 0;z-index:100;display:flex;flex-direction:column}
+.sidebar-header{padding:0 24px 24px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-header h1{font-size:19px;font-weight:700;display:flex;align-items:center;gap:10px}
+.sidebar-header h1 i{font-size:22px;color:var(--secondary)}
+.sidebar-header p{font-size:11px;opacity:0.65;margin-top:4px}
+.nav-menu{padding:16px 0}
+.nav-item{padding:13px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.2s;font-size:0.9rem;opacity:0.85}
+.nav-item:hover{background:rgba(255,255,255,0.08)}
+.nav-item.active{background:rgba(255,255,255,0.15);opacity:1;border-left:3px solid var(--secondary)}
+.nav-item i{width:18px;text-align:center}
+.main{margin-left:250px;padding:2rem 2.5rem;max-width:900px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.header h2{font-size:1.4rem;color:var(--primary)}
+.card{background:var(--card-bg);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;border:1px solid var(--border)}
+.card h3{font-size:1rem;margin-bottom:0.25rem}
+.card .hint{color:var(--text-light);font-size:0.82rem;margin-bottom:1rem}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-box{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center}
+.stat-box .num{font-size:1.8rem;font-weight:700;color:var(--primary)}
+.stat-box .label{font-size:0.8rem;color:var(--text-light);margin-top:0.25rem}
+textarea{width:100%;padding:0.9rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;line-height:1.5}
+button{cursor:pointer;font-family:inherit}
+.btn{padding:0.65rem 1.25rem;border:none;border-radius:8px;font-weight:600;font-size:0.85rem;transition:opacity 0.2s}
+.btn:hover{opacity:0.9}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary{background:var(--primary);color:white}
+.btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary)}
+.btn-danger{background:var(--danger);color:white}
+.badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;font-weight:600}
+.badge-default{background:#E8E8E8;color:var(--text-light)}
+.badge-custom{background:#E8F5E9;color:var(--success)}
+#promptStatus{margin-bottom:0.75rem}
+.toast{position:fixed;bottom:24px;right:24px;padding:0.9rem 1.4rem;border-radius:8px;color:white;font-size:0.9rem;font-weight:500;z-index:999;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+
+/* ===== Uji Coba Bot (chat) ===== */
+.chat-window{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);height:420px;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem}
+.chat-bubble{max-width:80%;padding:0.6rem 0.9rem;border-radius:12px;font-size:0.88rem;line-height:1.4;white-space:pre-wrap}
+.chat-bubble.user{align-self:flex-end;background:var(--primary);color:white;border-bottom-right-radius:2px}
+.chat-bubble.bot{align-self:flex-start;background:white;border:1px solid var(--border);border-bottom-left-radius:2px}
+.chat-bubble.system{align-self:center;background:transparent;color:var(--text-light);font-size:0.78rem;font-style:italic}
+.chat-input-row{display:flex;gap:0.6rem}
+.chat-input-row input{flex:1;padding:0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.9rem}
+
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.main{margin-left:0;padding:1.25rem}.stat-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen">
+<div class="login-card">
+<h1><i class="fab fa-whatsapp"></i> QCO Bot Admin</h1>
+<p>Masuk untuk kelola persona &amp; uji coba chatbot AI</p>
+<input type="password" id="loginPassword" placeholder="Password admin" onkeydown="if(event.key==='Enter')doLogin()">
+<button class="btn btn-primary" onclick="doLogin()">Masuk</button>
+<p id="loginError">Password salah.</p>
+</div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+<div class="sidebar">
+<div class="sidebar-header">
+<h1><i class="fab fa-whatsapp"></i> QCO Bot Admin</h1>
+<p>Asisten penjualan berbasis AI</p>
+</div>
+<div class="nav-menu">
+<div class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
+<div class="nav-item" data-section="persona" onclick="showSection('persona')"><i class="fas fa-robot"></i> Persona Bot</div>
+<div class="nav-item" data-section="testbot" onclick="showSection('testbot')"><i class="fas fa-comments"></i> Uji Coba Bot</div>
+<div class="nav-item" data-section="takeover" onclick="showSection('takeover')"><i class="fas fa-hand-paper"></i> Ambil Alih <span id="takeoverBadge" style="background:var(--danger);color:white;border-radius:10px;padding:1px 7px;font-size:0.7rem;margin-left:auto;display:none">0</span></div>
+<div class="nav-item" data-section="history" onclick="showSection('history')"><i class="fas fa-history"></i> Riwayat Eskalasi</div>
+<div class="nav-item" data-section="salesmgmt" onclick="showSection('salesmgmt')"><i class="fas fa-users"></i> Kelola Sales</div>
+</div>
+<div style="margin-top:auto;padding:16px 24px;border-top:1px solid rgba(255,255,255,0.1)">
+<div id="loggedInAs" style="font-size:0.78rem;opacity:0.7;margin-bottom:0.6rem"></div>
+<div class="nav-item" style="padding:10px 0;opacity:0.85" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Keluar</div>
+</div>
+</div>
+
+<div class="main">
+<div id="versionWarning" style="display:none;background:#FFF3E0;color:#8B5E00;border:1px solid #FFB74D;border-radius:8px;padding:0.8rem 1rem;margin-bottom:1rem;font-size:0.85rem"></div>
+
+<!-- Dashboard -->
+<div id="section-dashboard" class="section">
+<div class="header"><h2>Dashboard</h2><button class="btn btn-outline" id="btnRefreshStats" onclick="loadStats()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="stat-grid">
+<div class="stat-box"><div class="num" id="statTotal">-</div><div class="label">Total Order via WA</div></div>
+<div class="stat-box"><div class="num" id="statPending">-</div><div class="label">Menunggu Diproses</div></div>
+<div class="stat-box"><div class="num" id="statToday">-</div><div class="label">Order Hari Ini</div></div>
+</div>
+<div class="card">
+<h3>Tentang dashboard ini</h3>
+<p class="hint" style="margin-bottom:0">Order yang masuk lewat WhatsApp langsung muncul di panel admin utama (index.html) bersama order dari web — bukan di sini. Halaman ini khusus untuk kelola cara bot ini "berpikir" dan menjawab.</p>
+</div>
+</div>
+
+<!-- Persona Bot -->
+<div id="section-persona" class="section" style="display:none">
+<div class="header"><h2>Persona &amp; Aturan Bot</h2></div>
+<div class="card">
+<h3>System Prompt</h3>
+<p class="hint">Ini instruksi yang menentukan kepribadian, gaya bicara, dan aturan bot saat menjawab pembeli. Ubah kalimatnya untuk sesuaikan gaya jualan, tambah aturan baru, atau ganti kepribadian - tidak perlu edit kode.</p>
+<div id="promptStatus"></div>
+<textarea id="promptText" rows="18"></textarea>
+<div style="display:flex;gap:0.6rem;margin-top:1rem">
+<button class="btn btn-primary" id="btnSavePrompt" onclick="savePrompt()"><i class="fas fa-save"></i> Simpan Perubahan</button>
+<button class="btn btn-outline" onclick="resetPrompt()"><i class="fas fa-undo"></i> Kembalikan ke Bawaan</button>
+</div>
+</div>
+</div>
+
+<!-- Uji Coba Bot -->
+<div id="section-testbot" class="section" style="display:none">
+<div class="header"><h2>Uji Coba Bot</h2><button class="btn btn-outline" onclick="resetChatTest()"><i class="fas fa-broom"></i> Mulai Ulang</button></div>
+<div class="card">
+<p class="hint">Chat langsung dengan bot di sini untuk lihat bagaimana dia akan menjawab pembeli sungguhan - termasuk cek produk, hitung ongkir, sampai buat pesanan. <strong>Aman dicoba</strong>: kalau sampai submit order, itu akan benar-benar tercatat ke sistem (pakai nomor tes), jadi hindari selesaikan order sungguhan di sini kecuali memang mau tes itu juga.</p>
+<div class="chat-window" id="chatWindow">
+<div class="chat-bubble system">Ketik pesan di bawah untuk mulai uji coba percakapan</div>
+</div>
+<div class="chat-input-row">
+<input type="text" id="chatInput" placeholder="Ketik pesan seperti pembeli..." onkeydown="if(event.key==='Enter')sendTestMessage()">
+<button class="btn btn-primary" id="btnSendChat" onclick="sendTestMessage()"><i class="fas fa-paper-plane"></i></button>
+</div>
+</div>
+</div>
+
+<!-- Ambil Alih -->
+<div id="section-takeover" class="section" style="display:none">
+<div class="header"><h2>Ambil Alih Percakapan</h2><button class="btn btn-outline" id="btnRefreshTakeover" onclick="loadEscalatedList()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="card">
+<p class="hint">Daftar pembeli yang percakapannya sudah dialihkan bot ke Anda (komplain, pertanyaan di luar kemampuan bot, dll). Bot <strong>berhenti membalas otomatis</strong> ke nomor yang ada di sini - balas manual dari sini, atau klik "Kembalikan ke Bot" kalau sudah selesai.</p>
+<div id="escalatedList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
+</div>
+
+<div class="card" id="replyPanel" style="display:none">
+<h3 id="replyPanelTitle">Balas ke -</h3>
+<div class="chat-window" id="escalatedChatWindow"></div>
+<div class="chat-input-row">
+<input type="text" id="adminReplyInput" placeholder="Ketik balasan Anda..." onkeydown="if(event.key==='Enter')sendAdminReplyNow()">
+<button class="btn btn-primary" onclick="sendAdminReplyNow()"><i class="fas fa-paper-plane"></i></button>
+</div>
+<div style="margin-top:1rem;display:flex;gap:0.6rem">
+<button class="btn btn-primary" onclick="markResolvedFromReplyPanel()"><i class="fas fa-check-circle"></i> Tandai Selesai</button>
+<button class="btn btn-outline" onclick="resumeBotNow()"><i class="fas fa-robot"></i> Kembalikan ke Bot (tanpa tandai selesai)</button>
+</div>
+</div>
+</div>
+
+<!-- Riwayat Eskalasi -->
+<div id="section-history" class="section" style="display:none">
+<div class="header"><h2>Riwayat Eskalasi</h2><button class="btn btn-outline" id="btnRefreshHistory" onclick="loadEscalationHistory()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+<div class="card">
+<p class="hint">Semua eskalasi yang pernah terjadi - termasuk yang sudah selesai ditangani, oleh siapa, dan kapan. Berguna untuk memastikan tidak ada pembeli yang terlewat.</p>
+<div style="margin-bottom:1rem">
+<select id="historyFilter" class="form-input" style="max-width:220px;padding:0.5rem;border:1.5px solid var(--border);border-radius:8px" onchange="loadEscalationHistory()">
+<option value="all">Semua</option>
+<option value="open">Belum Selesai</option>
+<option value="resolved">Sudah Selesai</option>
+</select>
+</div>
+<div id="historyList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
+</div>
+</div>
+
+<!-- Kelola Sales (admin-only) -->
+<div id="section-salesmgmt" class="section" style="display:none">
+<div class="header"><h2>Kelola Sales/Marketing</h2></div>
+<div class="card">
+<p class="hint">Tambahkan staff di sini - tiap orang dapat password sendiri (tampil sekali saat dibuat/direset, salin & kirim langsung ke orangnya). Mereka login pakai password itu, dan sistem otomatis tahu identitasnya - tidak bisa mengaku jadi orang lain. Nomor WA wajib diisi supaya eskalasi & reminder bisa terkirim LANGSUNG ke orangnya, tidak perlu diteruskan admin manual.</p>
+<div style="display:flex;gap:0.6rem;margin-bottom:1.5rem">
+<input type="text" id="newSalesName" placeholder="Nama staff baru" style="flex:1.2">
+<input type="text" id="newSalesPhone" placeholder="No WA (contoh: 6281234567890)" style="flex:1">
+<button class="btn btn-primary" onclick="addSalesUser()" style="white-space:nowrap"><i class="fas fa-plus"></i> Tambah</button>
+</div>
+<div id="salesUsersList"><p style="color:var(--text-light);font-size:0.85rem">Memuat...</p></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Modal pilih identitas DIHAPUS - identitas sekarang otomatis dari password
+     individual yang dipakai login (lihat doLogin), bukan lagi dipilih bebas. -->
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+// ============================================================================
+// KONFIGURASI - GANTI URL INI ke deployment WA-Bot.gs Anda
+// ============================================================================
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjkW2OuIatPM3KK5HghbKgK9HaSAF7kKZhipAvQ78uMXJD92fI/exec';
+// BARU (verifikasi deployment): versi yang DIHARAPKAN (sesuai file WA-Bot.gs &
+// Code.gs yang dikirim BERSAMAAN dengan wa-admin.html ini). Kalau versi live
+// beda, berarti salah satu project belum di-redeploy - tampil peringatan otomatis.
+// BARU (fix desain): dulu SATU EXPECTED_VERSION dipakai buat bandingkan KEDUA
+// project - tapi Code.gs dan WA-Bot.gs tidak selalu berubah bersamaan, jadi
+// kalau cuma satu yang diupdate, yang satunya lagi salah kena tandai "ketinggalan"
+// padahal dia memang tidak berubah. Sekarang dipisah, masing-masing independen.
+const EXPECTED_CODE_VERSION = '2026-07-15-2300-promo-moved-to-main-app';
+const EXPECTED_WABOT_VERSION = '2026-07-16-0030-proactive-lead-warnings';
+
+let dashboardPassword = '';
+let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
+let currentTier = null;
+let currentSalesIdentity = null;
+
+function doLogin(){
+const pw = document.getElementById('loginPassword').value.trim();
+if(!pw){return}
+// Validasi dilakukan oleh server saat panggilan action pertama (getStats) -
+// kalau password salah, server yang menolak, bukan dicek di sini.
+dashboardPassword = pw;
+callAdminAction('getStats', {}).then(res=>{
+if(res.success){
+currentTier = res.tier;
+// REVISI (akuntabilitas sungguhan): identitas SEKARANG otomatis ditentukan
+// dari password yang dipakai login (server yang cocokkan ke staff mana),
+// bukan lagi dipilih bebas dari dropdown - supaya tidak bisa "mengaku" jadi
+// orang lain.
+currentSalesIdentity = res.identity || null;
+document.getElementById('loginScreen').style.display='none';
+document.getElementById('app').style.display='block';
+renderStats(res.stats);
+checkDeploymentVersion(res); // BARU (verifikasi deployment)
+applyTierVisibility();
+if(currentTier === 'admin'){
+loadPromptIntoUI();
+}
+loadEscalatedList();
+loadEscalationHistory();
+document.getElementById('loggedInAs').textContent = 'Masuk sebagai: ' + (currentSalesIdentity || (currentTier === 'admin' ? 'Admin' : 'Sales/Marketing'));
+}else{
+document.getElementById('loginError').style.display='block';
+dashboardPassword='';
+}
+}).catch(()=>{document.getElementById('loginError').style.display='block'});
+}
+
+// BARU (2 tingkat akses): sembunyikan menu yang bukan wewenang tier sales -
+// staff sales/marketing cuma perlu lihat Dashboard, Ambil Alih, dan Riwayat.
+function applyTierVisibility(){
+const adminOnlySections = ['persona', 'testbot', 'salesmgmt'];
+if(currentTier === 'sales'){
+adminOnlySections.forEach(id=>{
+const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
+if(nav) nav.style.display = 'none';
+});
+// Kalau sales login & lagi di section admin-only (tidak mungkin normalnya, tapi
+// jaga-jaga), lempar ke dashboard.
+showSection('dashboard');
+}else{
+adminOnlySections.forEach(id=>{
+const nav = document.querySelector('.nav-item[data-section="'+id+'"]');
+if(nav) nav.style.display = 'flex';
+});
+}
+}
+
+function doLogout(){
+if(!confirm('Keluar dari dashboard?')) return;
+dashboardPassword = '';
+currentTier = null;
+currentSalesIdentity = null;
+document.getElementById('app').style.display = 'none';
+document.getElementById('loginScreen').style.display = 'flex';
+document.getElementById('loginPassword').value = '';
+}
+
+// ==================== IDENTITAS SALES ====================
+// (showIdentityModal & confirmIdentity DIHAPUS - identitas sekarang otomatis
+// dari password individual yang dipakai login, lihat doLogin di atas)
+
+
+// ==================== KELOLA SALES (admin-only) ====================
+async function loadSalesUsersManagement(){
+const res = await callAdminAction('getSalesUsers', {});
+const container = document.getElementById('salesUsersList');
+if(!res.success){
+container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
+return;
+}
+if(res.users.length === 0){
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Belum ada staff terdaftar - tambahkan lewat form di atas.</p>';
+return;
+}
+container.innerHTML = res.users.map(u=>
+'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.5rem">'+
+'<span>'+u.name+' <small style="color:var(--text-light)">('+(u.phone||'no HP belum diisi')+')</small></span>'+
+'<div style="display:flex;gap:6px">'+
+'<button class="btn btn-sm btn-outline" onclick="showEditSalesUserModal(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\',\''+(u.phone||'')+'\')" title="Edit"><i class="fas fa-pen"></i></button>'+
+'<button class="btn btn-sm btn-outline" onclick="resetSalesUserPassword(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Reset password"><i class="fas fa-key"></i></button>'+
+'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger)" onclick="deactivateSalesUser(\''+u.id+'\',\''+u.name.replace(/'/g,"\\'")+'\')" title="Hapus"><i class="fas fa-trash-alt"></i></button>'+
+'</div>'+
+'</div>'
+).join('');
+}
+
+// BARU: tampilkan password yang baru dibuat/direset dalam kotak yang tetap
+// kelihatan sampai ditutup manual (bukan toast yang hilang sendiri dalam 3
+// detik) - supaya sempat disalin & dikirim ke orangnya.
+function showGeneratedPassword(name, password){
+const box = document.createElement('div');
+box.className = 'modal-overlay active';
+box.innerHTML = '<div class="modal-box">'+
+'<h2><i class="fas fa-key"></i> Password untuk '+name+'</h2>'+
+'<p class="hint">Salin dan kirimkan ke orangnya lewat chat pribadi/telepon - password ini TIDAK akan ditampilkan lagi setelah ditutup.</p>'+
+'<input type="text" readonly value="'+password+'" style="font-family:monospace;font-size:1.1rem;text-align:center;font-weight:600" onclick="this.select()">'+
+'<button class="btn btn-primary" style="width:100%" onclick="this.closest(\'.modal-overlay\').remove()">Sudah Disalin, Tutup</button>'+
+'</div>';
+document.body.appendChild(box);
+}
+
+// BARU: edit nama/nomor HP staff yang sudah terdaftar - password TIDAK berubah.
+function showEditSalesUserModal(id, currentName, currentPhone){
+const box = document.createElement('div');
+box.className = 'modal-overlay active';
+box.innerHTML = '<div class="modal-box">'+
+'<h2><i class="fas fa-pen"></i> Edit Staff</h2>'+
+'<p class="hint">Password TIDAK ikut berubah - kalau perlu ganti password, pakai tombol reset password (ikon kunci) terpisah.</p>'+
+'<input type="text" id="editSalesName" value="'+currentName+'" placeholder="Nama">'+
+'<input type="text" id="editSalesPhone" value="'+currentPhone+'" placeholder="No WA">'+
+'<button class="btn btn-primary" style="width:100%" onclick="submitEditSalesUser(\''+id+'\')">Simpan Perubahan</button>'+
+'</div>';
+document.body.appendChild(box);
+}
+
+async function submitEditSalesUser(id){
+const name = document.getElementById('editSalesName').value.trim();
+const phone = document.getElementById('editSalesPhone').value.trim();
+if(!name || !phone){showToast('Nama dan nomor WA wajib diisi', 'error'); return}
+const res = await callAdminAction('editSalesUser', {id: id, name: name, phone: phone});
+if(res.success){
+document.querySelector('.modal-overlay.active').remove();
+showToast('Perubahan tersimpan', 'success');
+loadSalesUsersManagement();
+}else{
+showToast(res.error || 'Gagal menyimpan perubahan', 'error');
+}
+}
+
+async function addSalesUser(){
+const name = document.getElementById('newSalesName').value.trim();
+const phone = document.getElementById('newSalesPhone').value.trim();
+if(!name){showToast('Nama wajib diisi', 'error'); return}
+if(!phone){showToast('Nomor WA wajib diisi', 'error'); return}
+const res = await callAdminAction('saveSalesUser', {name: name, phone: phone});
+if(res.success){
+document.getElementById('newSalesName').value = '';
+document.getElementById('newSalesPhone').value = '';
+loadSalesUsersManagement();
+showGeneratedPassword(res.name, res.password);
+}else{
+showToast(res.error || 'Gagal menambahkan', 'error');
+}
+}
+
+async function resetSalesUserPassword(id, name){
+if(!confirm('Reset password untuk "'+name+'"? Password lama otomatis tidak berlaku lagi.')) return;
+const res = await callAdminAction('resetSalesUserPassword', {id: id});
+if(res.success){
+showGeneratedPassword(name, res.password);
+}else{
+showToast(res.error || 'Gagal reset password', 'error');
+}
+}
+
+async function deactivateSalesUser(id, name){
+if(!confirm('Hapus "'+name+'" dari daftar? Riwayat eskalasi yang sudah tercatat atas nama ini TIDAK akan berubah, tapi orang ini tidak akan bisa login lagi.')) return;
+const res = await callAdminAction('deleteSalesUser', {id: id});
+if(res.success){
+showToast('Staff dihapus dari daftar', 'success');
+loadSalesUsersManagement();
+}else{
+showToast(res.error || 'Gagal menghapus', 'error');
+}
+}
+
+
+// ==================== PEMANGGIL API ====================
+async function callAdminAction(action, extraParams){
+const params = Object.assign({action:action, dashboardPassword:dashboardPassword}, extraParams||{});
+const body = new URLSearchParams(params);
+try{
+const res = await fetch(GAS_API_URL, {method:'POST', body: body});
+return await res.json();
+}catch(e){
+return {success:false, error:'Gagal menghubungi server. Cek GAS_API_URL di kode halaman ini.'};
+}
+}
+
+function showToast(msg, type){
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.className = 'toast ' + (type||'success');
+t.style.display = 'block';
+setTimeout(()=>{t.style.display='none'}, 3000);
+}
+
+// ==================== NAVIGASI ====================
+function showSection(id){
+document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+document.getElementById('section-'+id).style.display='block';
+document.querySelector('.nav-item[data-section="'+id+'"]').classList.add('active');
+if(id==='dashboard') loadStats();
+if(id==='takeover') loadEscalatedList();
+if(id==='history') loadEscalationHistory();
+if(id==='salesmgmt') loadSalesUsersManagement();
+}
+
+// ==================== DASHBOARD ====================
+// BARU: helper tampilkan status loading di tombol - supaya jelas kelihatan
+// tombol beneran ke-klik & sedang bekerja, bukan diam tanpa respons visual.
+function setButtonLoading(btnId, isLoading){
+const btn = document.getElementById(btnId);
+if(!btn) return;
+if(isLoading){
+btn.dataset.originalHtml = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+}else{
+btn.disabled = false;
+if(btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+}
+}
+
+async function loadStats(){
+setButtonLoading('btnRefreshStats', true);
+const res = await callAdminAction('getStats', {});
+if(res.success) renderStats(res.stats);
+setButtonLoading('btnRefreshStats', false);
+}
+function renderStats(stats){
+document.getElementById('statTotal').textContent = stats.totalOrders || 0;
+document.getElementById('statPending').textContent = stats.pending || 0;
+document.getElementById('statToday').textContent = stats.today || 0;
+}
+
+// BARU (verifikasi deployment): bandingkan versi live (dikirim WA-Bot.gs lewat
+// getStats) dengan versi yang diharapkan masing-masing project (EXPECTED_CODE_VERSION
+// & EXPECTED_WABOT_VERSION, independen satu sama lain) - kalau beda, tampilkan
+// peringatan supaya tidak bingung kenapa fitur baru "tidak muncul"/error aneh
+// padahal sudah update file.
+function checkDeploymentVersion(res){
+const banner = document.getElementById('versionWarning');
+const problems = [];
+if(res.waBotVersion && res.waBotVersion !== EXPECTED_WABOT_VERSION){
+problems.push('WA-Bot.gs: live=' + res.waBotVersion + ', seharusnya=' + EXPECTED_WABOT_VERSION);
+}
+if(res.mainGasVersion && res.mainGasVersion !== EXPECTED_CODE_VERSION){
+problems.push('Code.gs: live=' + res.mainGasVersion + ', seharusnya=' + EXPECTED_CODE_VERSION);
+}
+if(problems.length > 0){
+banner.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <strong>Ada project yang belum di-redeploy versi terbaru!</strong><br>' + problems.join('<br>') + '<br>Redeploy dari Apps Script editor: Deploy > Manage deployments > edit > New version > Deploy.';
+banner.style.display = 'block';
+}else{
+banner.style.display = 'none';
+}
+}
+
+// ==================== PERSONA BOT ====================
+async function loadPromptIntoUI(){
+const res = await callAdminAction('getSystemPrompt', {});
+if(!res.success) return;
+document.getElementById('promptText').value = res.prompt;
+document.getElementById('promptStatus').innerHTML = res.isDefault
+? '<span class="badge badge-default">Memakai persona bawaan</span>'
+: '<span class="badge badge-custom">Memakai persona custom</span>';
+}
+
+async function savePrompt(){
+const prompt = document.getElementById('promptText').value.trim();
+const btn = document.getElementById('btnSavePrompt');
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+const res = await callAdminAction('saveSystemPrompt', {prompt: prompt});
+btn.disabled = false;
+btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+if(res.success){
+showToast('Persona bot berhasil disimpan', 'success');
+loadPromptIntoUI();
+}else{
+showToast(res.error || 'Gagal menyimpan', 'error');
+}
+}
+
+async function resetPrompt(){
+if(!confirm('Kembalikan ke persona bawaan? Perubahan custom akan hilang.')) return;
+const res = await callAdminAction('resetSystemPrompt', {});
+if(res.success){
+showToast('Dikembalikan ke persona bawaan', 'success');
+loadPromptIntoUI();
+}else{
+showToast(res.error || 'Gagal reset', 'error');
+}
+}
+
+// (Fungsi promo DIHAPUS - sudah dipindah ke index.html/sistem utama)
+
+// ==================== AMBIL ALIH PERCAKAPAN ====================
+let selectedTakeoverPhone = null;
+let escalatedConversationsCache = [];
+
+// BARU: ubah satu pesan format Claude (bisa string biasa, atau array content
+// block untuk giliran assistant/tool) jadi teks polos yang enak dibaca admin.
+function extractMessageText(msg){
+if(typeof msg.content === 'string') return msg.content;
+if(!Array.isArray(msg.content)) return '(kosong)';
+return msg.content.map(block=>{
+if(block.type==='text') return block.text;
+if(block.type==='tool_use') return '[memanggil: '+block.name+']';
+if(block.type==='tool_result') return '[hasil sistem: '+String(block.content).substring(0,80)+'...]';
+return '';
+}).filter(Boolean).join(' ') || '(kosong)';
+}
+
+async function loadEscalatedList(){
+setButtonLoading('btnRefreshTakeover', true);
+const res = await callAdminAction('getEscalatedConversations', {});
+setButtonLoading('btnRefreshTakeover', false);
+console.log('[Ambil Alih] respons dari server:', res); // BARU: buat debug cepat lewat F12 Console
+const container = document.getElementById('escalatedList');
+if(!res.success){
+container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
+return;
+}
+escalatedConversationsCache = res.conversations || [];
+
+const badge = document.getElementById('takeoverBadge');
+if(escalatedConversationsCache.length > 0){
+badge.textContent = escalatedConversationsCache.length;
+badge.style.display = 'inline-block';
+}else{
+badge.style.display = 'none';
+}
+
+if(escalatedConversationsCache.length === 0){
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Tidak ada percakapan yang perlu ditangani manual saat ini \u2705</p>';
+document.getElementById('replyPanel').style.display = 'none';
+return;
+}
+
+container.innerHTML = escalatedConversationsCache.map(c=>{
+const lastMsg = c.session.claudeMessages && c.session.claudeMessages.length
+? extractMessageText(c.session.claudeMessages[c.session.claudeMessages.length-1])
+: '(belum ada pesan)';
+const since = c.session.takeoverSince ? new Date(c.session.takeoverSince).toLocaleString('id-ID') : '-';
+return '<div style="padding:0.9rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.6rem;cursor:pointer" onclick="openEscalatedChat(\''+c.phone+'\')">'+
+'<strong>'+c.phone+'</strong> <small style="color:var(--text-light)">sejak '+since+'</small>'+
+'<div style="font-size:0.85rem;color:var(--text-light);margin-top:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lastMsg+'</div>'+
+'</div>';
+}).join('');
+}
+
+function openEscalatedChat(phone){
+selectedTakeoverPhone = phone;
+const convo = escalatedConversationsCache.find(c=>c.phone===phone);
+if(!convo) return;
+
+document.getElementById('replyPanelTitle').textContent = 'Balas ke ' + phone;
+const win = document.getElementById('escalatedChatWindow');
+const messages = convo.session.claudeMessages || [];
+win.innerHTML = messages.map(m=>{
+const cls = m.role==='user' ? 'user' : 'bot';
+return '<div class="chat-bubble '+cls+'">'+extractMessageText(m).replace(/</g,'&lt;')+'</div>';
+}).join('') || '<div class="chat-bubble system">Belum ada riwayat pesan</div>';
+win.scrollTop = win.scrollHeight;
+
+document.getElementById('replyPanel').style.display = 'block';
+document.getElementById('adminReplyInput').focus();
+}
+
+async function sendAdminReplyNow(){
+if(!selectedTakeoverPhone) return;
+const input = document.getElementById('adminReplyInput');
+const message = input.value.trim();
+if(!message) return;
+input.value = '';
+
+const win = document.getElementById('escalatedChatWindow');
+const bubble = document.createElement('div');
+bubble.className = 'chat-bubble bot';
+bubble.textContent = message;
+win.appendChild(bubble);
+win.scrollTop = win.scrollHeight;
+
+const res = await callAdminAction('sendAdminReply', {phone: selectedTakeoverPhone, message: message});
+if(!res.success){
+showToast(res.error || 'Gagal mengirim balasan', 'error');
+}
+}
+
+async function resumeBotNow(){
+if(!selectedTakeoverPhone) return;
+if(!confirm('Kembalikan percakapan ini ke bot? Bot akan mulai membalas otomatis lagi ke nomor ini.')) return;
+const res = await callAdminAction('resumeBot', {phone: selectedTakeoverPhone});
+if(res.success){
+showToast('Dikembalikan ke bot', 'success');
+document.getElementById('replyPanel').style.display = 'none';
+selectedTakeoverPhone = null;
+loadEscalatedList();
+}else{
+showToast(res.error || 'Gagal', 'error');
+}
+}
+
+// BARU (log eskalasi permanen): tandai selesai LANGSUNG dari panel balas cepat -
+// wajib isi nama (akuntabilitas), otomatis kembalikan bot aktif juga.
+async function markResolvedFromReplyPanel(){
+if(!selectedTakeoverPhone) return;
+// BARU (registry sales): pakai identitas yang sudah dipilih saat login (tier
+// sales) otomatis - tidak perlu tanya ulang tiap kali. Admin (yang tidak lewat
+// alur pilih identitas) tetap ditanya manual seperti sebelumnya.
+let name = currentSalesIdentity;
+if(!name){
+name = prompt('Nama Anda (untuk catatan siapa yang menangani ini):');
+if(!name || !name.trim()) { showToast('Nama wajib diisi', 'error'); return; }
+name = name.trim();
+}
+const res = await callAdminAction('markEscalationResolved', {phone: selectedTakeoverPhone, resolvedBy: name});
+if(res.success){
+showToast('Ditandai selesai oleh ' + name, 'success');
+document.getElementById('replyPanel').style.display = 'none';
+selectedTakeoverPhone = null;
+loadEscalatedList();
+loadEscalationHistory();
+}else{
+showToast(res.error || 'Gagal', 'error');
+}
+}
+
+
+// ==================== RIWAYAT ESKALASI ====================
+async function loadEscalationHistory(){
+const filter = document.getElementById('historyFilter') ? document.getElementById('historyFilter').value : 'all';
+setButtonLoading('btnRefreshHistory', true);
+const res = await callAdminAction('getEscalationHistory', {filter: filter});
+setButtonLoading('btnRefreshHistory', false);
+const container = document.getElementById('historyList');
+if(!res.success){
+container.innerHTML = '<p style="color:var(--danger);font-size:0.85rem">Gagal memuat: '+(res.error||'')+'</p>';
+return;
+}
+if(res.escalations.length === 0){
+container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem">Tidak ada data</p>';
+return;
+}
+container.innerHTML = res.escalations.map(e=>{
+const isOpen = String(e.status).toLowerCase() === 'open';
+const badge = isOpen
+? '<span class="badge" style="background:#FFF3E0;color:var(--warning)">Belum Selesai</span>'
+: '<span class="badge badge-custom">Selesai</span>';
+const resolvedInfo = !isOpen ? '<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem">Ditangani oleh <strong>'+(e.resolvedby||'-')+'</strong> pada '+new Date(e.resolvedat).toLocaleString('id-ID')+'</div>' : '';
+return '<div style="padding:0.9rem;border:1px solid var(--border);border-radius:8px;margin-bottom:0.6rem">'+
+'<div style="display:flex;justify-content:space-between;align-items:start"><strong>'+e.phone+'</strong>'+badge+'</div>'+
+'<div style="font-size:0.85rem;color:var(--text-light);margin-top:0.3rem">'+(e.reason||'-')+'</div>'+
+'<div style="font-size:0.78rem;color:var(--text-light);margin-top:0.3rem">Eskalasi: '+new Date(e.escalatedat).toLocaleString('id-ID')+'</div>'+
+resolvedInfo+
+'</div>';
+}).join('');
+}
+
+
+// ==================== UJI COBA BOT ====================
+function addChatBubble(text, cls){
+const win = document.getElementById('chatWindow');
+const div = document.createElement('div');
+div.className = 'chat-bubble ' + cls;
+div.textContent = text;
+win.appendChild(div);
+win.scrollTop = win.scrollHeight;
+}
+
+function resetChatTest(){
+chatHistory = null;
+document.getElementById('chatWindow').innerHTML = '<div class="chat-bubble system">Percakapan direset - ketik pesan baru untuk mulai lagi</div>';
+}
+
+async function sendTestMessage(){
+const input = document.getElementById('chatInput');
+const message = input.value.trim();
+if(!message) return;
+input.value = '';
+addChatBubble(message, 'user');
+
+const btn = document.getElementById('btnSendChat');
+btn.disabled = true;
+addChatBubble('Mengetik...', 'system');
+
+const params = {message: message};
+if(chatHistory) params.history = chatHistory;
+
+const res = await callAdminAction('testAgentReply', params);
+
+// Hapus bubble "Mengetik..." terakhir
+const win = document.getElementById('chatWindow');
+win.removeChild(win.lastChild);
+btn.disabled = false;
+
+if(res.success){
+addChatBubble(res.reply, 'bot');
+chatHistory = res.history;
+}else{
+addChatBubble('[Error] ' + (res.error || 'Gagal dapat balasan'), 'system');
+}
+}
+</script>
+</body>
+</html>
