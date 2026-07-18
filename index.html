@@ -720,6 +720,57 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 </div>
 </div>
 
+<!-- BARU: BONUS TARGET & PERINGKAT PENJUALAN BULANAN (admin-only) -->
+<div class="card admin-only" id="bonusCard">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-trophy"></i> Bonus Target &amp; Peringkat Penjualan</div>
+<button class="btn btn-outline btn-sm" onclick="toggleBonusSettings()"><i class="fas fa-cog"></i> Pengaturan</button>
+</div>
+<div class="card-body">
+
+<div id="bonusSettingsPanel" style="display:none;background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem">
+<p style="font-weight:600;font-size:0.85rem;margin-bottom:0.75rem"><i class="fas fa-sliders-h"></i> Pengaturan Bonus</p>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Target Penjualan/Bulan (Rp)</label>
+<input type="number" class="form-input" id="bonusSettingThreshold" min="1" step="100000">
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Persen Bonus Target (%)</label>
+<input type="number" class="form-input" id="bonusSettingPercent" min="0.1" max="100" step="0.1">
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Tanggal Hitung Otomatis</label>
+<select class="form-input" id="bonusSettingCalcDay"></select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Bonus Peringkat 1 (Rp)</label>
+<input type="number" class="form-input" id="bonusSettingTop1" min="0" step="10000">
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Bonus Peringkat 2 (Rp)</label>
+<input type="number" class="form-input" id="bonusSettingTop2" min="0" step="10000">
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Bonus Peringkat 3 (Rp)</label>
+<input type="number" class="form-input" id="bonusSettingTop3" min="0" step="10000">
+</div>
+</div>
+<button class="btn btn-primary btn-sm" onclick="saveBonusSettings()"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+</div>
+
+<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Bonus dihitung otomatis tiap bulan (tanggal bisa diatur di atas) untuk bulan yang baru selesai. Reset bersih tiap bulan - tidak ada akumulasi dari bulan sebelumnya.</p>
+
+<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+<input type="month" class="form-input" id="bonusManualMonth" style="width:180px">
+<button class="btn btn-primary btn-sm" onclick="runBonusCalculationManual()"><i class="fas fa-calculator"></i> Hitung Bonus Bulan Ini</button>
+</div>
+<p id="bonusManualResult" style="font-size:0.82rem;margin-top:0.5rem"></p>
+</div>
+</div>
+
 <div class="card">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-money-bill-wave"></i> Daftar Pencairan Komisi Affiliator</div>
@@ -2536,6 +2587,67 @@ document.getElementById('payoutMinimumLabel').textContent = 'Rp ' + formatNumber
 loadEligiblePayouts(); // refresh daftar - batas minimum mungkin berubah
 } else {
 showToast(res.error || 'Gagal menyimpan pengaturan', 'error');
+}
+}
+
+// ==================== BONUS TARGET & PERINGKAT PENJUALAN (BARU) ====================
+var bonusSettingsLoaded = false;
+
+async function toggleBonusSettings() {
+var panel = document.getElementById('bonusSettingsPanel');
+var isOpening = panel.style.display === 'none';
+panel.style.display = isOpening ? 'block' : 'none';
+if (isOpening && !bonusSettingsLoaded) {
+var daySelect = document.getElementById('bonusSettingCalcDay');
+for (var d = 1; d <= 28; d++) {
+var opt = document.createElement('option');
+opt.value = d;
+opt.textContent = 'Tanggal ' + d;
+daySelect.appendChild(opt);
+}
+var res = await callGASPost('getBonusSettings', {});
+if (res.success) {
+document.getElementById('bonusSettingThreshold').value = res.data.targetThreshold;
+document.getElementById('bonusSettingPercent').value = res.data.targetPercent;
+document.getElementById('bonusSettingTop1').value = res.data.top1Amount;
+document.getElementById('bonusSettingTop2').value = res.data.top2Amount;
+document.getElementById('bonusSettingTop3').value = res.data.top3Amount;
+document.getElementById('bonusSettingCalcDay').value = res.data.calcDay;
+}
+bonusSettingsLoaded = true;
+}
+}
+
+async function saveBonusSettings() {
+var payload = {
+targetThreshold: document.getElementById('bonusSettingThreshold').value,
+targetPercent: document.getElementById('bonusSettingPercent').value,
+top1Amount: document.getElementById('bonusSettingTop1').value,
+top2Amount: document.getElementById('bonusSettingTop2').value,
+top3Amount: document.getElementById('bonusSettingTop3').value,
+calcDay: document.getElementById('bonusSettingCalcDay').value
+};
+var res = await callGASPost('saveBonusSettings', payload);
+if (res.success) {
+showToast('Pengaturan bonus tersimpan', 'success');
+} else {
+showToast(res.error || 'Gagal menyimpan pengaturan', 'error');
+}
+}
+
+async function runBonusCalculationManual() {
+var monthInput = document.getElementById('bonusManualMonth').value; // format YYYY-MM dari <input type="month">
+var resultEl = document.getElementById('bonusManualResult');
+resultEl.textContent = 'Menghitung...';
+resultEl.style.color = 'var(--text-light)';
+var res = await callGASPost('runMonthlyBonusCalculation', monthInput ? { yearMonth: monthInput } : {});
+if (res.success) {
+resultEl.textContent = '✅ Selesai - ' + res.affiliatesRewarded + ' affiliator dapat bonus (' + res.entriesCreated + ' entri komisi dibuat) untuk bulan ' + res.yearMonth + '.';
+resultEl.style.color = 'var(--success)';
+refreshAllData();
+} else {
+resultEl.textContent = '❌ ' + (res.error || 'Gagal menghitung bonus');
+resultEl.style.color = 'var(--danger)';
 }
 }
 
