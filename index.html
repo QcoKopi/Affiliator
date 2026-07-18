@@ -639,10 +639,37 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card admin-only" id="payoutCard">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-hand-holding-usd"></i> Payout Komisi (Xendit)</div>
+<div style="display:flex;gap:0.5rem">
+<button class="btn btn-outline btn-sm" onclick="togglePayoutSettings()"><i class="fas fa-cog"></i> Pengaturan</button>
 <button class="btn btn-outline btn-sm" onclick="loadEligiblePayouts()"><i class="fas fa-sync-alt"></i> Refresh</button>
 </div>
+</div>
 <div class="card-body">
-<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Affiliator dengan komisi belum dibayar minimal Rp 100.000. Cek/perbaiki kode bank &amp; nomor rekening sebelum kirim - ini uang sungguhan, tidak bisa dibatalkan.</p>
+
+<!-- BARU: panel pengaturan batas minimum & jadwal reminder - tersembunyi default -->
+<div id="payoutSettingsPanel" style="display:none;background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem">
+<p style="font-weight:600;font-size:0.85rem;margin-bottom:0.75rem"><i class="fas fa-sliders-h"></i> Pengaturan Payout</p>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Batas Minimum Payout (Rp)</label>
+<input type="number" class="form-input" id="payoutSettingMinimum" min="1" step="1000">
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Hari Reminder</label>
+<select class="form-input" id="payoutSettingDay">
+<option value="0">Minggu</option><option value="1">Senin</option><option value="2">Selasa</option>
+<option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Jam Reminder</label>
+<select class="form-input" id="payoutSettingHour"></select>
+</div>
+</div>
+<button class="btn btn-primary btn-sm" onclick="savePayoutSettings()"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+</div>
+
+<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Affiliator dengan komisi belum dibayar minimal <span id="payoutMinimumLabel">Rp 100.000</span>. Cek/perbaiki kode bank &amp; nomor rekening sebelum kirim - ini uang sungguhan, tidak bisa dibatalkan.</p>
 <div class="table-container">
 <table class="data-table">
 <thead><tr><th>Affiliator</th><th>Jumlah</th><th>Kode Bank</th><th>No. Rekening</th><th>Nama Pemilik</th><th>Aksi</th></tr></thead>
@@ -2346,6 +2373,48 @@ var XENDIT_BANK_CODES_UI = [
 { code: 'SHOPEEPAY', label: 'ShopeePay (e-wallet)' }
 ];
 
+// BARU: panel pengaturan payout - batas minimum & jadwal reminder, bisa
+// diubah admin sendiri tanpa perlu minta edit kode lagi.
+var payoutSettingsLoaded = false;
+
+async function togglePayoutSettings() {
+var panel = document.getElementById('payoutSettingsPanel');
+var isOpening = panel.style.display === 'none';
+panel.style.display = isOpening ? 'block' : 'none';
+if (isOpening && !payoutSettingsLoaded) {
+// Isi dropdown jam (00-23) sekali saja
+var hourSelect = document.getElementById('payoutSettingHour');
+for (var h = 0; h < 24; h++) {
+var opt = document.createElement('option');
+opt.value = h;
+opt.textContent = (h < 10 ? '0' + h : h) + ':00';
+hourSelect.appendChild(opt);
+}
+var res = await callGASPost('getPayoutSettings', {});
+if (res.success) {
+document.getElementById('payoutSettingMinimum').value = res.data.minimumAmount;
+document.getElementById('payoutSettingDay').value = res.data.reminderDay;
+document.getElementById('payoutSettingHour').value = res.data.reminderHour;
+document.getElementById('payoutMinimumLabel').textContent = 'Rp ' + formatNumber(res.data.minimumAmount);
+}
+payoutSettingsLoaded = true;
+}
+}
+
+async function savePayoutSettings() {
+var minimumAmount = document.getElementById('payoutSettingMinimum').value;
+var reminderDay = document.getElementById('payoutSettingDay').value;
+var reminderHour = document.getElementById('payoutSettingHour').value;
+var res = await callGASPost('savePayoutSettings', { minimumAmount: minimumAmount, reminderDay: reminderDay, reminderHour: reminderHour });
+if (res.success) {
+showToast('Pengaturan payout tersimpan', 'success');
+document.getElementById('payoutMinimumLabel').textContent = 'Rp ' + formatNumber(minimumAmount);
+loadEligiblePayouts(); // refresh daftar - batas minimum mungkin berubah
+} else {
+showToast(res.error || 'Gagal menyimpan pengaturan', 'error');
+}
+}
+
 async function loadEligiblePayouts() {
 var tbody = document.getElementById('payoutBody');
 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
@@ -2440,11 +2509,15 @@ summaryHTML += '<p style="font-size:0.85rem;color:var(--text-light)">Tidak ada a
 summaryHTML += '<div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0.4rem">';
 for (var j = 0; j < summaryArr.length; j++) {
 var s = summaryArr[j];
-summaryHTML += '<div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;background:var(--card-bg);padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:0.85rem;flex-wrap:wrap">';
-summaryHTML += '<span style="font-weight:600">' + escapeHtml(s.name) + '</span>';
+// BARU: sorot & tandai affiliator yang unpaid-nya sudah capai minimum payout
+// (Rp 100.000) - supaya kelihatan langsung tanpa perlu hitung manual di
+// antara data yang banyak.
+var isEligible = s.unpaid >= 100000;
+summaryHTML += '<div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;background:' + (isEligible ? '#FFF9E6' : 'var(--card-bg)') + ';padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1.5px solid ' + (isEligible ? '#F0C930' : 'var(--border)') + ';font-size:0.85rem;flex-wrap:wrap">';
+summaryHTML += '<span style="font-weight:600">' + escapeHtml(s.name) + (isEligible ? ' <span style="background:#F0C930;color:#5C4A00;font-size:0.68rem;padding:0.15rem 0.45rem;border-radius:10px;font-weight:700;margin-left:0.3rem"><i class="fas fa-hand-holding-usd"></i> Siap Payout</span>' : '') + '</span>';
 summaryHTML += '<span style="display:flex;gap:0.75rem;font-size:0.8rem">';
 summaryHTML += '<span style="color:var(--success)"><i class="fas fa-check-circle"></i> Rp ' + formatNumber(s.paid) + '</span>';
-summaryHTML += '<span style="color:var(--warning)"><i class="fas fa-clock"></i> Rp ' + formatNumber(s.unpaid) + '</span>';
+summaryHTML += '<span style="color:' + (isEligible ? '#B8860B' : 'var(--warning)') + ';font-weight:' + (isEligible ? '700' : '400') + '"><i class="fas fa-clock"></i> Rp ' + formatNumber(s.unpaid) + '</span>';
 summaryHTML += '<strong style="color:var(--primary-dark)">Total: Rp ' + formatNumber(s.total) + '</strong>';
 summaryHTML += '</span></div>';
 }
