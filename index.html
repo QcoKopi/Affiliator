@@ -498,6 +498,17 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <p style="font-size:1.3rem;font-weight:700;color:var(--primary-dark);margin:0.25rem 0">Rp <span id="commInfoAmount">0</span></p>
 <p style="font-size:0.8rem;color:var(--text-light);margin:0"><span id="commInfoPaid">Dibayar: Rp 0</span> | <span id="commInfoUnpaid">Belum dibayar: Rp 0</span></p>
 </div>
+
+<!-- BARU: LEADERBOARD TOP 5 AFFILIATOR (nama tersamar) -->
+<div class="card" id="topAffiliateCard" style="display:none;margin-top:1.25rem">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-trophy" style="color:#F0C930"></i> 5 Affiliator Komisi Tertinggi</div>
+</div>
+<div class="card-body">
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.75rem"><i class="fas fa-gift"></i> Reward khusus untuk 5 besar - nama disamarkan untuk privasi.</p>
+<div id="topAffiliateList" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+</div>
+</div>
 <div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.75rem;border:1.5px solid var(--border)">
 <p style="margin:0 0 0.5rem 0;font-size:0.85rem"><i class="fas fa-calendar-alt" style="color:var(--primary-light)"></i> <strong>Jadwal Transfer:</strong></p>
 <ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:var(--text-light)">
@@ -618,6 +629,13 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="card-title"><i class="fas fa-shopping-cart"></i> Riwayat Transaksi Penjualan (Orders)</div>
 <div class="filter-bar">
 <input type="text" class="form-input" id="filterOrderSearch" placeholder="Cari pembeli/produk..." oninput="PaginationState.orders=1;renderOrders()" onkeyup="PaginationState.orders=1;renderOrders()" style="width:200px">
+<select class="form-input" id="filterOrderStatus" onchange="PaginationState.orders=1;renderOrders()" style="width:150px">
+<option value="">Semua Status</option>
+<option value="Pending">Pending</option>
+<option value="Diproses">Diproses</option>
+<option value="Dikirim">Dikirim</option>
+<option value="Diterima">Diterima</option>
+</select>
 <button class="btn btn-outline btn-sm" onclick="exportTableToCSV('orders')"><i class="fas fa-file-csv"></i> Export CSV</button>
 </div>
 </div>
@@ -1651,6 +1669,16 @@ var cic = document.getElementById('commInfoCard');
 if (cic) cic.style.display = 'none';
 }
 
+// BARU: leaderboard top 5 - cuma untuk affiliator (bukan admin), dimuat sekali
+// tiap render dashboard.
+if (currentUser && !currentUser.isAdmin) {
+var topCard = document.getElementById('topAffiliateCard');
+if (topCard) { topCard.style.display = ''; loadTopAffiliates(); }
+} else {
+var hideTopCard = document.getElementById('topAffiliateCard');
+if (hideTopCard) hideTopCard.style.display = 'none';
+}
+
 if (currentUser && !currentUser.isAdmin) {
 var myOrders = DATA.orders.filter(function(o) {
 var orderRef = String(o.referralcode || o.referralCode || '').toUpperCase();
@@ -2320,7 +2348,10 @@ function renderOrders() {
 if (!currentUser || !currentUser.isAdmin) return;
 const orderSearchEl = document.getElementById('filterOrderSearch');
 const orderSearch = orderSearchEl ? orderSearchEl.value.toLowerCase() : '';
+const orderStatusEl = document.getElementById('filterOrderStatus');
+const orderStatusFilter = orderStatusEl ? orderStatusEl.value : '';
 const filteredOrders = DATA.orders.filter(function(o) {
+if (orderStatusFilter && String(o.status || 'Pending') !== orderStatusFilter) return false;
 if (!orderSearch) return true;
 return String(o.buyername || o.buyerName || '').toLowerCase().indexOf(orderSearch) !== -1 || String(o.productname || o.productName || '').toLowerCase().indexOf(orderSearch) !== -1;
 });
@@ -2420,6 +2451,14 @@ var tbody = document.getElementById('payoutBody');
 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
 var res = await callGASPost('getEligibleAffiliatesForPayoutAction', {});
 if (!res.success) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Gagal memuat: ' + escapeHtml(res.error || '') + '</td></tr>'; return; }
+// BARU (fix): label batas minimum SEKARANG selalu ikut ter-update di sini juga -
+// sebelumnya cuma ter-update kalau panel Pengaturan sempat dibuka, jadi kalau
+// cuma klik Refresh, label bisa nyangkut nilai lama walau datanya sendiri
+// sebenarnya sudah benar (bikin terlihat seperti "belum update" padahal cuma
+// labelnya yang telat).
+if (res.minimumAmount !== undefined) {
+document.getElementById('payoutMinimumLabel').textContent = 'Rp ' + formatNumber(res.minimumAmount);
+}
 if (res.data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Tidak ada affiliator yang eligible saat ini</td></tr>'; return; }
 
 var bankOptions = XENDIT_BANK_CODES_UI.map(function(b) { return '<option value="' + b.code + '">' + b.label + '</option>'; }).join('');
@@ -2467,6 +2506,24 @@ refreshAllData();
 } else {
 showToast(res.error || 'Gagal mengirim payout', 'error');
 }
+}
+
+// BARU: muat leaderboard top 5 affiliator (nama tersamar) - dipanggil dari
+// dashboard affiliator.
+async function loadTopAffiliates() {
+var res = await callGASPost('getTopAffiliates', {});
+var container = document.getElementById('topAffiliateList');
+if (!res.success || !res.data || res.data.length === 0) {
+container.innerHTML = '<p style="text-align:center;color:var(--text-light);font-size:0.85rem;padding:0.5rem">Belum ada data</p>';
+return;
+}
+var medals = ['🥇', '🥈', '🥉', '4.', '5.'];
+container.innerHTML = res.data.map(function(row, idx) {
+return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:0.6rem 0.9rem;border-radius:var(--radius-sm);border:1px solid var(--border)">' +
+'<span style="font-weight:600"><span style="margin-right:0.5rem">' + medals[idx] + '</span>' + escapeHtml(row.maskedName) + '</span>' +
+'<span style="color:var(--primary-dark);font-weight:700;font-size:0.85rem">Rp ' + formatNumber(row.totalCommission) + '</span>' +
+'</div>';
+}).join('');
 }
 
 function renderCommissions() {
