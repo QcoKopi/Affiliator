@@ -193,6 +193,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 </div>
 </div>
 
+<!-- MODAL AJAKAN JADI AFFILIATOR (BARU) - cuma muncul untuk pembeli yang order TANPA link referral -->
+<div class="success-modal-overlay" id="affiliateInviteModal">
+<div class="success-modal">
+<i class="fas fa-hand-holding-usd" style="font-size:3.5rem;color:var(--primary);margin-bottom:1rem;display:block"></i>
+<h2 style="color:var(--primary-dark);margin-bottom:0.5rem">Mau Dapat Penghasilan Tambahan?</h2>
+<p style="color:var(--text-light);margin-bottom:1rem">Gabung jadi <strong>Affiliator QCO Kopi</strong> - gratis, tanpa syarat rumit!</p>
+<div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem;text-align:left">
+<p style="font-size:0.85rem;margin-bottom:0.5rem"><i class="fas fa-check-circle" style="color:var(--success)"></i> Komisi <strong>5%</strong> dari setiap orang yang belanja lewat link Anda</p>
+<p style="font-size:0.85rem;margin-bottom:0.5rem"><i class="fas fa-check-circle" style="color:var(--success)"></i> Tinggal share link ke WhatsApp/Instagram/TikTok, tidak perlu jualan aktif</p>
+<p style="font-size:0.85rem;margin-bottom:0"><i class="fas fa-check-circle" style="color:var(--success)"></i> Pendaftaran gratis, komisi ditransfer rutin</p>
+</div>
+<div style="display:flex;gap:0.6rem;justify-content:center">
+<a href="/index.html" target="_blank" class="btn btn-primary" style="width:auto;padding:0.75rem 1.5rem;text-decoration:none"><i class="fas fa-user-plus"></i> Daftar Sekarang</a>
+<button class="btn btn-outline" onclick="closeAffiliateInviteModal()" style="width:auto;padding:0.75rem 1.5rem">Nanti Saja</button>
+</div>
+</div>
+</div>
+
 <script>
 // Force HTTPS
 if(window.location.protocol==='http:'&&window.location.hostname==='affiliate.qcoid.com'){
@@ -948,6 +966,10 @@ document.querySelectorAll('.product-btn').forEach(b=>{b.className='product-btn';
 // BARU: simpan data pembeli sementara - dipakai KALAU nanti mereka pilih
 // "Ya, Simpan" di modal setelah pembayaran berhasil.
 __lastOrderCustomerData={name:name,email:email,phone:phone,namaJalanGedung:street,provinsi:province,kotaKabupaten:city,kecamatan:district,kelurahan:kelurahan,kodePos:postal};
+// BARU: simpan juga apakah order ini datang TANPA referral - dipakai nanti
+// buat tawarkan jadi affiliator setelah pembayaran berhasil (poin permintaan:
+// leads yang tidak lewat affiliator ditawari peluang jadi affiliator).
+__lastOrderHadReferral = !!refCode;
 // BARU: langsung buka modal pembayaran Xendit (grand total = harga setelah
 // diskon + ongkir) - tidak perlu lagi nunggu admin kirim invoice manual.
 const grandTotal=Math.round(totalAfterDiscount+shippingCost);
@@ -962,6 +984,7 @@ function closeSuccessModal(){document.getElementById('successModal').classList.r
 
 // ==================== PEMBAYARAN XENDIT INLINE (BARU) ====================
 let __lastOrderCustomerData=null;
+let __lastOrderHadReferral=true;
 
 async function openPaymentModal(leadId,amount,buyerEmail){
 const invRes=await callGASFull('createXenditInvoicePublic',{leadId:leadId,amount:amount,buyerEmail:buyerEmail});
@@ -1028,6 +1051,18 @@ showToast(res.error||'Gagal menyimpan data','error');
 
 function closeSaveCustomerModal(){
 document.getElementById('saveCustomerModal').classList.remove('active');
+// BARU: kalau order ini TANPA referral (bukan lewat link affiliator manapun),
+// tawarkan dulu jadi affiliator sebelum modal sukses akhir - kesempatan yang
+// pas karena mereka baru saja jadi pembeli sungguhan, jadi tahu produknya.
+if(!__lastOrderHadReferral){
+document.getElementById('affiliateInviteModal').classList.add('active');
+}else{
+document.getElementById('successModal').classList.add('active');
+}
+}
+
+function closeAffiliateInviteModal(){
+document.getElementById('affiliateInviteModal').classList.remove('active');
 document.getElementById('successModal').classList.add('active');
 }
 
@@ -1222,6 +1257,16 @@ if(postSel.options.length <= 1){
 postSel.outerHTML = '<input type="text" class="form-input" id="buyerPostal" placeholder="Kode Pos" onchange="calculateShipping()" required>';
 }else{
 postSel.disabled = false;
+// BARU (fix bug): kalau hasil pencarian CUMA SATU kode pos, otomatis
+// pilihkan (bukan dibiarkan di placeholder "Pilih Kode Pos...") - sebelumnya
+// pembeli harus SADAR untuk klik dropdown itu manual walau kelihatan sudah
+// "terisi", padahal browser tidak menganggap apa pun terpilih sampai
+// benar-benar diklik. Ini yang bikin ongkir sering "tidak keluar" padahal
+// kode pos kelihatan sudah ada isinya.
+if(postSel.options.length === 2){ // 1 placeholder + 1 hasil sungguhan
+postSel.value = postSel.options[1].value;
+calculateShipping();
+}
 }
 }catch(e){
 // Fallback: ganti select jadi input text
