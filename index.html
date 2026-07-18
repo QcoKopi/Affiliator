@@ -2299,7 +2299,17 @@ statusSelect += '<option value="' + statusOptions[si] + '"' + sel + '>' + status
 }
 statusSelect += '</select>';
 var resiBtn = ' <button class="btn btn-sm btn-outline" onclick="openResiModal(\'' + orderIdAttr + '\')" title="' + (o.resi ? 'Resi: ' + escapeHtml(o.resi) : 'Input No. Resi') + '" style="' + (o.resi ? 'color:var(--success);border-color:var(--success)' : '') + '"><i class="fas fa-truck"></i></button>';
-return '<tr><td>' + formatDate(o.date) + '</td><td>' + escapeHtml(o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + escapeHtml(o.qty) : '') + '</td><td><strong>' + escapeHtml(o.buyername || o.buyerName || '-') + '</strong></td><td>' + escapeHtml(o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + escapeHtml(o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + escapeHtml(alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + escapeHtml(o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + escapeHtml(shipStatus) + '</span></td><td>' + statusSelect + resiBtn + '</td></tr>';
+// BARU: tampilkan status kurir TERKINI dari Biteship (confirmed/allocated/
+// picked/dst) - supaya admin bisa cross-check manual apakah paket SUDAH
+// benar-benar diambil kurir atau belum, tanpa perlu buka dashboard Biteship
+// terpisah. Beda dari kolom "Status Order" di sebelah kiri (yang cuma
+// Pending/Diproses/Dikirim/Diterima - kategori bisnis internal kita).
+var courierStatusLabel = '';
+if (o.courierstatus) {
+var csColor = o.courierstatus === 'picked' ? 'var(--success)' : (o.courierstatus === 'cancelled' || o.courierstatus === 'rejected' ? 'var(--danger)' : 'var(--text-light)');
+courierStatusLabel = '<br><small style="color:' + csColor + '"><i class="fas fa-truck-loading"></i> Kurir: ' + escapeHtml(o.courierstatus) + '</small>';
+}
+return '<tr><td>' + formatDate(o.date) + '</td><td>' + escapeHtml(o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + escapeHtml(o.qty) : '') + '</td><td><strong>' + escapeHtml(o.buyername || o.buyerName || '-') + '</strong></td><td>' + escapeHtml(o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + escapeHtml(o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + escapeHtml(alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + escapeHtml(o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + escapeHtml(shipStatus) + '</span>' + courierStatusLabel + '</td><td>' + statusSelect + resiBtn + '</td></tr>';
 }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Tidak ada order yang cocok</td></tr>';
 var orderPgEl = document.getElementById('ordersPagination');
 if (orderPgEl) orderPgEl.innerHTML = paginationControlsHTML('orders', orderPg.page, orderPg.totalPages, orderPg.total);
