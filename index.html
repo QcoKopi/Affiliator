@@ -635,6 +635,23 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 
 <!-- COMMISSIONS -->
 <div id="page-commissions" class="page">
+<!-- BARU: PAYOUT KOMISI VIA XENDIT (admin-only) -->
+<div class="card admin-only" id="payoutCard">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-hand-holding-usd"></i> Payout Komisi (Xendit)</div>
+<button class="btn btn-outline btn-sm" onclick="loadEligiblePayouts()"><i class="fas fa-sync-alt"></i> Refresh</button>
+</div>
+<div class="card-body">
+<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Affiliator dengan komisi belum dibayar minimal Rp 100.000. Cek/perbaiki kode bank &amp; nomor rekening sebelum kirim - ini uang sungguhan, tidak bisa dibatalkan.</p>
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Affiliator</th><th>Jumlah</th><th>Kode Bank</th><th>No. Rekening</th><th>Nama Pemilik</th><th>Aksi</th></tr></thead>
+<tbody id="payoutBody"><tr><td colspan="6" style="text-align:center;color:var(--text-light)">Klik Refresh untuk memuat daftar</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+
 <div class="card">
 <div class="card-header">
 <div class="card-title"><i class="fas fa-money-bill-wave"></i> Daftar Pencairan Komisi Affiliator</div>
@@ -2316,6 +2333,73 @@ if (orderPgEl) orderPgEl.innerHTML = paginationControlsHTML('orders', orderPg.pa
 }
 
 // ==================== COMMISSIONS ====================
+// ==================== PAYOUT KOMISI VIA XENDIT (BARU) ====================
+var XENDIT_BANK_CODES_UI = [
+{ code: 'BCA', label: 'BCA' }, { code: 'MANDIRI', label: 'Mandiri' },
+{ code: 'BNI', label: 'BNI' }, { code: 'BRI', label: 'BRI' },
+{ code: 'PERMATA', label: 'Permata' }, { code: 'CIMB', label: 'CIMB Niaga' },
+{ code: 'BTN', label: 'BTN' }, { code: 'DANAMON', label: 'Danamon' },
+{ code: 'BSI', label: 'BSI' }, { code: 'SINARMAS', label: 'Sinarmas' },
+{ code: 'MAYBANK', label: 'Maybank' },
+{ code: 'OVO', label: 'OVO (e-wallet)' }, { code: 'DANA', label: 'DANA (e-wallet)' },
+{ code: 'GOPAY', label: 'GoPay (e-wallet)' }, { code: 'LINKAJA', label: 'LinkAja (e-wallet)' },
+{ code: 'SHOPEEPAY', label: 'ShopeePay (e-wallet)' }
+];
+
+async function loadEligiblePayouts() {
+var tbody = document.getElementById('payoutBody');
+tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
+var res = await callGASPost('getEligibleAffiliatesForPayoutAction', {});
+if (!res.success) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Gagal memuat: ' + escapeHtml(res.error || '') + '</td></tr>'; return; }
+if (res.data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">Tidak ada affiliator yang eligible saat ini</td></tr>'; return; }
+
+var bankOptions = XENDIT_BANK_CODES_UI.map(function(b) { return '<option value="' + b.code + '">' + b.label + '</option>'; }).join('');
+
+tbody.innerHTML = res.data.map(function(row) {
+var rid = escapeJsAttr(row.affiliatorId);
+var bankSelect = '<select id="payoutBank_' + escapeHtml(row.affiliatorId) + '" style="font-size:0.8rem;padding:0.3rem;border-radius:4px;border:1px solid var(--border)">' +
+'<option value="">-- pilih --</option>' + bankOptions + '</select>';
+return '<tr>' +
+'<td><strong>' + escapeHtml(row.name) + '</strong></td>' +
+'<td>Rp ' + formatNumber(row.totalUnpaid) + '</td>' +
+'<td>' + bankSelect + '</td>' +
+'<td><input type="text" class="form-input" id="payoutAcc_' + escapeHtml(row.affiliatorId) + '" value="' + escapeHtml(row.suggestedAccountNumber) + '" style="font-size:0.8rem;padding:0.3rem;width:130px"></td>' +
+'<td><input type="text" class="form-input" id="payoutName_' + escapeHtml(row.affiliatorId) + '" value="' + escapeHtml(row.name) + '" style="font-size:0.8rem;padding:0.3rem;width:130px"></td>' +
+'<td><button class="btn btn-sm btn-primary" onclick="sendPayout(\'' + rid + '\',' + row.totalUnpaid + ')"><i class="fas fa-paper-plane"></i> Kirim</button></td>' +
+'</tr>';
+}).join('');
+
+// BARU: coba pre-select bank yang berhasil ditebak (kalau ada) - admin tetap
+// wajib cek/konfirmasi sebelum kirim, ini cuma bantu isi awal.
+res.data.forEach(function(row) {
+if (row.suggestedBankCode) {
+var sel = document.getElementById('payoutBank_' + row.affiliatorId);
+if (sel) sel.value = row.suggestedBankCode;
+}
+});
+}
+
+async function sendPayout(affiliatorId, amount) {
+var bankCode = document.getElementById('payoutBank_' + affiliatorId).value;
+var accountNumber = document.getElementById('payoutAcc_' + affiliatorId).value.trim();
+var accountHolderName = document.getElementById('payoutName_' + affiliatorId).value.trim();
+
+if (!bankCode) { showToast('Pilih kode bank terlebih dahulu', 'error'); return; }
+if (!accountNumber) { showToast('Nomor rekening wajib diisi', 'error'); return; }
+if (!accountHolderName) { showToast('Nama pemilik rekening wajib diisi', 'error'); return; }
+
+if (!confirm('Kirim Rp ' + formatNumber(amount) + ' ke ' + accountHolderName + ' (' + bankCode + ' ' + accountNumber + ')?\n\nIni uang SUNGGUHAN dan TIDAK BISA dibatalkan setelah terkirim. Pastikan data sudah benar.')) return;
+
+var res = await callGASPost('sendCommissionPayout', { affiliatorId: affiliatorId, bankCode: bankCode, accountNumber: accountNumber, accountHolderName: accountHolderName, amount: amount });
+if (res.success) {
+showToast('Payout berhasil dikirim! ID: ' + res.disbursementId, 'success');
+loadEligiblePayouts();
+refreshAllData();
+} else {
+showToast(res.error || 'Gagal mengirim payout', 'error');
+}
+}
+
 function renderCommissions() {
 if (!currentUser) return;
 
