@@ -1664,10 +1664,12 @@ document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(tota
 var elPaidComm = document.getElementById('dashPaidCommInfo'); if (elPaidComm) elPaidComm.textContent = 'Sudah dibayar: Rp ' + formatNumber(totalPaidComm);
 
 // refLinkCard sudah DIPINDAH ke sidebar - tidak perlu di-handle di sini lagi
-if (!currentUser || currentUser.isAdmin) {
+// BARU (fix bug lama): sebelumnya cuma ada baris SEMBUNYIKAN untuk admin,
+// TIDAK PERNAH ada baris TAMPILKAN untuk affiliator - jadi card ini (dan
+// leaderboard yang saya taruh di dalamnya) selalu tersembunyi buat siapa pun,
+// bukan cuma soal deploy.
 var cic = document.getElementById('commInfoCard');
-if (cic) cic.style.display = 'none';
-}
+if (cic) cic.style.display = (!currentUser || currentUser.isAdmin) ? 'none' : '';
 
 // BARU: leaderboard top 5 - cuma untuk affiliator (bukan admin), dimuat sekali
 // tiap render dashboard.
