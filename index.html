@@ -485,6 +485,7 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 </div>
 </div>
 
+<h3 style="color:var(--primary-dark);font-size:1.05rem;margin-bottom:0.75rem;margin-top:0.5rem"><i class="fas fa-chart-pie"></i> Rincian Transaksi Konsumen Anda</h3>
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
 <div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator - nilai total transaksinya"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">Rp 0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashTotalLeadsCount">0 leads</div></div>
@@ -792,8 +793,8 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 <div class="card-body">
 <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Ini isi modal "Panduan" yang otomatis muncul tiap affiliator login. Pakai <code>{{nama}}</code> di teks Informasi - otomatis diganti nama affiliator yang sedang login masing-masing.</p>
 <div class="form-group">
-<label class="form-label">Bagian Informasi <small style="color:var(--text-light)">(sapaan/pengumuman, tampil di atas)</small></label>
-<textarea class="form-textarea" id="guideInfoEdit" rows="8" maxlength="3000" style="font-family:inherit"></textarea>
+<label class="form-label">Bagian Informasi <small style="color:var(--text-light)">(sapaan/pengumuman, tampil di atas dashboard - <strong>boleh pakai kode HTML</strong> untuk hasil lebih rapi, mis. <code>&lt;b&gt;tebal&lt;/b&gt;</code>, <code>&lt;br&gt;</code> ganti baris, <code>&lt;img src="..."&gt;</code> gambar, dll)</small></label>
+<textarea class="form-textarea" id="guideInfoEdit" rows="8" maxlength="3000" style="font-family:inherit" placeholder="Boleh teks biasa, atau kode HTML seperti &lt;b&gt;Selamat datang&lt;/b&gt;&lt;br&gt;Ada promo baru minggu ini!"></textarea>
 </div>
 <div class="form-group">
 <label class="form-label">Bagian Panduan <small style="color:var(--text-light)">(penjelasan cara pakai, tampil di bawah)</small></label>
@@ -801,6 +802,14 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 </div>
 <button class="btn btn-primary" id="btnSaveGuide" onclick="saveGuideContentForm()"><i class="fas fa-save"></i> Simpan Perubahan</button>
 <button class="btn btn-outline" onclick="previewGuideContent()" style="margin-left:0.5rem"><i class="fas fa-eye"></i> Lihat Preview</button>
+
+<!-- BARU: preview KHUSUS bagian Informasi (dirender sebagai HTML) - supaya
+admin bisa lihat hasil tampilan HTML-nya persis sebelum disimpan, karena
+bagian ini sekarang tampil di Dashboard (bukan lagi di modal Panduan). -->
+<div id="guideInfoPreviewBox" style="display:none;margin-top:1rem">
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.4rem"><i class="fas fa-eye"></i> Preview Bagian Informasi (tampilan sungguhan di Dashboard):</p>
+<div id="guideInfoPreviewContent" style="background:#E3F2FD;border-left:4px solid var(--info);border-radius:var(--radius-sm);padding:1rem;font-size:0.9rem;line-height:1.7"></div>
+</div>
 </div>
 </div>
 
@@ -1639,7 +1648,11 @@ async function loadDashInfo() {
 var content = await fetchGuideContent();
 var el = document.getElementById('dashInfoContent');
 if (!content || !el) return;
-el.textContent = personalizeGuideText(content.info);
+// BARU: pakai innerHTML (bukan textContent) - supaya kode HTML yang admin
+// tulis di Kelola Panduan (bold, gambar, warna, dll) benar-benar dirender,
+// bukan tampil sebagai tulisan mentah "<b>...</b>". Admin adalah user
+// tepercaya (bukan input publik), jadi aman render HTML apa adanya di sini.
+el.innerHTML = personalizeGuideText(content.info);
 }
 
 // BARU: muat & tampilkan kupon aktif di dashboard - untuk semua (admin & affiliator).
@@ -3136,6 +3149,10 @@ btn.innerHTML = originalHTML;
 function previewGuideContent() {
 var info = document.getElementById('guideInfoEdit').value;
 var panduan = document.getElementById('guidePanduanEdit').value;
+// BARU: preview Informasi ditampilkan sebagai HTML sungguhan (innerHTML), di
+// kotak inline khusus - supaya persis seperti tampilan di Dashboard nanti.
+document.getElementById('guideInfoPreviewContent').innerHTML = personalizeGuideText(info);
+document.getElementById('guideInfoPreviewBox').style.display = 'block';
 document.getElementById('guidePanduanSection').textContent = personalizeGuideText(panduan);
 document.getElementById('guideModal').classList.add('active');
 }
@@ -3230,6 +3247,14 @@ btn.innerHTML = originalHTML;
 
 // ==================== NAVIGATION & UTILITIES ====================
 function showPage(pageId) {
+// BARU: sidebar otomatis tertutup begitu menu dipilih - terutama penting di
+// mobile (sidebar biasanya menutupi konten sampai ditutup manual, jadi kalau
+// tidak auto-close, pembeli harus tutup dulu manual tiap kali pindah halaman).
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
+if (sidebarEl) sidebarEl.classList.remove('open');
+if (overlayEl) overlayEl.classList.remove('active');
+
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
 const targetPage = document.getElementById('page-' + pageId);
