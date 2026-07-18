@@ -467,6 +467,24 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="content">
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
+
+<!-- BARU: BAGIAN INFORMASI (sapaan/pengumuman) - PALING ATAS, dikelola lewat
+tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) -->
+<div class="card affiliator-only" id="dashInfoCard" style="display:none;margin-bottom:1.25rem;background:#E3F2FD;border-left:4px solid var(--info)">
+<div class="card-body" style="font-size:0.9rem;white-space:pre-wrap;line-height:1.7" id="dashInfoContent"></div>
+</div>
+
+<!-- LEADERBOARD TOP 5 AFFILIATOR (nama tersamar) -->
+<div class="card" id="topAffiliateCard" style="display:none;margin-bottom:1.25rem">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-trophy" style="color:#F0C930"></i> 5 Affiliator Komisi Tertinggi</div>
+</div>
+<div class="card-body">
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.75rem"><i class="fas fa-gift"></i> Reward khusus untuk 5 besar - nama disamarkan untuk privasi.</p>
+<div id="topAffiliateList" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+</div>
+</div>
+
 <div class="stats-grid">
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div class="stat-value" id="dashTotalAff">0</div><div class="stat-label">Total Affiliators</div></div>
 <div class="stat-card" title="Jumlah orang yang melakukan order lewat Link Affiliator - nilai total transaksinya"><div class="stat-icon orange"><i class="fas fa-address-book"></i></div><div class="stat-value" id="dashTotalLeads">Rp 0</div><div class="stat-label">Total Transaksi <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashTotalLeadsCount">0 leads</div></div>
@@ -479,44 +497,14 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 </div>
 <!-- Link Referral Anda sudah DIPINDAH ke sidebar menu (affiliator-only) -->
 
-<!-- ORDERS AFFILIATOR -->
-<div class="card" id="affOrdersCard" style="display:none">
+<!-- BARU: INFORMASI KUPON AKTIF -->
+<div class="card" id="dashCouponCard" style="margin-top:1.25rem">
 <div class="card-header">
-<div class="card-title"><i class="fas fa-shopping-bag" style="color:var(--primary-light)"></i> Pembelian dari Leads Anda</div>
-</div>
-<div class="card-body"></div>
-</div>
-
-<!-- INFO KOMISI AFFILIATOR -->
-<div class="card" id="commInfoCard" style="display:none">
-<div class="card-header">
-<div class="card-title"><i class="fas fa-info-circle" style="color:var(--info)"></i> Informasi Pembayaran Komisi</div>
-</div>
-<div class="card-body" style="font-size:0.9rem">
-<div style="background:#E3F2FD;border-radius:var(--radius-sm);padding:1rem;margin-bottom:0.75rem;border-left:4px solid var(--info)">
-<p style="margin:0"><i class="fas fa-money-check-alt"></i> Komisi Anda saat ini:</p>
-<p style="font-size:1.3rem;font-weight:700;color:var(--primary-dark);margin:0.25rem 0">Rp <span id="commInfoAmount">0</span></p>
-<p style="font-size:0.8rem;color:var(--text-light);margin:0"><span id="commInfoPaid">Dibayar: Rp 0</span> | <span id="commInfoUnpaid">Belum dibayar: Rp 0</span></p>
-</div>
-
-<!-- BARU: LEADERBOARD TOP 5 AFFILIATOR (nama tersamar) -->
-<div class="card" id="topAffiliateCard" style="display:none;margin-top:1.25rem">
-<div class="card-header">
-<div class="card-title"><i class="fas fa-trophy" style="color:#F0C930"></i> 5 Affiliator Komisi Tertinggi</div>
+<div class="card-title"><i class="fas fa-tags" style="color:var(--primary-light)"></i> Kupon Aktif</div>
 </div>
 <div class="card-body">
-<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.75rem"><i class="fas fa-gift"></i> Reward khusus untuk 5 besar - nama disamarkan untuk privasi.</p>
-<div id="topAffiliateList" style="display:flex;flex-direction:column;gap:0.5rem"></div>
-</div>
-</div>
-<div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.75rem;border:1.5px solid var(--border)">
-<p style="margin:0 0 0.5rem 0;font-size:0.85rem"><i class="fas fa-calendar-alt" style="color:var(--primary-light)"></i> <strong>Jadwal Transfer:</strong></p>
-<ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:var(--text-light)">
-<li>Setiap hari <strong>Jumat</strong></li>
-<li>Minimal akumulasi <strong>Rp 100.000</strong></li>
-<li>Transfer ke rekening bank yang terdaftar</li>
-</ul>
-</div>
+<p style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.75rem"><i class="fas fa-info-circle"></i> Promo yang sedang berjalan - bisa disebutkan ke calon pembeli.</p>
+<div id="dashCouponList" style="display:flex;flex-direction:column;gap:0.5rem"></div>
 </div>
 </div>
 
@@ -620,6 +608,16 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div id="leadsPagination"></div>
 </div>
 </div>
+
+<!-- BARU (dipindah dari Dashboard): Pembelian dari Leads Anda - khusus affiliator -->
+<div class="card" id="affOrdersCard" style="display:none;margin-top:1.25rem">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-shopping-bag" style="color:var(--primary-light)"></i> Pembelian dari Leads Anda</div>
+</div>
+<div class="card-body"></div>
+</div>
+
+</div>
 </div>
 
 <!-- ORDERS (Admin Only) -->
@@ -653,6 +651,30 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 
 <!-- COMMISSIONS -->
 <div id="page-commissions" class="page">
+
+<!-- BARU (dipindah dari Dashboard): Informasi Pembayaran Komisi - khusus affiliator -->
+<div class="card" id="commInfoCard" style="display:none">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-info-circle" style="color:var(--info)"></i> Informasi Pembayaran Komisi</div>
+</div>
+<div class="card-body" style="font-size:0.9rem">
+<div style="background:#E3F2FD;border-radius:var(--radius-sm);padding:1rem;margin-bottom:0.75rem;border-left:4px solid var(--info)">
+<p style="margin:0"><i class="fas fa-money-check-alt"></i> Komisi Anda saat ini:</p>
+<p style="font-size:1.3rem;font-weight:700;color:var(--primary-dark);margin:0.25rem 0">Rp <span id="commInfoAmount">0</span></p>
+<p style="font-size:0.8rem;color:var(--text-light);margin:0"><span id="commInfoPaid">Dibayar: Rp 0</span> | <span id="commInfoUnpaid">Belum dibayar: Rp 0</span></p>
+</div>
+
+<div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.75rem;border:1.5px solid var(--border)">
+<p style="margin:0 0 0.5rem 0;font-size:0.85rem"><i class="fas fa-calendar-alt" style="color:var(--primary-light)"></i> <strong>Jadwal Transfer:</strong></p>
+<ul style="margin:0;padding-left:1.2rem;font-size:0.8rem;color:var(--text-light)">
+<li>Setiap hari <strong>Jumat</strong></li>
+<li>Minimal akumulasi <strong>Rp 100.000</strong></li>
+<li>Transfer ke rekening bank yang terdaftar</li>
+</ul>
+</div>
+</div>
+</div>
+
 <!-- BARU: PAYOUT KOMISI VIA XENDIT (admin-only) -->
 <div class="card admin-only" id="payoutCard">
 <div class="card-header">
@@ -819,7 +841,6 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <div class="modal" style="max-width:560px">
 <div class="modal-header"><h3><i class="fas fa-book-open"></i> Panduan Affiliator</h3><button class="modal-close" onclick="closeModal('guideModal')">&times;</button></div>
 <div class="modal-body">
-<div id="guideInfoSection" style="background:#E3F2FD;border-left:4px solid var(--info);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;font-size:0.9rem;white-space:pre-wrap;line-height:1.7"></div>
 <div id="guidePanduanSection" style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-size:0.88rem;white-space:pre-wrap;line-height:1.7"></div>
 </div>
 <div class="modal-footer">
@@ -1612,6 +1633,83 @@ if (pageId === 'guideeditor') loadGuideEditorForm();
 applyRoleVisibility();
 }
 
+// BARU: muat Bagian Informasi (sapaan/pengumuman) dari Kelola Panduan - cuma
+// bagian "Informasi", ditampilkan inline di paling atas dashboard (bukan modal).
+async function loadDashInfo() {
+var content = await fetchGuideContent();
+var el = document.getElementById('dashInfoContent');
+if (!content || !el) return;
+el.textContent = personalizeGuideText(content.info);
+}
+
+// BARU: muat & tampilkan kupon aktif di dashboard - untuk semua (admin & affiliator).
+async function loadDashCoupons() {
+var container = document.getElementById('dashCouponList');
+if (!container) return;
+var res = await callGASPost('getActiveCouponsForDashboard', {});
+if (!res.success || !res.data || res.data.length === 0) {
+container.innerHTML = '<p style="text-align:center;color:var(--text-light);font-size:0.85rem;padding:0.5rem">Tidak ada kupon aktif saat ini</p>';
+return;
+}
+container.innerHTML = res.data.map(function(c) {
+var valueLabel = c.type === 'percent' ? (c.value + '%') : ('Rp ' + formatNumber(c.value));
+var expiryLabel = c.expirydate ? (' • berlaku s.d. ' + formatDate(c.expirydate)) : '';
+return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:0.6rem 0.9rem;border-radius:var(--radius-sm);border:1px solid var(--border)">' +
+'<span><code style="font-weight:700;color:var(--primary-dark)">' + escapeHtml(c.code) + '</code><span style="font-size:0.75rem;color:var(--text-light)">' + expiryLabel + '</span></span>' +
+'<span style="color:var(--success);font-weight:700;font-size:0.85rem">Diskon ' + valueLabel + '</span>' +
+'</div>';
+}).join('');
+}
+
+// BARU (dipindah dari renderDashboard): render "Pembelian dari Leads Anda" -
+// sekarang dipanggil dari halaman Leads (bukan Dashboard lagi).
+function renderAffOrdersCard() {
+var ordersCard = document.getElementById('affOrdersCard');
+if (!ordersCard) return;
+if (!currentUser || currentUser.isAdmin) { ordersCard.style.display = 'none'; return; }
+
+var myOrders = DATA.orders.filter(function(o) {
+var orderRef = String(o.referralcode || o.referralCode || '').toUpperCase();
+var myRef = String(currentUser.referralCode || currentUser.referralcode || '').toUpperCase();
+return orderRef === myRef;
+});
+ordersCard.style.display = '';
+if (myOrders.length === 0) {
+ordersCard.querySelector('.card-body').innerHTML = '<p style="text-align:center;color:var(--text-light);padding:1rem"><i class="fas fa-shopping-bag" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3"></i>Belum ada pembelian dari leads Anda</p>';
+} else {
+var ordersHTML = '<div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Pembeli</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Total</th></tr></thead><tbody>';
+for (var oi = 0; oi < myOrders.length; oi++) {
+var mo = myOrders[oi];
+var itemTotal = (parseFloat(mo.price) || 0) * (parseInt(mo.qty) || 1);
+ordersHTML += '<tr><td>' + formatDate(mo.date) + '</td><td>' + escapeHtml(mo.buyername || mo.buyerName || '-') + '</td><td>' + escapeHtml(mo.productname || mo.productName || '-') + '</td><td>Rp ' + formatNumber(mo.price) + '</td><td>' + escapeHtml(mo.qty || 1) + '</td><td>Rp ' + formatNumber(itemTotal) + '</td></tr>';
+}
+ordersHTML += '</tbody></table></div>';
+ordersCard.querySelector('.card-body').innerHTML = ordersHTML;
+}
+}
+
+// BARU (dipindah dari renderDashboard): render "Informasi Pembayaran Komisi" -
+// sekarang dipanggil dari halaman Komisi (bukan Dashboard lagi). Sekalian
+// memperbaiki bug lama: commInfoAmount/Paid/Unpaid sebelumnya TIDAK PERNAH
+// benar-benar diisi oleh kode mana pun (selalu nampilkan "0"), sekarang dihitung
+// dari DATA.commissions milik affiliator yang login.
+function renderCommInfoCard() {
+var cic = document.getElementById('commInfoCard');
+if (!cic) return;
+if (!currentUser || currentUser.isAdmin) { cic.style.display = 'none'; return; }
+cic.style.display = '';
+
+var myComm = DATA.commissions.filter(function(c) {
+return String(c.affiliatorid || c.affiliatorId || '') === String(currentUser.userId || currentUser.id || '');
+});
+var paid = myComm.filter(function(c) { return String(c.paid).toLowerCase().trim() === 'true'; }).reduce(function(s, c) { return s + (parseFloat(c.amount) || 0); }, 0);
+var unpaid = myComm.filter(function(c) { return String(c.paid).toLowerCase().trim() !== 'true'; }).reduce(function(s, c) { return s + (parseFloat(c.amount) || 0); }, 0);
+
+var elAmount = document.getElementById('commInfoAmount'); if (elAmount) elAmount.textContent = formatNumber(unpaid);
+var elPaid = document.getElementById('commInfoPaid'); if (elPaid) elPaid.textContent = 'Dibayar: Rp ' + formatNumber(paid);
+var elUnpaid = document.getElementById('commInfoUnpaid'); if (elUnpaid) elUnpaid.textContent = 'Belum dibayar: Rp ' + formatNumber(unpaid);
+}
+
 function renderDashboard() {
 if (!currentUser) return;
 const filteredLeads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
@@ -1664,13 +1762,6 @@ document.getElementById('dashTotalComm').textContent = 'Rp ' + formatNumber(tota
 var elPaidComm = document.getElementById('dashPaidCommInfo'); if (elPaidComm) elPaidComm.textContent = 'Sudah dibayar: Rp ' + formatNumber(totalPaidComm);
 
 // refLinkCard sudah DIPINDAH ke sidebar - tidak perlu di-handle di sini lagi
-// BARU (fix bug lama): sebelumnya cuma ada baris SEMBUNYIKAN untuk admin,
-// TIDAK PERNAH ada baris TAMPILKAN untuk affiliator - jadi card ini (dan
-// leaderboard yang saya taruh di dalamnya) selalu tersembunyi buat siapa pun,
-// bukan cuma soal deploy.
-var cic = document.getElementById('commInfoCard');
-if (cic) cic.style.display = (!currentUser || currentUser.isAdmin) ? 'none' : '';
-
 // BARU: leaderboard top 5 - cuma untuk affiliator (bukan admin), dimuat sekali
 // tiap render dashboard.
 if (currentUser && !currentUser.isAdmin) {
@@ -1681,32 +1772,18 @@ var hideTopCard = document.getElementById('topAffiliateCard');
 if (hideTopCard) hideTopCard.style.display = 'none';
 }
 
+// BARU: Bagian Informasi (sapaan/pengumuman) - PALING ATAS dashboard, khusus
+// affiliator, isinya dari "Kelola Panduan" (cuma bagian Informasi, bukan Panduan).
 if (currentUser && !currentUser.isAdmin) {
-var myOrders = DATA.orders.filter(function(o) {
-var orderRef = String(o.referralcode || o.referralCode || '').toUpperCase();
-var myRef = String(currentUser.referralCode || currentUser.referralcode || '').toUpperCase();
-return orderRef === myRef;
-});
-var ordersCard = document.getElementById('affOrdersCard');
-if (ordersCard) {
-ordersCard.style.display = '';
-if (myOrders.length === 0) {
-ordersCard.querySelector('.card-body').innerHTML = '<p style="text-align:center;color:var(--text-light);padding:1rem"><i class="fas fa-shopping-bag" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3"></i>Belum ada pembelian dari leads Anda</p>';
+var infoCard = document.getElementById('dashInfoCard');
+if (infoCard) { infoCard.style.display = ''; loadDashInfo(); }
 } else {
-var ordersHTML = '<div class="table-container"><table class="data-table"><thead><tr><th>Tanggal</th><th>Pembeli</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Total</th></tr></thead><tbody>';
-for (var oi = 0; oi < myOrders.length; oi++) {
-var mo = myOrders[oi];
-var itemTotal = (parseFloat(mo.price) || 0) * (parseInt(mo.qty) || 1);
-ordersHTML += '<tr><td>' + formatDate(mo.date) + '</td><td>' + escapeHtml(mo.buyername || mo.buyerName || '-') + '</td><td>' + escapeHtml(mo.productname || mo.productName || '-') + '</td><td>Rp ' + formatNumber(mo.price) + '</td><td>' + escapeHtml(mo.qty || 1) + '</td><td>Rp ' + formatNumber(itemTotal) + '</td></tr>';
+var hideInfoCard = document.getElementById('dashInfoCard');
+if (hideInfoCard) hideInfoCard.style.display = 'none';
 }
-ordersHTML += '</tbody></table></div>';
-ordersCard.querySelector('.card-body').innerHTML = ordersHTML;
-}
-}
-} else {
-var hideOrders = document.getElementById('affOrdersCard');
-if (hideOrders) hideOrders.style.display = 'none';
-}
+
+// BARU: Informasi Kupon Aktif - tampil untuk semua (admin & affiliator).
+loadDashCoupons();
 
 const recent = filteredLeads.slice(-5).reverse();
 document.getElementById('recentLeadsBody').innerHTML = recent.map(l => {
@@ -2124,6 +2201,7 @@ if (affPgEl) affPgEl.innerHTML = paginationControlsHTML('affiliators', affPg.pag
 // ==================== LEADS ====================
 function renderLeads() {
 if (!currentUser) return;
+renderAffOrdersCard();
 const statusFilter = document.getElementById('filterLeadStatus').value;
 const searchFilter = document.getElementById('filterLeadSearch').value.toLowerCase();
 
@@ -2530,6 +2608,7 @@ return '<div style="display:flex;justify-content:space-between;align-items:cente
 
 function renderCommissions() {
 if (!currentUser) return;
+renderCommInfoCard();
 
 // BARU: baca kolom pencarian SEKALI di sini, dipakai bersama untuk tabel maupun
 // ringkasan (sebelumnya ringkasan punya kolom cari+dropdown SENDIRI yang terpisah
@@ -2877,7 +2956,6 @@ return String(text || '').split('{{nama}}').join(name);
 async function openGuideModal() {
 var content = await fetchGuideContent();
 if (!content) { showToast('Gagal memuat konten panduan', 'error'); return; }
-document.getElementById('guideInfoSection').textContent = personalizeGuideText(content.info);
 document.getElementById('guidePanduanSection').textContent = personalizeGuideText(content.panduan);
 document.getElementById('guideModal').classList.add('active');
 }
@@ -3058,7 +3136,6 @@ btn.innerHTML = originalHTML;
 function previewGuideContent() {
 var info = document.getElementById('guideInfoEdit').value;
 var panduan = document.getElementById('guidePanduanEdit').value;
-document.getElementById('guideInfoSection').textContent = personalizeGuideText(info);
 document.getElementById('guidePanduanSection').textContent = personalizeGuideText(panduan);
 document.getElementById('guideModal').classList.add('active');
 }
