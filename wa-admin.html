@@ -137,7 +137,7 @@ button{cursor:pointer;font-family:inherit}
 <div class="header"><h2>Persona &amp; Aturan Bot</h2></div>
 <div class="card">
 <h3>System Prompt</h3>
-<p class="hint">Ini instruksi yang menentukan kepribadian, gaya bicara, dan aturan bot saat menjawab pembeli. Ubah kalimatnya untuk sesuaikan gaya jualan, tambah aturan baru, atau ganti kepribadian - tidak perlu edit kode.</p>
+<p class="hint">Ini instruksi yang menentukan kepribadian, gaya bicara, dan aturan bot saat menjawab pembeli. Ubah kalimatnya untuk sesuaikan gaya jualan, tambah aturan baru, atau ganti kepribadian - tidak perlu edit kode. Pakai <code>{{komisi}}</code> untuk sebut persentase komisi - otomatis diganti angka terkini dari menu Kelola Komisi dan Bonus, jadi kalau persentasenya berubah, tidak perlu edit prompt ini manual.</p>
 <div id="promptStatus"></div>
 <textarea id="promptText" rows="18"></textarea>
 <div style="display:flex;gap:0.6rem;margin-top:1rem">
@@ -235,8 +235,8 @@ const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzh4sVwyQXSRDW0hdjk
 // project - tapi Code.gs dan WA-Bot.gs tidak selalu berubah bersamaan, jadi
 // kalau cuma satu yang diupdate, yang satunya lagi salah kena tandai "ketinggalan"
 // padahal dia memang tidak berubah. Sekarang dipisah, masing-masing independen.
-const EXPECTED_CODE_VERSION = '2026-07-18-1000-ux-fixes-leaderboard-affiliate-invite';
-const EXPECTED_WABOT_VERSION = '2026-07-18-1000-ux-fixes-leaderboard-affiliate-invite';
+const EXPECTED_CODE_VERSION = '2026-08-03-0100-fix-xendit-iframe-redirect';
+const EXPECTED_WABOT_VERSION = '2026-07-19-0500-editable-commission-percent';
 
 let dashboardPassword = '';
 let chatHistory = null; // array pesan format Claude (JSON string), null = percakapan baru
