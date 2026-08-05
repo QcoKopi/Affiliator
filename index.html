@@ -493,7 +493,7 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 <div class="stat-card" title="Transaksi yang belum membayar order"><div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="dashPendingLeads">Rp 0</div><div class="stat-label">Transaksi Pending <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPendingLeadsCount">0 leads</div></div>
 <div class="stat-card" title="Transaksi yang tidak membayar order lebih dari 3x24 jam"><div class="stat-icon red"><i class="fas fa-user-times"></i></div><div class="stat-value" id="dashRejectedLeads">Rp 0</div><div class="stat-label">Transaksi Rejected <i class="fas fa-info-circle" style="font-size:0.7rem;opacity:0.6"></i></div><div style="font-size:0.7rem;color:var(--text-light)" id="dashRejectedLeadsCount">0 leads</div></div>
 <div class="stat-card admin-only"><div class="stat-icon purple"><i class="fas fa-shopping-cart"></i></div><div class="stat-value" id="dashTotalOrders">0</div><div class="stat-label">Total Orders</div></div>
-<div class="stat-card" title="Komisi yang masih harus dibayar ke affiliator (5% dari transaksi valid, dikurangi yang sudah dibayar)"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Komisi Belum Dibayar</div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPaidCommInfo">Sudah dibayar: Rp 0</div></div>
+<div class="stat-card" id="dashCommStatCard" title="Komisi yang masih harus dibayar ke affiliator (dikurangi yang sudah dibayar)"><div class="stat-icon red"><i class="fas fa-money-bill-wave"></i></div><div class="stat-value" id="dashTotalComm">Rp 0</div><div class="stat-label">Komisi Belum Dibayar</div><div style="font-size:0.7rem;color:var(--text-light)" id="dashPaidCommInfo">Sudah dibayar: Rp 0</div></div>
 <div class="stat-card admin-only"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-value" id="dashTotalProducts">0</div><div class="stat-label">Total Produk</div></div>
 </div>
 <!-- Link Referral Anda sudah DIPINDAH ke sidebar menu (affiliator-only) -->
@@ -723,13 +723,20 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 <!-- BARU: BONUS TARGET & PERINGKAT PENJUALAN BULANAN (admin-only) -->
 <div class="card admin-only" id="bonusCard">
 <div class="card-header">
-<div class="card-title"><i class="fas fa-trophy"></i> Bonus Target &amp; Peringkat Penjualan</div>
+<div class="card-title"><i class="fas fa-trophy"></i> Kelola Komisi dan Bonus</div>
 <button class="btn btn-outline btn-sm" onclick="toggleBonusSettings()"><i class="fas fa-cog"></i> Pengaturan</button>
 </div>
 <div class="card-body">
 
 <div id="bonusSettingsPanel" style="display:none;background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem">
-<p style="font-weight:600;font-size:0.85rem;margin-bottom:0.75rem"><i class="fas fa-sliders-h"></i> Pengaturan Bonus</p>
+<p style="font-weight:600;font-size:0.85rem;margin-bottom:0.75rem"><i class="fas fa-sliders-h"></i> Pengaturan Komisi &amp; Bonus</p>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label" style="font-size:0.78rem">Persentase Komisi Referral (%)</label>
+<input type="number" class="form-input" id="bonusSettingCommission" min="0.1" max="100" step="0.1">
+<small style="color:var(--text-light);font-size:0.72rem">Berlaku untuk semua transaksi baru &amp; teks yang menyebut persentase komisi di seluruh sistem</small>
+</div>
+</div>
 <div class="form-row">
 <div class="form-group">
 <label class="form-label" style="font-size:0.78rem">Target Penjualan/Bulan (Rp)</label>
@@ -1104,7 +1111,7 @@ bagian ini sekarang tampil di Dashboard (bukan lagi di modal Panduan). -->
 
 <span class="pasal-title">PASAL 3: PERHITUNGAN DAN TRANSFER KOMISI</span>
 <ul>
-<li><strong>Besaran Komisi:</strong> Anda berhak mendapatkan komisi sebesar <strong>5% (lima persen)</strong> dari nilai penjualan bersih (net sales value) atas transaksi yang berhasil melalui tautan atau kode unik Anda.</li>
+<li><strong>Besaran Komisi:</strong> Anda berhak mendapatkan komisi sebesar <strong id="termsCommissionPercent">5%</strong> dari nilai penjualan bersih (net sales value) atas transaksi yang berhasil melalui tautan atau kode unik Anda.</li>
 <li><strong>Jadwal Pembayaran:</strong> Komisi diakumulasikan dan ditransfer secara berkala ke rekening bank yang telah terverifikasi.</li>
 <li><strong>Pemotongan Pajak:</strong> Pembayaran komisi tunduk pada ketentuan perpajakan Indonesia, termasuk pemotongan PPh Pasal 21.</li>
 </ul>
@@ -1561,6 +1568,26 @@ return { success: false, error: err.message };
 }
 }
 
+// BARU (fix bug: data "kadang ada kadang tidak"): Apps Script kadang lambat/
+// timeout kalau beberapa permintaan ditembak BERSAMAAN (mis. syncAllData yang
+// minta users+leads+orders+commissions sekaligus) - kegagalan SESAAT seperti
+// ini sebelumnya membuat data terkait diam-diam TIDAK diupdate, tanpa pesan
+// error apa pun ke pengguna. Sekarang otomatis dicoba ulang sebelum benar-benar
+// menyerah - kegagalan sesaat jadi tidak pernah terlihat oleh pengguna sama sekali.
+async function fetchFromGASWithRetry(action, maxAttempts) {
+maxAttempts = maxAttempts || 3;
+var lastResult = null;
+for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+lastResult = await fetchFromGAS(action);
+if (lastResult.success) return lastResult;
+if (attempt < maxAttempts) {
+Debug.log('GAS RETRY:', action + ' - percobaan ' + attempt + ' gagal (' + lastResult.error + '), coba lagi...');
+await new Promise(function(resolve) { setTimeout(resolve, attempt * 800); }); // 800ms, lalu 1600ms
+}
+}
+return lastResult;
+}
+
 async function syncToGAS(action, data) {
 const iframe = document.getElementById('gasFrame');
 return new Promise((resolve) => {
@@ -1656,10 +1683,10 @@ async function syncAllData() {
 updateSyncStatus('syncing');
 
 const [usersRes, leadsRes, ordersRes, commsRes] = await Promise.all([
-fetchFromGAS('getUsers'),
-fetchFromGAS('getLeads'),
-fetchFromGAS('getOrders'),
-fetchFromGAS('getCommissions')
+fetchFromGASWithRetry('getUsers'),
+fetchFromGASWithRetry('getLeads'),
+fetchFromGASWithRetry('getOrders'),
+fetchFromGASWithRetry('getCommissions')
 ]);
 
 if (usersRes.success && Array.isArray(usersRes.data)) DATA.users = usersRes.data;
@@ -1667,9 +1694,23 @@ if (leadsRes.success && Array.isArray(leadsRes.data)) DATA.leads = leadsRes.data
 if (ordersRes.success && Array.isArray(ordersRes.data)) DATA.orders = ordersRes.data;
 if (commsRes.success && Array.isArray(commsRes.data)) DATA.commissions = commsRes.data;
 
+// BARU (fix bug: data "kadang ada kadang tidak" tanpa pesan apa pun): kalau
+// ADA bagian yang tetap gagal walau sudah dicoba ulang 3x, JANGAN diam saja -
+// beri tahu jelas supaya pengguna tahu harus refresh manual, bukan mengira
+// datanya memang kosong/hilang.
+var failedParts = [];
+if (!usersRes.success) failedParts.push('Affiliator');
+if (!leadsRes.success) failedParts.push('Leads');
+if (!ordersRes.success) failedParts.push('Orders');
+if (!commsRes.success) failedParts.push('Komisi');
+if (failedParts.length > 0) {
+showToast('Gagal memuat data: ' + failedParts.join(', ') + '. Coba klik Refresh lagi.', 'error');
+}
+
 if (currentUser && currentUser.isAdmin) {
-const pRes = await fetchFromGAS('getProducts');
+const pRes = await fetchFromGASWithRetry('getProducts');
 if (pRes.success && Array.isArray(pRes.data)) DATA.products = pRes.data;
+else showToast('Gagal memuat data Produk. Coba klik Refresh lagi.', 'error');
 }
 
 updateSyncStatus('synced');
@@ -1776,6 +1817,7 @@ var elUnpaid = document.getElementById('commInfoUnpaid'); if (elUnpaid) elUnpaid
 
 function renderDashboard() {
 if (!currentUser) return;
+applyCurrentCommissionPercent(); // BARU: pastikan tooltip komisi selalu tampilkan persentase terkini
 const filteredLeads = currentUser.isAdmin ? DATA.leads : DATA.leads.filter(l => (l.referralcode || l.referralCode) === currentUser.referralCode);
 const filteredCommissions = currentUser.isAdmin ? DATA.commissions : DATA.commissions.filter(c => (c.affiliatorid || c.affiliatorId) === currentUser.id);
 
@@ -2518,6 +2560,15 @@ statusSelect += '<option value="' + statusOptions[si] + '"' + sel + '>' + status
 }
 statusSelect += '</select>';
 var resiBtn = ' <button class="btn btn-sm btn-outline" onclick="openResiModal(\'' + orderIdAttr + '\')" title="' + (o.resi ? 'Resi: ' + escapeHtml(o.resi) : 'Input No. Resi') + '" style="' + (o.resi ? 'color:var(--success);border-color:var(--success)' : '') + '"><i class="fas fa-truck"></i></button>';
+// BARU: tombol khusus "Tandai Diterima" - cuma muncul kalau status SEKARANG
+// "Dikirim" (prasyarat wajar), supaya admin punya cara PASTI konfirmasi paket
+// sudah sampai walau Biteship tidak selalu kirim update status "delivered"
+// otomatis (fitur Proof of Delivery Biteship itu BERBAYAR per pengiriman -
+// ini alternatif gratis, cukup 1 klik, konsisten dengan tombol "Tandai Lunas").
+var receivedBtn = '';
+if (shipStatus === 'Dikirim') {
+receivedBtn = ' <button class="btn btn-sm btn-outline" onclick="markOrderReceived(\'' + orderIdAttr + '\')" title="Tandai Diterima" style="color:var(--success);border-color:var(--success)"><i class="fas fa-box-open"></i></button>';
+}
 // BARU: tampilkan status kurir TERKINI dari Biteship (confirmed/allocated/
 // picked/dst) - supaya admin bisa cross-check manual apakah paket SUDAH
 // benar-benar diambil kurir atau belum, tanpa perlu buka dashboard Biteship
@@ -2528,7 +2579,7 @@ if (o.courierstatus) {
 var csColor = o.courierstatus === 'picked' ? 'var(--success)' : (o.courierstatus === 'cancelled' || o.courierstatus === 'rejected' ? 'var(--danger)' : 'var(--text-light)');
 courierStatusLabel = '<br><small style="color:' + csColor + '"><i class="fas fa-truck-loading"></i> Kurir: ' + escapeHtml(o.courierstatus) + '</small>';
 }
-return '<tr><td>' + formatDate(o.date) + '</td><td>' + escapeHtml(o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + escapeHtml(o.qty) : '') + '</td><td><strong>' + escapeHtml(o.buyername || o.buyerName || '-') + '</strong></td><td>' + escapeHtml(o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + escapeHtml(o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + escapeHtml(alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + escapeHtml(o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + escapeHtml(shipStatus) + '</span>' + courierStatusLabel + '</td><td>' + statusSelect + resiBtn + '</td></tr>';
+return '<tr><td>' + formatDate(o.date) + '</td><td>' + escapeHtml(o.productname || o.productName || '-') + (o.qty > 1 ? ' x' + escapeHtml(o.qty) : '') + '</td><td><strong>' + escapeHtml(o.buyername || o.buyerName || '-') + '</strong></td><td>' + escapeHtml(o.buyerphone || o.buyerPhone || o.buyerwhatsapp || '-') + '<br><small>' + escapeHtml(o.buyeremail || o.buyerEmail || '') + '</small></td><td>' + escapeHtml(alamat || '-') + '</td><td>Rp ' + formatNumber(o.price || 0) + '</td><td><code>' + escapeHtml(o.referralcode || o.referralCode || '-') + '</code></td><td><span class="badge ' + statusClass + '">' + escapeHtml(shipStatus) + '</span>' + courierStatusLabel + '</td><td>' + statusSelect + resiBtn + receivedBtn + '</td></tr>';
 }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Tidak ada order yang cocok</td></tr>';
 var orderPgEl = document.getElementById('ordersPagination');
 if (orderPgEl) orderPgEl.innerHTML = paginationControlsHTML('orders', orderPg.page, orderPg.totalPages, orderPg.total);
@@ -2607,6 +2658,7 @@ daySelect.appendChild(opt);
 }
 var res = await callGASPost('getBonusSettings', {});
 if (res.success) {
+document.getElementById('bonusSettingCommission').value = res.data.commissionPercent;
 document.getElementById('bonusSettingThreshold').value = res.data.targetThreshold;
 document.getElementById('bonusSettingPercent').value = res.data.targetPercent;
 document.getElementById('bonusSettingTop1').value = res.data.top1Amount;
@@ -2620,6 +2672,7 @@ bonusSettingsLoaded = true;
 
 async function saveBonusSettings() {
 var payload = {
+commissionPercent: document.getElementById('bonusSettingCommission').value,
 targetThreshold: document.getElementById('bonusSettingThreshold').value,
 targetPercent: document.getElementById('bonusSettingPercent').value,
 top1Amount: document.getElementById('bonusSettingTop1').value,
@@ -2629,7 +2682,7 @@ calcDay: document.getElementById('bonusSettingCalcDay').value
 };
 var res = await callGASPost('saveBonusSettings', payload);
 if (res.success) {
-showToast('Pengaturan bonus tersimpan', 'success');
+showToast('Pengaturan komisi & bonus tersimpan', 'success');
 } else {
 showToast(res.error || 'Gagal menyimpan pengaturan', 'error');
 }
@@ -2654,8 +2707,16 @@ resultEl.style.color = 'var(--danger)';
 async function loadEligiblePayouts() {
 var tbody = document.getElementById('payoutBody');
 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat...</td></tr>';
-var res = await callGASPost('getEligibleAffiliatesForPayoutAction', {});
-if (!res.success) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Gagal memuat: ' + escapeHtml(res.error || '') + '</td></tr>'; return; }
+// BARU (fix bug "kadang ada kadang tidak"): coba ulang otomatis sampai 3x
+// kalau gagal - sebelumnya sekali gagal (mis. Apps Script lambat/timeout)
+// langsung berhenti dan tampil seolah error permanen padahal cuma sesaat.
+var res = null;
+for (var attempt = 1; attempt <= 3; attempt++) {
+res = await callGASPost('getEligibleAffiliatesForPayoutAction', {});
+if (res.success) break;
+if (attempt < 3) await new Promise(function(resolve) { setTimeout(resolve, attempt * 800); });
+}
+if (!res.success) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Gagal memuat setelah beberapa percobaan: ' + escapeHtml(res.error || '') + ' - coba klik Refresh lagi.</td></tr>'; return; }
 // BARU (fix): label batas minimum SEKARANG selalu ikut ter-update di sini juga -
 // sebelumnya cuma ter-update kalau panel Pengaturan sempat dibuka, jadi kalau
 // cuma klik Refresh, label bisa nyangkut nilai lama walau datanya sendiri
@@ -3688,6 +3749,25 @@ showToast('Gagal menyalin link', 'error');
 // ==================== QUICK UPDATE STATUS ORDER (Admin) ====================
 // FIX: onchange="quickUpdateOrderStatus(...)" pada dropdown status pengiriman
 // di halaman Orders sebelumnya tidak terdefinisi.
+// BARU: cara cepat 1-klik tandai order sudah diterima pembeli - dipakai kalau
+// Biteship tidak kirim update status "delivered" otomatis (fitur Proof of
+// Delivery mereka berbayar, tidak diaktifkan by default).
+async function markOrderReceived(orderId) {
+if (!confirm('Tandai order ini sudah diterima pembeli?')) return;
+try {
+var res = await callGASGet('updateOrderStatus', { id: orderId, status: 'Diterima' });
+if (res.success) {
+showToast('Order ditandai sudah diterima', 'success');
+await syncAllData();
+renderOrders();
+} else {
+showToast(res.error || 'Gagal update status', 'error');
+}
+} catch (err) {
+showToast('Koneksi terputus', 'error');
+}
+}
+
 async function quickUpdateOrderStatus(orderId) {
 var sel = document.getElementById('orderStatus_' + orderId);
 if (!sel) return;
@@ -4263,6 +4343,21 @@ document.getElementById('termsCheckboxWrapper').classList.remove('checked');
 document.getElementById('btnAgreeTerms').disabled = true;
 document.getElementById('termsProgressBar').style.width = '0%';
 document.getElementById('termsScroll').scrollTop = 0;
+applyCurrentCommissionPercent(); // BARU: pastikan angka komisi di T&C selalu terkini
+}
+
+// BARU: satu fungsi dipakai bersama untuk isi angka komisi TERKINI ke semua
+// tempat yang menampilkannya (T&C, tooltip Dashboard) - supaya kalau admin
+// ubah persentase di menu Kelola Komisi dan Bonus, SEMUA tempat ini otomatis
+// ikut berubah tanpa perlu edit teks manual satu-satu. Aman dipanggil sebelum
+// login (action publik, tidak butuh token).
+async function applyCurrentCommissionPercent() {
+var res = await callGASPost('getCommissionPercentPublic', {});
+var percent = (res && res.success && res.percent) ? res.percent : 5;
+var termsEl = document.getElementById('termsCommissionPercent');
+if (termsEl) termsEl.textContent = percent + '%';
+var dashEl = document.getElementById('dashCommStatCard');
+if (dashEl) dashEl.title = 'Komisi yang masih harus dibayar ke affiliator (' + percent + '% dari transaksi valid, dikurangi yang sudah dibayar)';
 }
 
 function updateTermsProgress() {
