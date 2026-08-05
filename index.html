@@ -415,6 +415,7 @@ Belum punya akun? <a href="#" class="register-link" onclick="openTermsModal();re
 <li><a onclick="showPage('leads')" data-page="leads"><i class="fas fa-address-book"></i> Leads</a></li>
 <li class="admin-only"><a onclick="showPage('orders')" data-page="orders"><i class="fas fa-shopping-cart"></i> Orders</a></li>
 <li><a onclick="showPage('commissions')" data-page="commissions"><i class="fas fa-money-bill-wave"></i> Komisi</a></li>
+<li class="admin-only"><a onclick="showPage('xenditledger')" data-page="xenditledger"><i class="fas fa-exchange-alt"></i> Lalu Lintas Xendit</a></li>
 <li class="admin-only"><a onclick="showPage('auditlog')" data-page="auditlog"><i class="fas fa-history"></i> Audit Trail</a></li>
 <li class="admin-only"><a onclick="showPage('coupons')" data-page="coupons"><i class="fas fa-tags"></i> Kupon Diskon</a></li>
 <li class="admin-only"><a onclick="showPage('guideeditor')" data-page="guideeditor"><i class="fas fa-edit"></i> Kelola Panduan</a></li>
@@ -794,6 +795,44 @@ tombol "Kelola Panduan" admin (cuma bagian "Informasi"-nya saja, bukan Panduan) 
 </table>
 </div>
 <div id="commissionsPagination"></div>
+</div>
+</div>
+</div>
+
+<!-- BARU: LALU LINTAS XENDIT - tabel gabungan uang masuk (pembayaran pembeli)
+dan uang keluar (pencairan komisi affiliator), difilter dalam satu tempat -
+supaya admin bisa lihat langsung tanpa buka dashboard Xendit terpisah. -->
+<div id="page-xenditledger" class="page">
+<div class="card">
+<div class="card-header">
+<div class="card-title"><i class="fas fa-exchange-alt"></i> Lalu Lintas Transaksi Xendit</div>
+</div>
+<div class="card-body">
+<p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem"><i class="fas fa-info-circle"></i> Gabungan semua transaksi yang pernah lewat Xendit - uang masuk (pembayaran pembeli) dan uang keluar (pencairan komisi affiliator) - dalam satu tabel, diambil dari data yang sudah tersinkron (tidak perlu buka Xendit terpisah).</p>
+
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
+<select class="form-input" id="filterLedgerType" style="width:auto;min-width:140px" onchange="renderXenditLedger()">
+<option value="">Semua Jenis</option>
+<option value="in">Masuk (Pembayaran)</option>
+<option value="out">Keluar (Komisi)</option>
+</select>
+<select class="form-input" id="filterLedgerStatus" style="width:auto;min-width:140px" onchange="renderXenditLedger()">
+<option value="">Semua Status</option>
+<option value="paid">Berhasil/Lunas</option>
+<option value="pending">Pending</option>
+<option value="expired">Kedaluwarsa</option>
+</select>
+<input type="text" class="form-input" id="filterLedgerSearch" placeholder="Cari nama pembeli/affiliator..." style="flex:1;min-width:200px" oninput="renderXenditLedger()">
+</div>
+
+<div style="background:var(--bg);border-radius:var(--radius-sm);padding:0.85rem;margin-bottom:1rem;border:1.5px solid var(--border);display:flex;gap:1.5rem;flex-wrap:wrap" id="ledgerSummaryBar"></div>
+
+<div class="table-container">
+<table class="data-table">
+<thead><tr><th>Tanggal</th><th>Jenis</th><th>Pihak Terkait</th><th>Jumlah</th><th>Status</th><th>Referensi</th><th>Aksi</th></tr></thead>
+<tbody id="xenditLedgerBody"><tr><td colspan="7" style="text-align:center;color:var(--text-light)">Memuat...</td></tr></tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -1741,6 +1780,7 @@ if (pageId === 'affiliators') renderAffiliators();
 if (pageId === 'leads') renderLeads();
 if (pageId === 'orders') renderOrders();
 if (pageId === 'commissions') renderCommissions();
+if (pageId === 'xenditledger') renderXenditLedger();
 if (pageId === 'auditlog') renderAuditLog();
 if (pageId === 'coupons') renderCoupons();
 if (pageId === 'guideeditor') loadGuideEditorForm();
@@ -2927,6 +2967,87 @@ var commPgEl = document.getElementById('commissionsPagination');
 if (commPgEl) commPgEl.innerHTML = paginationControlsHTML('commissions', commPg.page, commPg.totalPages, commPg.total);
 }
 
+// BARU: LALU LINTAS XENDIT - gabungan uang MASUK (Leads yang punya invoice
+// Xendit) dan uang KELUAR (Commissions yang dibayar via Xendit Disbursement)
+// jadi satu tabel dengan filter. Dihitung PENUH dari data yang sudah tersinkron
+// (DATA.leads & DATA.commissions) - tidak perlu action/network baru sama sekali.
+function renderXenditLedger() {
+if (!currentUser || !currentUser.isAdmin) return;
+
+var typeFilter = document.getElementById('filterLedgerType').value;
+var statusFilter = document.getElementById('filterLedgerStatus').value;
+var searchFilter = document.getElementById('filterLedgerSearch').value.toLowerCase();
+
+var rows = [];
+
+// Uang MASUK - Leads yang pernah punya invoice Xendit
+DATA.leads.forEach(function(l) {
+if (!l.xenditinvoiceid) return;
+var rawStatus = String(l.paymentstatus || '').toLowerCase();
+var normStatus = (rawStatus === 'paid') ? 'paid' : (rawStatus === 'expired') ? 'expired' : 'pending';
+rows.push({
+date: l.paidat || l.date || '',
+type: 'in',
+typeLabel: 'Masuk',
+party: l.name || '-',
+amount: parseFloat(l.transactionvalue || l.transactionValue) || 0,
+status: normStatus,
+statusLabel: { paid: 'Lunas', pending: 'Pending', expired: 'Kedaluwarsa' }[normStatus],
+reference: l.id,
+detailAction: 'checkXenditInvoiceStatus(\'' + escapeJsAttr(l.id) + '\')'
+});
+});
+
+// Uang KELUAR - Commissions yang dibayar via Xendit Disbursement
+DATA.commissions.forEach(function(c) {
+if (!c.xenditdisbursementid) return;
+var affId = c.affiliatorid || c.affiliatorId || '';
+var aff = DATA.users.find(function(u) { return String(u.id).trim() === String(affId).trim(); });
+rows.push({
+date: c.paiddate || c.date || '',
+type: 'out',
+typeLabel: 'Keluar',
+party: aff ? aff.name : (affId || '-'),
+amount: parseFloat(c.paidamount || c.amount) || 0,
+status: 'paid', // kalau xenditdisbursementid tersimpan, berarti sudah dikirim - status detail terkini lewat tombol Cek
+statusLabel: 'Terkirim',
+reference: c.id,
+detailAction: 'checkXenditDisbursementStatus(\'' + escapeJsAttr(c.xenditdisbursementid) + '\')'
+});
+});
+
+// Filter
+if (typeFilter) rows = rows.filter(function(r) { return r.type === typeFilter; });
+if (statusFilter) rows = rows.filter(function(r) { return r.status === statusFilter; });
+if (searchFilter) rows = rows.filter(function(r) { return String(r.party).toLowerCase().indexOf(searchFilter) !== -1; });
+
+// Urutkan terbaru dulu
+rows.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+// Ringkasan
+var totalIn = rows.filter(function(r) { return r.type === 'in' && r.status === 'paid'; }).reduce(function(s, r) { return s + r.amount; }, 0);
+var totalOut = rows.filter(function(r) { return r.type === 'out'; }).reduce(function(s, r) { return s + r.amount; }, 0);
+document.getElementById('ledgerSummaryBar').innerHTML =
+'<div><span style="color:var(--text-light);font-size:0.8rem">Total Masuk (lunas)</span><br><strong style="color:var(--success);font-size:1.1rem">Rp ' + formatNumber(totalIn) + '</strong></div>' +
+'<div><span style="color:var(--text-light);font-size:0.8rem">Total Keluar</span><br><strong style="color:var(--danger);font-size:1.1rem">Rp ' + formatNumber(totalOut) + '</strong></div>' +
+'<div><span style="color:var(--text-light);font-size:0.8rem">Jumlah Transaksi</span><br><strong style="font-size:1.1rem">' + rows.length + '</strong></div>';
+
+var statusColors = { paid: 'var(--success)', pending: 'var(--warning)', expired: 'var(--danger)' };
+document.getElementById('xenditLedgerBody').innerHTML = rows.map(function(r) {
+var typeColor = r.type === 'in' ? 'var(--success)' : 'var(--danger)';
+var typeIcon = r.type === 'in' ? 'fa-arrow-down' : 'fa-arrow-up';
+return '<tr>' +
+'<td>' + formatDate(r.date) + '</td>' +
+'<td><span style="color:' + typeColor + ';font-weight:600"><i class="fas ' + typeIcon + '"></i> ' + r.typeLabel + '</span></td>' +
+'<td><strong>' + escapeHtml(r.party) + '</strong></td>' +
+'<td>Rp ' + formatNumber(r.amount) + '</td>' +
+'<td><span class="badge" style="background:' + (statusColors[r.status] || 'var(--text-light)') + ';color:white">' + r.statusLabel + '</span></td>' +
+'<td><code style="font-size:0.75rem">' + escapeHtml(r.reference) + '</code></td>' +
+'<td><button class="btn btn-sm btn-outline" onclick="' + r.detailAction + '" title="Cek Detail di Xendit"><i class="fas fa-search-dollar"></i></button></td>' +
+'</tr>';
+}).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Tidak ada transaksi yang cocok dengan filter</td></tr>';
+}
+
 // BARU: Audit Trail - dimuat sesuai permintaan (bukan bagian syncAllData) karena
 // khusus admin dan hanya perlu diambil saat halaman ini benar-benar dibuka.
 // Data disimpan di AuditLogData supaya klik halaman/pencarian tidak perlu fetch ulang.
@@ -3510,6 +3631,7 @@ affiliators: 'Affiliators',
 leads: 'Leads Management',
 orders: 'Orders History',
 commissions: 'Komisi',
+xenditledger: 'Lalu Lintas Xendit',
 auditlog: 'Audit Trail',
 coupons: 'Kupon Diskon',
 guideeditor: 'Kelola Panduan',
