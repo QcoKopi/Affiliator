@@ -1365,6 +1365,19 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 </div>
 </div>
 
+<!-- BARU: modal detail transaksi Xendit (invoice pembayaran & disbursement komisi) -->
+<div class="modal-overlay" id="xenditDetailModal" style="z-index:10006">
+<div class="modal" style="max-width:420px">
+<div class="modal-header"><h3><i class="fas fa-search-dollar" style="color:var(--primary)"></i> Detail Transaksi Xendit</h3><button class="modal-close" onclick="closeModal('xenditDetailModal')">&times;</button></div>
+<div class="modal-body" id="xenditDetailBody">
+<p style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat dari Xendit...</p>
+</div>
+<div class="modal-footer">
+<button class="btn btn-outline" onclick="closeModal('xenditDetailModal')">Tutup</button>
+</div>
+</div>
+</div>
+
 <script>
 // Force HTTPS - redirect HTTP ke HTTPS
 if(window.location.protocol === 'http:' && window.location.hostname === 'affiliate.qcoid.com'){
@@ -2414,7 +2427,11 @@ statusBtns = '<button class="btn btn-sm btn-primary" onclick="updateLeadStatus(\
 }
 var hasOrder = DATA.orders.some(function(o) { return String(o.leadid || o.leadId) === String(leadId); });
 var invoiceBtn = hasOrder ? ' <button class="btn btn-sm btn-outline" onclick="openInvoiceModal(\'' + leadIdAttr + '\')" title="Invoice" style="color:var(--info);border-color:var(--info)"><i class="fas fa-file-invoice"></i></button>' : '';
-actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal(\'' + leadIdAttr + '\')" title="Edit"><i class="fas fa-edit"></i></button>' + (statusBtns ? ' ' + statusBtns : '') + invoiceBtn;
+// BARU: kalau lead ini punya invoice Xendit, tambahkan tombol cek detail
+// pembayaran langsung dari Xendit (channel, jumlah diterima, waktu bayar) -
+// tanpa perlu buka dashboard Xendit terpisah.
+var xenditCheckBtn = l.xenditinvoiceid ? ' <button class="btn btn-sm btn-outline" onclick="checkXenditInvoiceStatus(\'' + leadIdAttr + '\')" title="Cek Pembayaran di Xendit" style="color:var(--primary);border-color:var(--primary)"><i class="fas fa-search-dollar"></i></button>' : '';
+actionBtn = '<button class="btn btn-sm btn-outline" onclick="openUpdateLeadModal(\'' + leadIdAttr + '\')" title="Edit"><i class="fas fa-edit"></i></button>' + (statusBtns ? ' ' + statusBtns : '') + invoiceBtn + xenditCheckBtn;
 } else {
 actionBtn = '<button class="btn btn-sm btn-outline" onclick="viewLeadDetail(\'' + leadIdAttr + '\')" title="Lihat Detail"><i class="fas fa-eye"></i></button>';
 }
@@ -2896,6 +2913,13 @@ commAction = '<button class="btn btn-sm btn-outline" disabled title="Sudah Dibay
 } else {
 commAction = '<button class="btn btn-sm btn-outline" disabled title="Lihat Detail"><i class="fas fa-eye"></i></button>';
 }
+// BARU: kalau komisi ini dibayar lewat Xendit Disbursement (ada ID-nya
+// tersimpan), tambahkan tombol untuk cek status TERKINI langsung dari Xendit -
+// supaya tidak perlu buka dashboard Xendit terpisah untuk pastikan transfer
+// benar-benar sampai (status bisa berubah PENDING -> COMPLETED/FAILED setelah dikirim).
+if (currentUser.isAdmin && isPaid && c.xenditdisbursementid) {
+commAction += ' <button class="btn btn-sm btn-outline" onclick="checkXenditDisbursementStatus(\'' + escapeJsAttr(c.xenditdisbursementid) + '\')" title="Cek Status di Xendit"><i class="fas fa-search-dollar"></i></button>';
+}
 
 return '<tr><td>' + formatDate(c.date) + '</td><td><strong>' + escapeHtml(aff ? aff.name : (affId || '-')) + '</strong></td><td>' + escapeHtml(c.type || '-') + '</td><td>' + escapeHtml(c.description || '-') + '</td><td>Rp ' + formatNumber(c.amount) + '</td><td>' + badge + '</td><td><div style="display:flex;gap:4px">' + commAction + '</div></td></tr>';
 }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">Belum ada komisi</td></tr>';
@@ -3348,6 +3372,51 @@ if (tabunganUrl) window.open(tabunganUrl, '_blank');
 
 if (ktpUrl && !tabunganUrl) showToast('KTP dibuka - Tabungan belum diupload', 'info');
 else if (!ktpUrl && tabunganUrl) showToast('Tabungan dibuka - KTP belum diupload', 'info');
+}
+
+// BARU: cek status disbursement (pencairan komisi) langsung ke Xendit, tampilkan di modal.
+async function checkXenditDisbursementStatus(disbursementId) {
+document.getElementById('xenditDetailModal').classList.add('active');
+document.getElementById('xenditDetailBody').innerHTML = '<p style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat dari Xendit...</p>';
+const res = await callGASPost('getXenditDisbursementStatus', { disbursementId: disbursementId });
+const bodyEl = document.getElementById('xenditDetailBody');
+if (!res.success) {
+bodyEl.innerHTML = '<p style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(res.error || 'Gagal memuat data') + '</p>';
+return;
+}
+const d = res.data;
+const statusColor = { COMPLETED: 'var(--success)', PENDING: 'var(--warning)', FAILED: 'var(--danger)' }[d.status] || 'var(--text-light)';
+bodyEl.innerHTML =
+'<p style="margin-bottom:0.75rem"><span style="background:' + statusColor + ';color:white;padding:0.3rem 0.8rem;border-radius:12px;font-size:0.85rem;font-weight:600">' + escapeHtml(d.status) + '</span></p>' +
+'<table style="width:100%;font-size:0.85rem"><tbody>' +
+'<tr><td style="padding:0.3rem 0;color:var(--text-light)">Jumlah</td><td style="text-align:right;font-weight:600">Rp ' + formatNumber(d.amount) + '</td></tr>' +
+'<tr><td style="padding:0.3rem 0;color:var(--text-light)">Bank</td><td style="text-align:right">' + escapeHtml(d.bankCode || '-') + '</td></tr>' +
+'<tr><td style="padding:0.3rem 0;color:var(--text-light)">Pemilik Rekening</td><td style="text-align:right">' + escapeHtml(d.accountHolderName || '-') + '</td></tr>' +
+(d.failureCode ? '<tr><td style="padding:0.3rem 0;color:var(--danger)">Kode Gagal</td><td style="text-align:right;color:var(--danger)">' + escapeHtml(d.failureCode) + '</td></tr>' : '') +
+'</tbody></table>';
+}
+
+// BARU: cek detail invoice (pembayaran masuk) langsung ke Xendit, tampilkan di modal.
+async function checkXenditInvoiceStatus(leadId) {
+document.getElementById('xenditDetailModal').classList.add('active');
+document.getElementById('xenditDetailBody').innerHTML = '<p style="text-align:center;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Memuat dari Xendit...</p>';
+const res = await callGASPost('getXenditInvoiceStatus', { leadId: leadId });
+const bodyEl = document.getElementById('xenditDetailBody');
+if (!res.success) {
+bodyEl.innerHTML = '<p style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(res.error || 'Gagal memuat data') + '</p>';
+return;
+}
+const d = res.data;
+const statusColor = { PAID: 'var(--success)', SETTLED: 'var(--success)', PENDING: 'var(--warning)', EXPIRED: 'var(--danger)' }[d.status] || 'var(--text-light)';
+bodyEl.innerHTML =
+'<p style="margin-bottom:0.75rem"><span style="background:' + statusColor + ';color:white;padding:0.3rem 0.8rem;border-radius:12px;font-size:0.85rem;font-weight:600">' + escapeHtml(d.status) + '</span></p>' +
+'<table style="width:100%;font-size:0.85rem"><tbody>' +
+'<tr><td style="padding:0.3rem 0;color:var(--text-light)">Jumlah Tagihan</td><td style="text-align:right;font-weight:600">Rp ' + formatNumber(d.amount) + '</td></tr>' +
+(d.paidAmount ? '<tr><td style="padding:0.3rem 0;color:var(--text-light)">Jumlah Diterima</td><td style="text-align:right">Rp ' + formatNumber(d.paidAmount) + '</td></tr>' : '') +
+(d.paymentChannel ? '<tr><td style="padding:0.3rem 0;color:var(--text-light)">Metode Bayar</td><td style="text-align:right">' + escapeHtml(d.paymentMethod || '') + (d.paymentChannel ? ' - ' + escapeHtml(d.paymentChannel) : '') + '</td></tr>' : '') +
+(d.paidAt ? '<tr><td style="padding:0.3rem 0;color:var(--text-light)">Dibayar Pada</td><td style="text-align:right">' + formatDate(d.paidAt) + '</td></tr>' : '') +
+(d.payerEmail ? '<tr><td style="padding:0.3rem 0;color:var(--text-light)">Email Pembayar</td><td style="text-align:right">' + escapeHtml(d.payerEmail) + '</td></tr>' : '') +
+'</tbody></table>';
 }
 
 function markCommissionAsPaid(id) {
