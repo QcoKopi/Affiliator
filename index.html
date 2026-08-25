@@ -1190,7 +1190,24 @@ bagian ini sekarang tampil di Dashboard (bukan lagi di modal Panduan). -->
 <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
 <div class="form-row">
 <div class="form-group"><label class="form-label">Nama Lengkap <span style="color:var(--danger)">*</span></label><input type="text" class="form-input" id="regName" placeholder="Sesuai KTP" required></div>
-<div class="form-group"><label class="form-label">Email <span style="color:var(--danger)">*</span></label><input type="email" class="form-input" id="regEmail" placeholder="nama@email.com" required></div>
+<div class="form-group"><label class="form-label">Email <span style="color:var(--danger)">*</span></label>
+<div style="display:flex;gap:0.5rem">
+<input type="email" class="form-input" id="regEmail" placeholder="nama@email.com" required oninput="handleRegEmailChanged()">
+<button type="button" class="btn btn-outline btn-sm" id="btnSendRegOtp" onclick="sendRegistrationOTP()" style="white-space:nowrap">Verifikasi</button>
+</div>
+</div>
+</div>
+<div class="form-group" id="regOtpSection" style="display:none;background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-sm);padding:0.85rem;margin-bottom:1rem">
+<label class="form-label" style="margin-bottom:0.4rem">Kode Verifikasi <small style="font-weight:400;color:var(--text-light)">(cek email Anda, berlaku 10 menit)</small></label>
+<div style="display:flex;gap:0.5rem">
+<input type="text" class="form-input" id="regOtpInput" placeholder="6 digit kode" maxlength="6" inputmode="numeric">
+<button type="button" class="btn btn-primary btn-sm" id="btnVerifyRegOtp" onclick="verifyRegistrationOTP()" style="white-space:nowrap">Verifikasi</button>
+</div>
+<p id="regOtpMsg" style="font-size:0.8rem;margin-top:0.5rem"></p>
+<a href="#" onclick="sendRegistrationOTP();return false;" style="font-size:0.78rem;color:var(--text-light)">Kirim ulang kode</a>
+</div>
+<div class="form-group" id="regEmailVerifiedBadge" style="display:none;margin-bottom:1rem">
+<span class="badge badge-active"><i class="fas fa-check-circle"></i> Email terverifikasi</span>
 </div>
 <div class="form-row">
 <div class="form-group"><label class="form-label">No. WhatsApp <span style="color:var(--danger)">*</span></label><input type="tel" class="form-input" id="regPhone" placeholder="08123456789" required></div>
@@ -1214,7 +1231,7 @@ bagian ini sekarang tampil di Dashboard (bukan lagi di modal Panduan). -->
 </div>
 <div class="modal-footer" style="padding:1rem 0 0 0;border:none">
 <button type="button" class="btn btn-outline" onclick="clearRegisterDraft();closeModal('registerModal')">Batal</button>
-<button type="submit" class="btn btn-primary" id="btnRegisterSubmit"><i class="fas fa-user-plus"></i> Daftar</button>
+<button type="submit" class="btn btn-primary" id="btnRegisterSubmit" disabled><i class="fas fa-user-plus"></i> Daftar</button>
 </div>
 </form>
 </div>
@@ -4277,6 +4294,91 @@ showToast(res.error || 'Gagal menandai lunas', 'error');
 }
 }
 
+// ==================== VERIFIKASI OTP EMAIL PENDAFTARAN (BARU) ====================
+// Langkah 1 pendaftaran: sebelum sisa form (password/bank/KTP/Tabungan) diisi,
+// email harus diverifikasi lewat kode OTP 6 digit yang dikirim ke email itu.
+// regOtpVerifiedToken hanya dianggap valid kalau regOtpVerifiedEmail SAMA
+// PERSIS dengan isi field email saat ini - jadi kalau email diubah setelah
+// verifikasi, tombol Daftar otomatis terkunci lagi sampai diverifikasi ulang.
+var regOtpVerifiedToken = null;
+var regOtpVerifiedEmail = null;
+
+function updateRegisterSubmitState() {
+var btn = document.getElementById('btnRegisterSubmit');
+var currentEmail = document.getElementById('regEmail').value.trim().toLowerCase();
+var isVerified = !!(regOtpVerifiedToken && regOtpVerifiedEmail && regOtpVerifiedEmail === currentEmail);
+if (btn) btn.disabled = !isVerified;
+var badge = document.getElementById('regEmailVerifiedBadge');
+if (badge) badge.style.display = isVerified ? 'block' : 'none';
+}
+
+function handleRegEmailChanged() {
+// Email diketik ulang/diubah setelah verifikasi - status verifikasi otomatis
+// dievaluasi ulang di updateRegisterSubmitState() (token cuma valid untuk
+// email yang PERSIS sama dengan yang diverifikasi terakhir).
+updateRegisterSubmitState();
+}
+
+async function sendRegistrationOTP() {
+var email = document.getElementById('regEmail').value.trim();
+if (!email || email.indexOf('@') === -1) { showToast('Masukkan email yang valid dulu', 'error'); return; }
+
+var btn = document.getElementById('btnSendRegOtp');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+try {
+var res = await callGASPost('requestRegistrationOTP', { email: email });
+if (res.success) {
+document.getElementById('regOtpSection').style.display = 'block';
+document.getElementById('regOtpInput').value = '';
+var msgEl = document.getElementById('regOtpMsg');
+msgEl.style.color = 'var(--text-light)';
+msgEl.textContent = 'Kode terkirim ke ' + email + '. Cek juga folder spam.';
+showToast('Kode verifikasi terkirim ke email Anda', 'success');
+} else {
+showToast(res.error || 'Gagal mengirim kode verifikasi', 'error');
+}
+} catch (e) {
+showToast('Koneksi bermasalah', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
+}
+
+async function verifyRegistrationOTP() {
+var email = document.getElementById('regEmail').value.trim();
+var otp = document.getElementById('regOtpInput').value.trim();
+if (!otp) { showToast('Masukkan kode OTP dari email Anda', 'error'); return; }
+
+var btn = document.getElementById('btnVerifyRegOtp');
+var originalHTML = btn.innerHTML;
+btn.disabled = true;
+btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+var msgEl = document.getElementById('regOtpMsg');
+try {
+var res = await callGASPost('verifyRegistrationOTP', { email: email, otp: otp });
+if (res.success) {
+regOtpVerifiedToken = res.verifiedToken;
+regOtpVerifiedEmail = email.trim().toLowerCase();
+msgEl.style.color = 'var(--success)';
+msgEl.textContent = 'Email berhasil diverifikasi!';
+document.getElementById('regOtpSection').style.display = 'none';
+showToast('Email berhasil diverifikasi', 'success');
+updateRegisterSubmitState();
+} else {
+msgEl.style.color = 'var(--danger)';
+msgEl.textContent = res.error || 'Kode OTP salah';
+}
+} catch (e) {
+showToast('Koneksi bermasalah', 'error');
+} finally {
+btn.disabled = false;
+btn.innerHTML = originalHTML;
+}
+}
+
 // ==================== SUBMIT PENDAFTARAN AFFILIATOR ====================
 // FIX: onsubmit="handleRegisterSubmit(event)" di form pendaftaran tidak pernah
 // terdefinisi, jadi tombol "Daftar" diam saja saat diklik.
@@ -4304,6 +4406,14 @@ if (!ktpFile || !tabunganFile) {
 showToast('Foto KTP dan Buku Tabungan wajib diupload', 'error');
 return;
 }
+// BARU: WAJIB email sudah diverifikasi OTP dulu sebelum submit - pengaman
+// tambahan di sisi klien (tombol Daftar memang sudah disabled sampai
+// terverifikasi, ini jaga-jaga kalau tombol somehow ke-enable manual).
+var currentEmailLower = email.trim().toLowerCase();
+if (!regOtpVerifiedToken || regOtpVerifiedEmail !== currentEmailLower) {
+showToast('Email belum diverifikasi. Klik tombol "Verifikasi" di sebelah email dulu.', 'error');
+return;
+}
 
 var btn = document.getElementById('btnRegisterSubmit');
 var originalHTML = btn.innerHTML;
@@ -4311,7 +4421,7 @@ btn.disabled = true;
 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftarkan...';
 
 try {
-var params = { name: name, email: email, phone: phone, password: password, bank: bank, bankAccount: bankAccount };
+var params = { name: name, email: email, phone: phone, password: password, bank: bank, bankAccount: bankAccount, emailVerifiedToken: regOtpVerifiedToken };
 params.ktpBase64 = await fileToBase64(ktpFile);
 params.tabunganBase64 = await fileToBase64(tabunganFile);
 
@@ -4320,6 +4430,8 @@ var res = await callGASPost('registerAffiliator', params);
 
 if (res.success) {
 clearRegisterDraft();
+regOtpVerifiedToken = null;
+regOtpVerifiedEmail = null;
 closeModal('registerModal');
 document.getElementById('regSuccessName').textContent = name;
 document.getElementById('regSuccessRefCode').textContent = res.referralCode || '-';
@@ -4588,6 +4700,16 @@ document.getElementById('ktpUploadWrap').classList.remove('has-file');
 document.getElementById('tabunganUploadWrap').classList.remove('has-file');
 document.querySelectorAll('#passwordStuff span').forEach(function(s) { s.className = ''; });
 document.getElementById('passwordLabel').textContent = 'Kekuatan password';
+
+// BARU: reset status verifikasi OTP setiap kali modal dibuka - supaya modal
+// bekas sesi sebelumnya (atau bekas draft yang di-restore) tidak salah
+// dianggap sudah terverifikasi. Tombol Daftar mulai dalam keadaan terkunci.
+regOtpVerifiedToken = null;
+regOtpVerifiedEmail = null;
+document.getElementById('regOtpSection').style.display = 'none';
+document.getElementById('regOtpInput').value = '';
+document.getElementById('regOtpMsg').textContent = '';
+updateRegisterSubmitState();
 
 var saved = localStorage.getItem('aff_register_draft');
 if (saved) {
