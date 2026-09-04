@@ -1204,7 +1204,7 @@ bagian ini sekarang tampil di Dashboard (bukan lagi di modal Panduan). -->
 <button type="button" class="btn btn-primary btn-sm" id="btnVerifyRegOtp" onclick="verifyRegistrationOTP()" style="white-space:nowrap">Verifikasi</button>
 </div>
 <p id="regOtpMsg" style="font-size:0.8rem;margin-top:0.5rem"></p>
-<a href="#" onclick="sendRegistrationOTP();return false;" style="font-size:0.78rem;color:var(--text-light)">Kirim ulang kode</a>
+<a href="#" id="regOtpResendLink" onclick="sendRegistrationOTP();return false;" style="font-size:0.78rem;color:var(--text-light)">Kirim ulang kode</a>
 </div>
 <div class="form-group" id="regEmailVerifiedBadge" style="display:none;margin-bottom:1rem">
 <span class="badge badge-active"><i class="fas fa-check-circle"></i> Email terverifikasi</span>
@@ -4302,6 +4302,11 @@ showToast(res.error || 'Gagal menandai lunas', 'error');
 // verifikasi, tombol Daftar otomatis terkunci lagi sampai diverifikasi ulang.
 var regOtpVerifiedToken = null;
 var regOtpVerifiedEmail = null;
+// BARU: jatah email harian akun Google ini dipakai BERSAMA 5 project lain -
+// cooldown ini mencegah klik berulang (sengaja atau tidak sengaja dobel-klik)
+// memicu banyak email OTP percuma dalam waktu singkat.
+var regOtpCooldownUntil = 0;
+var regOtpCooldownSeconds = 60;
 
 function updateRegisterSubmitState() {
 var btn = document.getElementById('btnRegisterSubmit');
@@ -4323,6 +4328,15 @@ async function sendRegistrationOTP() {
 var email = document.getElementById('regEmail').value.trim();
 if (!email || email.indexOf('@') === -1) { showToast('Masukkan email yang valid dulu', 'error'); return; }
 
+// BARU: tolak di sisi klien dulu kalau masih dalam masa cooldown - supaya
+// klik berulang tidak sempat menembus ke server sama sekali (hemat request
+// SEKALIGUS hemat jatah email, bukan cuma UI-nya yang dikunci).
+if (Date.now() < regOtpCooldownUntil) {
+var waitSec = Math.ceil((regOtpCooldownUntil - Date.now()) / 1000);
+showToast('Tunggu ' + waitSec + ' detik lagi sebelum kirim ulang', 'error');
+return;
+}
+
 var btn = document.getElementById('btnSendRegOtp');
 var originalHTML = btn.innerHTML;
 btn.disabled = true;
@@ -4336,15 +4350,46 @@ var msgEl = document.getElementById('regOtpMsg');
 msgEl.style.color = 'var(--text-light)';
 msgEl.textContent = 'Kode terkirim ke ' + email + '. Cek juga folder spam.';
 showToast('Kode verifikasi terkirim ke email Anda', 'success');
+startRegOtpCooldown();
 } else {
 showToast(res.error || 'Gagal mengirim kode verifikasi', 'error');
 }
 } catch (e) {
 showToast('Koneksi bermasalah', 'error');
 } finally {
-btn.disabled = false;
 btn.innerHTML = originalHTML;
+btn.disabled = Date.now() < regOtpCooldownUntil;
 }
+}
+
+// BARU: kunci tombol "Verifikasi" (kirim pertama) dan link "Kirim ulang kode"
+// selama regOtpCooldownSeconds detik setelah tiap kali BERHASIL kirim, dengan
+// hitung mundur yang terlihat - supaya jelas ini bukan tombolnya rusak/diam,
+// tapi memang sengaja dikunci sementara demi menjaga jatah email bersama.
+function startRegOtpCooldown() {
+regOtpCooldownUntil = Date.now() + (regOtpCooldownSeconds * 1000);
+var btn = document.getElementById('btnSendRegOtp');
+var resendLink = document.getElementById('regOtpResendLink');
+var tick = function() {
+var remaining = Math.ceil((regOtpCooldownUntil - Date.now()) / 1000);
+if (remaining <= 0) {
+if (btn) btn.disabled = false;
+if (resendLink) {
+resendLink.style.pointerEvents = '';
+resendLink.style.opacity = '';
+resendLink.textContent = 'Kirim ulang kode';
+}
+return;
+}
+if (btn) btn.disabled = true;
+if (resendLink) {
+resendLink.style.pointerEvents = 'none';
+resendLink.style.opacity = '0.5';
+resendLink.textContent = 'Kirim ulang kode (' + remaining + 's)';
+}
+setTimeout(tick, 1000);
+};
+tick();
 }
 
 async function verifyRegistrationOTP() {
