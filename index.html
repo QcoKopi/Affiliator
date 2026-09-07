@@ -1290,6 +1290,13 @@ Silakan cek email dan WhatsApp Anda secara berkala untuk mendapatkan <strong>Use
 <div class="form-group"><label class="form-label">Tanggal Daftar</label><input type="text" class="form-input" id="detailJoined" readonly style="background:var(--border);cursor:not-allowed"></div>
 </div>
 </div>
+<div class="form-row admin-only">
+<div class="form-group">
+<label class="form-label">NIK (hasil OCR otomatis) <small style="font-weight:400;color:var(--text-light)">(bantuan deteksi awal, bukan penentu mutlak - tetap cek foto KTP asli)</small></label>
+<input type="text" class="form-input" id="detailNik" readonly style="background:var(--border);cursor:not-allowed">
+<p id="detailNikWarning" style="font-size:0.8rem;margin-top:0.4rem;display:none"></p>
+</div>
+</div>
 <div class="form-row">
 <div class="form-group">
 <label class="form-label">Foto KTP</label>
@@ -2368,7 +2375,19 @@ actionBtns += ' <button class="btn btn-sm btn-warning" onclick="deactivateUser(\
 
 actionBtns += '</div>';
 
-return '<tr><td><strong>' + escapeHtml(u.name || '-') + '</strong></td><td>' + escapeHtml(u.email || '-') + '</td><td>' + escapeHtml(u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + escapeHtml(ref || '-') + '</code></td><td>' + escapeHtml(u.bank || '-') + '</td><td>' + statusBadge + '</td><td><span style="color:var(--success);font-weight:600">' + item.totalSales + '</span></td><td><span style="color:var(--warning)">' + item.totalPending + '</span></td><td><span style="color:var(--danger)">' + item.totalReject + '</span></td><td>Rp ' + formatNumber(item.totalComm) + '</td><td>' + actionBtns + '</td></tr>';
+// BARU (OCR KTP): badge peringatan kalau NIK hasil OCR terdeteksi duplikat
+// dengan affiliator lain, atau kalau OCR gagal baca NIK dengan jelas - supaya
+// admin langsung lihat dan tahu perlu cek manual foto KTP-nya sebelum
+// mengaktifkan akun ini. Lihat handleRegisterAffiliator di Code.gs untuk
+// detail bagaimana status ini ditentukan.
+var nikBadge = '';
+if (u.nikstatus === 'duplicate') {
+nikBadge = '<br><span class="badge badge-rejected" style="font-size:0.65rem" title="NIK dari OCR sama dengan affiliator lain - cek manual sebelum aktifkan"><i class="fas fa-exclamation-triangle"></i> NIK Duplikat</span>';
+} else if (u.nikstatus === 'unreadable') {
+nikBadge = '<br><span class="badge badge-pending" style="font-size:0.65rem" title="OCR gagal baca NIK dengan jelas dari foto KTP - cek manual dari foto">NIK tidak terbaca</span>';
+}
+
+return '<tr><td><strong>' + escapeHtml(u.name || '-') + '</strong>' + nikBadge + '</td><td>' + escapeHtml(u.email || '-') + '</td><td>' + escapeHtml(u.phone || u.whatsapp || '-') + '</td><td><code style="background:var(--bg);padding:0.25rem 0.5rem;border-radius:4px">' + escapeHtml(ref || '-') + '</code></td><td>' + escapeHtml(u.bank || '-') + '</td><td>' + statusBadge + '</td><td><span style="color:var(--success);font-weight:600">' + item.totalSales + '</span></td><td><span style="color:var(--warning)">' + item.totalPending + '</span></td><td><span style="color:var(--danger)">' + item.totalReject + '</span></td><td>Rp ' + formatNumber(item.totalComm) + '</td><td>' + actionBtns + '</td></tr>';
 }).join('') || '<tr><td colspan="12" style="text-align:center;color:var(--text-light)">Belum ada affiliator</td></tr>';
 var affPgEl = document.getElementById('affiliatorsPagination');
 if (affPgEl) affPgEl.innerHTML = paginationControlsHTML('affiliators', affPg.page, affPg.totalPages, affPg.total);
@@ -3746,6 +3765,27 @@ document.getElementById('detailRefCode').value = u.referralcode || u.referralCod
 document.getElementById('detailStatus').value = u.status || 'Active';
 document.getElementById('detailBank').value = u.bank || '';
 document.getElementById('detailJoined').value = formatDate(u.joined || u.joinedat || '');
+
+// BARU (OCR KTP): tampilkan NIK hasil OCR + peringatan kalau duplikat/tidak
+// terbaca - cuma berarti untuk admin (yang melakukan review), affiliator
+// sendiri melihat kolom ini kosong info karena field ini memang read-only
+// murni informasi verifikasi, bukan sesuatu yang perlu mereka lihat.
+var nikField = document.getElementById('detailNik');
+var nikWarning = document.getElementById('detailNikWarning');
+if (nikField) nikField.value = u.nik || '(tidak terbaca otomatis)';
+if (nikWarning) {
+if (u.nikstatus === 'duplicate') {
+nikWarning.style.display = 'block';
+nikWarning.style.color = 'var(--danger)';
+nikWarning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> NIK ini SAMA dengan affiliator lain yang sudah terdaftar - cek foto KTP kedua akun sebelum mengaktifkan.';
+} else if (u.nikstatus === 'unreadable') {
+nikWarning.style.display = 'block';
+nikWarning.style.color = 'var(--warning)';
+nikWarning.innerHTML = '<i class="fas fa-info-circle"></i> OCR gagal membaca NIK dengan jelas dari foto - cek manual dari foto KTP di bawah.';
+} else {
+nikWarning.style.display = 'none';
+}
+}
 
 var ktpUrl = u.ktpurl || u.ktpUrl || '';
 var tabunganUrl = u.tabunganurl || u.tabunganUrl || '';
